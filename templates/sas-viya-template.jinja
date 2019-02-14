@@ -1,0 +1,20 @@
+resources:
+
+- name: networks
+  type: networks.jinja
+  properties:
+    region: {{ properties["zone"][:-2] }}
+    AdminIngressLocation: {{ properties["AdminIngressLocation"] }}
+
+- name: vms
+  type: vms.jinja
+  properties:
+     zone: {{ properties["zone"] }}
+     ssh-key: {{ properties["ssh-key"] }}
+ 
+- name: iam
+  type: iam.jinja
+ 
+
+
+        

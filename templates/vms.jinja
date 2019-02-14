@@ -1,0 +1,95 @@
+
+resources:
+
+
+
+- name: {{ env["deployment"] }}-ansible-controller
+  type: compute.v1.instance
+  properties:
+    zone: {{ properties["zone"] }}
+    machineType: zones/{{ properties["zone"] }}/machineTypes/f1-micro
+    serviceAccounts:
+    - email: $(ref.{{ env['deployment'] }}-ansible-svc-account.email)
+      scopes:
+      - https://www.googleapis.com/auth/cloud-platform
+     
+
+
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: true
+      initializeParams:
+        sourceImage: https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7
+        diskSizeGb: 10
+    networkInterfaces:
+    - subnetwork: $(ref.{{ env["deployment"] }}-public-subnet.selfLink)
+      accessConfigs:
+      - name: External NAT
+        type: ONE_TO_ONE_NAT
+    tags:
+      items:
+      - sas-viya-ansible-controller
+    metadata:
+      items:
+        - key: ssh-keys
+          value: sasinstall:{{ properties["ssh-key"] }}
+        - key: block-project-ssh-keys
+          value: 'true'
+
+
+- name: {{ env["deployment"] }}-visual
+  type: compute.v1.instance
+  properties:
+    zone: {{ properties["zone"] }}
+    machineType: zones/{{ properties["zone"] }}/machineTypes/f1-micro
+    hostname: visual.viya.sas
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: true
+      initializeParams:
+        sourceImage: https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7
+        diskSizeGb: 10
+    networkInterfaces:
+    - subnetwork: $(ref.{{ env["deployment"] }}-private-subnet.selfLink)
+    metadata:
+      items:
+        - key: ssh-keys
+          value: sasinstall:{{ properties["ssh-key"] }}
+        - key: block-project-ssh-keys
+          value: 'true'
+    tags:
+      items:
+      - sas-viya-vm
+ 
+        
+- name: {{ env["deployment"] }}-controller
+  type: compute.v1.instance
+  properties:
+    zone: {{ properties["zone"] }}
+    machineType: zones/{{ properties["zone"] }}/machineTypes/f1-micro
+    hostname: controller.viya.sas
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: true
+      initializeParams:
+        sourceImage: https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7
+        diskSizeGb: 10
+    networkInterfaces:
+    - subnetwork: $(ref.{{ env["deployment"] }}-private-subnet.selfLink)
+    metadata:
+      items:
+        - key: ssh-keys
+          value: sasinstall:{{ properties["ssh-key"] }}
+        - key: block-project-ssh-keys
+          value: 'true'
+    tags:
+      items:
+      - sas-viya-vm
+ 
+        

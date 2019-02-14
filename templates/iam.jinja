@@ -1,0 +1,53 @@
+
+resources:
+
+- type: gcp-types/iam-v1:projects.serviceAccounts
+  name: {{ env['deployment'] }}-ansible-svc-account
+  properties:
+    accountId: {{ env['deployment'] }}-ansible-svc-account   {# TODO: length can only be 6-30 #}
+    displayName: {{ env['deployment'] }}-ansible-svc-account
+
+
+- name: get-iam-policy
+  action: gcp-types/cloudresourcemanager-v1:cloudresourcemanager.projects.getIamPolicy
+  properties:
+    resource: {{ env["project"] }}
+
+
+- name: patch-iam-policy
+  action: gcp-types/cloudresourcemanager-v1:cloudresourcemanager.projects.setIamPolicy
+  properties:
+    resource: {{ env["project"] }}
+    policy: $(ref.get-iam-policy)
+    gcpIamPolicyPatch:
+      add:
+      - role: roles/storage.admin
+        members:
+        - serviceAccount:$(ref.{{ env['deployment'] }}-ansible-svc-account.email)
+  
+
+- type: gcp-types/iam-v1:projects.serviceAccounts.keys
+  name: test-account-key
+  properties:
+    parent: $(ref.{{ env['deployment'] }}-ansible-svc-account.name)
+    privateKeyType: TYPE_GOOGLE_CREDENTIALS_FILE
+
+{#
+
+Just in case. Roles take a long time to actually get removed: 
+https://cloud.google.com/iam/docs/creating-custom-roles#deleting_a_custom_role
+So, if we do want custom roles, we will need to use uuids or hashes as names
+
+- type: gcp-types/iam-v1:projects.roles
+  properties:
+    parent: projects/{{ env["project"] }}
+    roleId: ansible_account_role  # TODO: length can only be 3-64. Deployment name may be too long. How to avoid name duplication with multiple deployments?
+    role:
+      description: access permissions for the ansible controller service acount
+      title: Ansible Storage access
+      stage: GA
+      includedPermissions:
+      - storage.buckets.list
+      - storage.objects.get
+      - storage.objects.list
+ #}
