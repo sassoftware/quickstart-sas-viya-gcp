@@ -1,0 +1,9 @@
+resources:
+
+- name: sas-viya
+  type: gs://TEMPLATE_LOCATION/templates/sas-viya-template.jinja
+  properties:
+    AdminIngressLocation: 149.173.0.0/16 
+    zone: us-east1-b
+    ssh-key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDmj4OjEV/fQQRB4w1X/CbJz55FVHWtWJJ8mrOTM9xCEevza4xhB0YXKn64IZtVLvTK+pN+p2LWlIN4BIEjG6gB1q3Kr2xoZQ5kFlR2bZwirYDxYwM0UyQWBodHVDjJHZZREKj/c9zM+KMePpPAb5P6/KQE13Y74ZN4FkQXUSX5GQM6hb778TuSaIKb4k7cSQ1MJoOcF3ED+QVSraqip8d4ZDpJV9r1/UVwTvKRAP9WH8ByVeHW15RVJASdU+vLX9zODksxCrGNMATqOow8/n8p9auoYPuRfZn7T5DZATx3q9Rh4yOD/MRNnQ+8cVRGw9fDDsQoic59dOY204Cro2wj
+    

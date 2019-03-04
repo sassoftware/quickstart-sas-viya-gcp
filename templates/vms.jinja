@@ -1,0 +1,131 @@
+resources:
+
+- name: {{ env["deployment"] }}-ansible-controller
+  type: compute.v1.instance
+  properties:
+    zone: {{ properties["zone"] }}
+    machineType: zones/{{ properties["zone"] }}/machineTypes/g1-small
+    serviceAccounts:
+    - email: $(ref.{{ env['deployment'] }}-ansible-svc-account.email)
+      scopes:
+      - https://www.googleapis.com/auth/cloud-platform
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: true
+      initializeParams:
+        sourceImage: https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7
+        diskSizeGb: 10
+    networkInterfaces:
+    - subnetwork: $(ref.{{ env["deployment"] }}-public-subnet.selfLink)
+      accessConfigs:
+      - name: External NAT
+        type: ONE_TO_ONE_NAT
+    tags:
+      items:
+      - sas-viya-ansible-controller
+    metadata:
+      items:
+        - key: ssh-keys
+          value: sasinstall:{{ properties["ssh-key"] }}
+        - key: block-project-ssh-keys
+          value: 'true'
+        - key: startup-script
+          value: |
+            #! /bin/bash
+            yum install -y epel-release
+            yum install -y python-pip
+            yum install -y git
+            export DOWNLOAD_ROOT=mercury-playpen/dev-daberg
+            export IAAS=gcp
+            export INSTALL_DIR=/sas/install
+            ###mkdir -p ${INSTALL_DIR}
+            git clone https://github.com/sassoftware/quickstart-sas-viya-common $INSTALL_DIR
+            ###gsutil -m cp -r gs://${DOWNLOAD_ROOT}/common/* ${INSTALL_DIR}
+            ###chown -R sasinstall:sasinstall /sas
+            ###chmod -R 755 ${INSTALL_DIR}*
+            /bin/su -l sasinstall -c "${INSTALL_DIR}/scripts/ansiblecontroller_prereqs.sh"
+            yum -y update
+
+- name: {{ env["deployment"] }}-visual
+  type: compute.v1.instance
+  properties:
+    zone: {{ properties["zone"] }}
+    machineType: zones/{{ properties["zone"] }}/machineTypes/g1-small
+    hostname: visual.viya.sas
+    serviceAccounts:
+    - email: $(ref.{{ env['deployment'] }}-ansible-svc-account.email)
+      scopes:
+      - https://www.googleapis.com/auth/cloud-platform    
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: true
+      initializeParams:
+        sourceImage: https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7
+        diskSizeGb: 10
+    networkInterfaces:
+    - subnetwork: $(ref.{{ env["deployment"] }}-private-subnet.selfLink)
+    metadata:
+      items:
+        - key: ssh-keys
+          value: sasinstall:{{ properties["ssh-key"] }}
+        - key: block-project-ssh-keys
+          value: 'true'
+        - key: startup-script
+          value: |
+            #! /bin/bash
+            yum -y install git
+            git clone https://github.com/sassoftware/quickstart-sas-viya-common /tmp/common
+            export NFS_SERVER={{ env["deployment"] }}-ansible-controller
+            export HOST=`hostname`
+            /bin/su sasinstall -c '/tmp/common/scripts/sasnodes_prereqs.sh'
+            yum -y update
+
+    tags:
+      items:
+      - sas-viya-vm
+        
+
+- name: {{ env["deployment"] }}-controller
+  type: compute.v1.instance
+  properties:
+    zone: {{ properties["zone"] }}
+    machineType: zones/{{ properties["zone"] }}/machineTypes/g1-small
+    hostname: controller.viya.sas
+    serviceAccounts:
+    - email: $(ref.{{ env['deployment'] }}-ansible-svc-account.email)
+      scopes:
+      - https://www.googleapis.com/auth/cloud-platform    
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: true
+      initializeParams:
+        sourceImage: https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7
+        diskSizeGb: 10
+    networkInterfaces:
+    - subnetwork: $(ref.{{ env["deployment"] }}-private-subnet.selfLink)
+    metadata:
+      items:
+        - key: ssh-keys
+          value: sasinstall:{{ properties["ssh-key"] }}
+        - key: block-project-ssh-keys
+          value: 'true'
+        - key: startup-script
+          value: |
+            #! /bin/bash
+            yum -y install git
+            git clone https://github.com/sassoftware/quickstart-sas-viya-common /tmp/common
+            export NFS_SERVER={{ env["deployment"] }}-ansible-controller
+            export HOST=`hostname`
+            /bin/su sasinstall -c '/tmp/common/scripts/sasnodes_prereqs.sh'
+            yum -y update
+
+    tags:
+      items:
+      - sas-viya-vm
+      
