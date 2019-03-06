@@ -37,23 +37,24 @@ resources:
             yum install -y epel-release
             yum install -y python-pip
             yum install -y git
-            export DOWNLOAD_ROOT=mercury-playpen/dev-daberg
             export IAAS=gcp
             export INSTALL_DIR=/sas/install
-            ###mkdir -p ${INSTALL_DIR}
             git clone https://github.com/sassoftware/quickstart-sas-viya-common $INSTALL_DIR
-            ###gsutil -m cp -r gs://${DOWNLOAD_ROOT}/common/* ${INSTALL_DIR}
-            ###chown -R sasinstall:sasinstall /sas
-            ###chmod -R 755 ${INSTALL_DIR}*
-            /bin/su -l sasinstall -c "${INSTALL_DIR}/scripts/ansiblecontroller_prereqs.sh"
-            yum -y update
+            chown -R sasinstall:sasinstall $INSTALL_DIR
+            /bin/su sasinstall -c "$INSTALL_DIR/scripts/ansiblecontroller_prereqs.sh"
+            # Setting up environment to run Ansible Playbooks
+            export ANSIBLE_CONFIG=$INSTALL_DIR/ansible/playbooks/ansible.cfg
+            export ANSIBLE_LOG_PATH=/var/log/sas/install/prepare_nodes.log
+            /bin/su sasinstall -c "ansible-playbook $INSTALL_DIR/ansible/playbooks/prepare_nodes.yml"
+            # Final system update
+            yum -y update            
 
-- name: {{ env["deployment"] }}-visual
+- name: {{ env["deployment"] }}-services
   type: compute.v1.instance
   properties:
     zone: {{ properties["zone"] }}
     machineType: zones/{{ properties["zone"] }}/machineTypes/g1-small
-    hostname: visual.viya.sas
+    hostname: services.viya.sas
     serviceAccounts:
     - email: $(ref.{{ env['deployment'] }}-ansible-svc-account.email)
       scopes:
