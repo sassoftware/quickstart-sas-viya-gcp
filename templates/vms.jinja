@@ -1,0 +1,200 @@
+resources:
+
+- name: {{ env["deployment"] }}-ansible-controller
+  type: compute.v1.instance
+  properties:
+    zone: {{ properties["zone"] }}
+    machineType: zones/{{ properties["zone"] }}/machineTypes/f1-micro
+    serviceAccounts:
+    - email: $(ref.{{ env['deployment'] }}-ansible-svc-account.email)
+      scopes:
+      - https://www.googleapis.com/auth/cloud-platform
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: true
+      initializeParams:
+        sourceImage: https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7
+        diskSizeGb: 10
+    networkInterfaces:
+    - subnetwork: $(ref.{{ env["deployment"] }}-public-subnet.selfLink)
+      accessConfigs:
+      - name: External NAT
+        type: ONE_TO_ONE_NAT
+    tags:
+      items:
+      - sas-viya-ansible-controller
+    metadata:
+      items:
+        - key: ssh-keys
+          value: sasinstall:{{ properties["ssh-key"] }}
+        - key: block-project-ssh-keys
+          value: 'true'
+        - key: startup-script
+          value: |
+            #! /bin/bash
+            # Setting up environment
+            export IAAS=gcp
+            export INSTALL_DIR=/sas/install
+            # Installing dependencies
+            yum install -y epel-release
+            yum install -y python-pip
+            yum install -y git
+            # Getting quick start scripts from Github
+            git clone https://github.com/sassoftware/quickstart-sas-viya-gcp $INSTALL_DIR
+            git clone https://github.com/sassoftware/quickstart-sas-viya-common $INSTALL_DIR/common
+            # Updating ownership so that sasinstall user can read/write
+            chown -R sasinstall:sasinstall $INSTALL_DIR
+            # Bootstrapping ansible controller machine
+            /bin/su sasinstall -c "$INSTALL_DIR/common/scripts/ansiblecontroller_prereqs.sh"
+            export ANSIBLE_CONFIG=$INSTALL_DIR/common/ansible/playbooks/ansible.cfg
+            # Ansible playbook for additional steps needed before installing SAS
+            export ANSIBLE_LOG_PATH=/var/log/sas/install/prepare_nodes.log
+            /bin/su sasinstall -c "ansible-playbook $INSTALL_DIR/common/ansible/playbooks/prepare_nodes.yml \
+                -e SAS_INSTALL_DISK=/dev/disk/by-id/google-sashome \
+                -e USERLIB_DISK=/dev/disk/by-id/google-userlib \
+                -e CASCACHE_DISK=/dev/disk/by-id/google-cascache"
+            # Ansible playbook for setting up openldap !!WILL NEED TO REPLACE HARDCODED PASSWORDS WITH VARIABLES!!
+            export ANSIBLE_LOG_PATH=/var/log/sas/install/openldapsetup.log
+            /bin/su sasinstall -c "ansible-playbook -v $INSTALL_DIR/common/ansible/playbooks/openldapsetup.yml \
+                -e OLCROOTPW=$(echo "adminpass" | base64) \
+                -e OLCUSERPW=$(echo "userpass" | base64)"
+            # Final system update
+            yum -y update            
+
+- name: {{ env["deployment"] }}-services
+  type: compute.v1.instance
+  properties:
+    zone: {{ properties["zone"] }}
+    machineType: zones/{{ properties["zone"] }}/machineTypes/g1-small
+    hostname: services.viya.sas
+    serviceAccounts:
+    - email: $(ref.{{ env['deployment'] }}-ansible-svc-account.email)
+      scopes:
+      - https://www.googleapis.com/auth/cloud-platform    
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: true
+      initializeParams:
+        sourceImage: https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7
+        diskSizeGb: 10
+
+    - deviceName: sashome
+      type: PERSISTENT
+      boot: false
+      autoDelete: true
+      initializeParams:
+          diskName: {{ env["deployment"] }}-sashome-services
+          diskSizeGb: 100
+          description: SAS_INSTALL_DISK
+
+    networkInterfaces:
+    - subnetwork: $(ref.{{ env["deployment"] }}-private-subnet.selfLink)
+    metadata:
+      items:
+        - key: ssh-keys
+          value: sasinstall:{{ properties["ssh-key"] }}
+        - key: block-project-ssh-keys
+          value: 'true'
+        - key: startup-script
+          value: |
+            #! /bin/bash
+            # Setting up environment
+            export NFS_SERVER={{ env["deployment"] }}-ansible-controller
+            export HOST=`hostname`
+            # Installing dependencies
+            yum -y install git
+            # Getting quick start scripts
+            git clone https://github.com/sassoftware/quickstart-sas-viya-common /tmp/common
+            # Bootstrapping all SAS VM
+            /bin/su sasinstall -c '/tmp/common/scripts/sasnodes_prereqs.sh'
+            # Final system update
+            yum -y update
+
+    tags:
+      items:
+      - sas-viya-vm
+        
+
+- name: {{ env["deployment"] }}-controller
+  type: compute.v1.instance
+  properties:
+    zone: {{ properties["zone"] }}
+    machineType: zones/{{ properties["zone"] }}/machineTypes/g1-small
+    hostname: controller.viya.sas
+    serviceAccounts:
+    - email: $(ref.{{ env['deployment'] }}-ansible-svc-account.email)
+      scopes:
+      - https://www.googleapis.com/auth/cloud-platform    
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: true
+      initializeParams:
+        sourceImage: https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7
+        diskSizeGb: 10
+        
+    - deviceName: sashome
+      type: PERSISTENT
+      boot: false
+      autoDelete: true
+      initializeParams:
+          diskName: {{ env["deployment"] }}-sashome-controller
+          diskSizeGb: 50
+          description: SAS_INSTALL_DISK
+
+    - deviceName: userlib
+      type: PERSISTENT
+      boot: false
+      autoDelete: true
+      kind: compute#attachedDisk
+      mode: READ_WRITE      
+      initializeParams:
+          diskName: {{ env["deployment"] }}-userlib
+          diskType: projects/ace-dev/zones/{{ properties["zone"] }}/diskTypes/pd-standard
+          diskSizeGb: 50
+          description: USERLIB_DISK
+
+    - deviceName: cascache
+      type: PERSISTENT
+      boot: false
+      autoDelete: true
+      kind: compute#attachedDisk
+      mode: READ_WRITE      
+      initializeParams:
+          diskName: {{ env["deployment"] }}-cascache
+          diskType: projects/ace-dev/zones/{{ properties["zone"] }}/diskTypes/pd-standard
+          diskSizeGb: 50
+          description: CASCACHE_DISK
+
+    networkInterfaces:
+    - subnetwork: $(ref.{{ env["deployment"] }}-private-subnet.selfLink)
+    metadata:
+      items:
+        - key: ssh-keys
+          value: sasinstall:{{ properties["ssh-key"] }}
+        - key: block-project-ssh-keys
+          value: 'true'
+        - key: startup-script
+          value: |
+            #! /bin/bash
+            # Setting up environment
+            export NFS_SERVER={{ env["deployment"] }}-ansible-controller
+            export HOST=`hostname`
+            # Installing dependencies
+            yum -y install git
+            # Getting quick start scripts
+            git clone https://github.com/sassoftware/quickstart-sas-viya-common /tmp/common
+            # Bootstrapping all SAS VM
+            /bin/su sasinstall -c '/tmp/common/scripts/sasnodes_prereqs.sh'
+            # Final system update
+            yum -y update
+
+    tags:
+      items:
+      - sas-viya-vm
+      
