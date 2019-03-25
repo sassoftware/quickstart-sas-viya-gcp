@@ -7,5 +7,5 @@ resources:
   properties:
     AdminIngressLocation: 149.173.0.0/16 
     zone: <ZONE>
-    ssh-key: <PUBLIC SSH KEY>
+    ssh-key: <SSH PUBLIC KEY>
     

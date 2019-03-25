@@ -35,6 +35,7 @@ resources:
           value: |
             #! /bin/bash
             # Setting up environment
+            export COMMON_CODE_TAG=GCPVIYA-1.1
             export IAAS=gcp
             export INSTALL_DIR=/sas/install
             # Installing dependencies
@@ -43,7 +44,9 @@ resources:
             yum install -y git
             # Getting quick start scripts from Github
             git clone https://github.com/sassoftware/quickstart-sas-viya-gcp $INSTALL_DIR
+            # Getting specific release of common code from Github
             git clone https://github.com/sassoftware/quickstart-sas-viya-common $INSTALL_DIR/common 
+            pushd $INSTALL/common && git checkout tags/$COMMON_CODE_TAG -b $COMMON_CODE_TAG $$ rm -rf .git* && popd
             # Updating ownership so that sasinstall user can read/write
             chown -R sasinstall:sasinstall $INSTALL_DIR
             # Bootstrapping ansible controller machine
