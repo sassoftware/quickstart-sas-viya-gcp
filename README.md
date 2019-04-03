@@ -19,7 +19,7 @@ Deploying Quick Start for SAS Viya from Google Cloud CLI environment
         git clone https://github.com/sassoftware/quickstart-sas-viya-gcp -b develop
 
     - Before you can deploy the Quick Start templates you need to 
-      modify some of them with your specific values.
+      modify the following config file with your specific values.
         - File: templates/sas-viya-config.yaml
             - zone: Update which zone you want to deploy to. ex. us-east1-b  
               For a list of availale zones run:
@@ -27,6 +27,11 @@ Deploying Quick Start for SAS Viya from Google Cloud CLI environment
             - ssh-key: Enter your SSH PUBLIC KEY.  This will get added 
               to the authorized_keys file on all VMs created by this 
               Quick Start so you connect using ssh.
+            - OLCROOTPW and OLCUSERPW: passwords.
+              Used for initial identity for SAS Viya adminuser and sasuser
+            - DEPLOYMENT_DATA_LOCATION:
+              
+        (Optional)
         - File: templates/vms.jinja
             - machineType: Set to minimum configuration for each VM.  For 
               a complete list of machines available run: 
@@ -37,7 +42,7 @@ Deploying Quick Start for SAS Viya from Google Cloud CLI environment
               
     - To deploy templates run the following command where STACK represents
       the name of your deployment:  
-        gcloud deployment-manager deployments create STACK --config quickstart-sas-viya-gcp/templates/sas-viya-config.yaml --automatic-rollback-on-error
+        gcloud deployment-manager deployments create STACK --config <PATH to quickstart-sas-viya-gcp/templates>/sas-viya-config.yaml --automatic-rollback-on-error
     
     
     To connect to your deployment, open a terminal with Google Cloud CLI.

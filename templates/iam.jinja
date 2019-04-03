@@ -21,7 +21,7 @@ resources:
     policy: $(ref.get-iam-policy)
     gcpIamPolicyPatch:
       add:
-      - role: roles/storage.admin
+      - role: roles/storage.objectAdmin
         members:
         - serviceAccount:$(ref.{{ env['deployment'] }}-ansible-svc-account.email)
   
