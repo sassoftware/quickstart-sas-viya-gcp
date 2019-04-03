@@ -1,11 +1,23 @@
 imports:
 - path: sas-viya-template.jinja
-
+  
 resources:
 - name: sas-viya
   type: sas-viya-template.jinja
   properties:
-    AdminIngressLocation: 149.173.0.0/16 
-    zone: <ZONE>
-    ssh-key: <SSH PUBLIC KEY>
+    ### DO NOT MODIFY THESE VAULES
+    AdminIngressLocation: 149.173.0.0/16
+    # Version of Viya to deploy
+    VIYA_VERSION: \3.4
+    # Tag for specific version of Quick Start Common code to use
+    COMMON_CODE_TAG: GCPVIYA-1.1
+    
+    ### Replace these variables with customer provided values
+    zone: ZONE
+    ssh-key: PUBLIC_SSH_KEY
+    # Used by openldapsetup playbook
+    OLCROOTPW: ROOT_PASSWORD
+    OLCUSERPW: USER_PASSWORD
+    # Google storage bucket location and file name of SAS License file
+    DEPLOYMENT_DATA_LOCATION: gs://BUCKET_PATH/LICENSE_FILENAME.ZIP
     

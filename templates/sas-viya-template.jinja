@@ -11,7 +11,12 @@ resources:
   properties:
      zone: {{ properties["zone"] }}
      ssh-key: {{ properties["ssh-key"] }}
- 
+     COMMON_CODE_TAG: {{ properties["COMMON_CODE_TAG"] }}
+     OLCROOTPW: {{ properties["OLCROOTPW"] }}
+     OLCUSERPW: {{ properties["OLCUSERPW"] }}
+     VIYA_VERSION: {{ properties["VIYA_VERSION"] }}
+     DEPLOYMENT_DATA_LOCATION: {{ properties["DEPLOYMENT_DATA_LOCATION"] }}
+          
 - name: iam
   type: iam.jinja
   

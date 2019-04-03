@@ -1,0 +1,6 @@
+---
+
+- name: download SOE file
+  shell: |
+
+    gsutil cp {{ DEPLOYMENT_DATA_LOCATION }} {{ TEMPORARY_SOE_FILE }}
