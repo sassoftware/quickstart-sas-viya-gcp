@@ -48,15 +48,14 @@ resources:
             # The VM needs a few seconds to come up before executing the startup scripts
             sleep 10
             # Setting up environment
-            export COMMON_CODE_TAG=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/COMMON_CODE_TAG -H "Metadata-Flavor: Google")
-            export OLCROOTPW=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/OLCROOTPW -H "Metadata-Flavor: Google")
-            export OLCUSERPW=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/OLCUSERPW -H "Metadata-Flavor: Google")
-            export VIYA_VERSION=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/VIYA_VERSION -H "Metadata-Flavor: Google" | sed 's/\\//')
-            export DEPLOYMENT_DATA_LOCATION=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/DEPLOYMENT_DATA_LOCATION -H "Metadata-Flavor: Google")
-            DEPLOYMENT_DATA_LOCATION
+            export COMMON_CODE_TAG="{{ properties["COMMON_CODE_TAG"] }}"
+            export OLCROOTPW="{{ properties["OLCROOTPW"] }}"
+            export OLCUSERPW="{{ properties["OLCUSERPW"] }}"
+            export VIYA_VERSION=$(echo "{{ properties["VIYA_VERSION"] }}" | sed 's/\\//')
+            export DEPLOYMENT_DATA_LOCATION="{{ properties["DEPLOYMENT_DATA_LOCATION"] }}"
             export IAAS=gcp
             export INSTALL_DIR=/sas/install
-            export > /home/sasinstall/ENV
+            /bin/su sasinstall -c export > /home/sasinstall/ENVIRONMENT.list
             # Installing dependencies
             yum install -y epel-release
             yum install -y python-pip
