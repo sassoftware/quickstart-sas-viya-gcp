@@ -33,13 +33,10 @@ Deploying Quick Start for SAS Viya from Google Cloud CLI environment
               
         (Optional)
         - File: templates/vms.jinja
-            - machineType: Set to minimum configuration for each VM.  For 
-              a complete list of machines available run: 
+            - machineType: This is set to minimum configuration for each VM.  
+              For a complete list of machines available run: 
               gcloud compute machine-types list
-            - key: startup-script
-              In the value: section enter the OLCROOTPW and OLCUSERPW passwords.
-              Used for initial identity for SAS Viya adminuser and sasuser
-              
+            
     - To deploy templates run the following command where STACK represents
       the name of your deployment:  
         gcloud deployment-manager deployments create STACK --config <PATH to quickstart-sas-viya-gcp/templates>/sas-viya-config.yaml --automatic-rollback-on-error
