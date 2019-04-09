@@ -5,7 +5,6 @@ resources:
   properties:
     zone: {{ properties["zone"] }}
     machineType: zones/{{ properties["zone"] }}/machineTypes/f1-micro
-    foo: {{ properties["foo"] }}
     serviceAccounts:
     - email: $(ref.{{ env['deployment'] }}-ansible-svc-account.email)
       scopes:
