@@ -29,7 +29,8 @@ Deploying Quick Start for SAS Viya from Google Cloud CLI environment
               Quick Start so you connect using ssh.
             - OLCROOTPW and OLCUSERPW: passwords.
               Used for initial identity for SAS Viya adminuser and sasuser
-            - DEPLOYMENT_DATA_LOCATION:
+            - DEPLOYMENT_DATA_LOCATION: Enter the CGP bucket location of the SAS License zip file.
+              ex. gs://<bucket name>/<path>/<filename>.zip
               
         (Optional)
         - File: templates/vms.jinja
@@ -60,4 +61,15 @@ Deploying Quick Start for SAS Viya from Google Cloud CLI environment
     - Run the following command where STACK represents the 
       name of your deployment:  
         gcloud deployment-manager deployments delete STACK
+    - Remove service account from deployment. STACK represents
+      the name of your deployment and PROJECT represents the name
+      of the Google Project that you deployed into.
+      NOTE: If you do not remove this service account then future
+      deployments of the same STACK name may not have access to GCP 
+      resources. This command is sending output to NULL to avoid 
+      unnecessarily printing a list of all role bindings in the project. 
+      If the command fails for any reason it will print out the error 
+      message.
+        gcloud projects remove-iam-policy-binding PROJECT --member  serviceAccount:STACK-ansible-svc-account@PROJECT.iam.gserviceaccount.com --role roles/storage.objectAdmin 1>/dev/null
+
     

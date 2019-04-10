@@ -5,7 +5,6 @@ resources:
   properties:
     zone: {{ properties["zone"] }}
     machineType: zones/{{ properties["zone"] }}/machineTypes/f1-micro
-    foo: {{ properties["foo"] }}
     serviceAccounts:
     - email: $(ref.{{ env['deployment'] }}-ansible-svc-account.email)
       scopes:
@@ -32,16 +31,6 @@ resources:
           value: sasinstall:{{ properties["ssh-key"] }}
         - key: block-project-ssh-keys
           value: 'true'
-        - key: COMMON_CODE_TAG
-          value: {{ properties["COMMON_CODE_TAG"] }}
-        - key: OLCROOTPW
-          value: {{ properties["OLCROOTPW"] }}
-        - key: OLCUSERPW
-          value: {{ properties["OLCUSERPW"] }}
-        - key: VIYA_VERSION
-          value: {{ properties["VIYA_VERSION"] }}
-        - key: DEPLOYMENT_DATA_LOCATION
-          value: {{ properties["DEPLOYMENT_DATA_LOCATION"] }}
         - key: startup-script
           value: |
             #!/bin/bash
