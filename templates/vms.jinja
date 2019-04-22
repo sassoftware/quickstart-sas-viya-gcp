@@ -1,10 +1,10 @@
 resources:
 
 - name: {{ env["deployment"] }}-ansible-controller
-  type: compute.v1.instance
+  type: gcp-types/compute-v1:instances
   properties:
     zone: {{ properties["zone"] }}
-    machineType: zones/{{ properties["zone"] }}/machineTypes/f1-micro
+    machineType: zones/{{ properties["zone"] }}/machineTypes/g1-small
     serviceAccounts:
     - email: $(ref.{{ env['deployment'] }}-ansible-svc-account.email)
       scopes:
@@ -36,7 +36,9 @@ resources:
             #!/bin/bash
             # The VM needs a few seconds to come up before executing the startup scripts
             sleep 10
+            #
             # Setting up environment
+            #
             export COMMON_CODE_TAG="{{ properties["COMMON_CODE_TAG"] }}"
             export OLCROOTPW="{{ properties["OLCROOTPW"] }}"
             export OLCUSERPW="{{ properties["OLCUSERPW"] }}"
@@ -44,8 +46,12 @@ resources:
             export DEPLOYMENT_DATA_LOCATION="{{ properties["DEPLOYMENT_DATA_LOCATION"] }}"
             export IAAS=gcp
             export INSTALL_DIR=/sas/install
-            /bin/su sasinstall -c export > /home/sasinstall/ENVIRONMENT.list
+            export LOG_DIR=/var/log/sas/install
+            /bin/su sasinstall -c "export > /home/sasinstall/SAS_VIYA_DEPLOYMENT_ENVIRONMENT"
+            #
             # Installing dependencies
+            #
+            yum install -y java-1.8.0-openjdk
             yum install -y epel-release
             yum install -y python-pip
             yum install -y git
@@ -67,39 +73,69 @@ resources:
             # Bootstrapping ansible controller machine
             /bin/su sasinstall -c "$INSTALL_DIR/common/scripts/ansiblecontroller_prereqs.sh"
             export ANSIBLE_CONFIG=$INSTALL_DIR/common/ansible/playbooks/ansible.cfg
+            #
             # Ansible playbook does additional steps needed before installing SAS, including
             # - host routing
             # - volume attachments
             # - setting up directories and users
-            export ANSIBLE_LOG_PATH=/var/log/sas/install/prepare_nodes.log
-            /bin/su sasinstall -c "ansible-playbook $INSTALL_DIR/common/ansible/playbooks/prepare_nodes.yml \
+            #
+            export ANSIBLE_LOG_PATH=$LOG_DIR/prepare_nodes.log
+            /bin/su sasinstall -c "ansible-playbook -v $INSTALL_DIR/common/ansible/playbooks/prepare_nodes.yml \
                 -e SAS_INSTALL_DISK=/dev/disk/by-id/google-sashome \
                 -e USERLIB_DISK=/dev/disk/by-id/google-userlib \
                 -e CASCACHE_DISK=/dev/disk/by-id/google-cascache"
+            #
             # Ansible playbook sets up an OpenLDAP server that can be used as initial identity provider for SAS Viya.
-            export ANSIBLE_LOG_PATH=/var/log/sas/install/openldapsetup.log
+            #
+            export ANSIBLE_LOG_PATH=$LOG_DIR/openldapsetup.log
             /bin/su sasinstall -c "ansible-playbook -v $INSTALL_DIR/common/ansible/playbooks/openldapsetup.yml \
                 -e OLCROOTPW=$(echo "$OLCROOTPW" | base64) \
                 -e OLCUSERPW=$(echo "$OLCUSERPW" | base64)"
+            #
             # Ansible playbook does additional steps needed before installing SAS,  including
             # - download sas-orchestration
             # - set up access to deployment mirror (optional)
             # - build playbook from SOE file
             # - modify inventory.ini and vars.yml
-            export ANSIBLE_LOG_PATH=/var/log/sas/install/prepare_deployment.log
-            /bin/su sasinstall -c "ansible-playbook $INSTALL_DIR/common/ansible/playbooks/prepare_deployment.yml \
+            #
+            export ANSIBLE_LOG_PATH=$LOG_DIR/prepare_deployment.log
+            /bin/su sasinstall -c "ansible-playbook -v $INSTALL_DIR/common/ansible/playbooks/prepare_deployment.yml \
                 -e DEPLOYMENT_DATA_LOCATION=$DEPLOYMENT_DATA_LOCATION \
                 -e ADMINPASS=$(echo "$OLCROOTPW" | base64) \
                 -e VIYA_VERSION=$VIYA_VERSION"
+            #
+            # Run VIRK
+            # The VIRK pre-install playbook covers most of the Viya Deployment Guide prereqs in one fell swoop.
+            #
+            export ANSIBLE_LOG_PATH=$LOG_DIR/virk.log
+            export ANSIBLE_INVENTORY=$INSTALL_DIR/ansible/sas_viya_playbook/inventory.ini
+            /bin/su sasinstall -c "ansible-playbook -v $INSTALL_DIR/ansible/sas_viya_playbook/virk/playbooks/pre-install-playbook/viya_pre_install_playbook.yml \
+               -e "use_pause=false" \
+               --skip-tags skipmemfail,skipcoresfail,skipstoragefail,skipnicssfail,bandwidth"
+            #
+            # Install Viya
+            #
+            export ANSIBLE_LOG_PATH=$LOG_DIR/viya_deployment.log
+            export ANSIBLE_CONFIG=$INSTALL_DIR/ansible/sas_viya_playbook
+            pushd /sas/install/ansible/sas_viya_playbook
+            /bin/su sasinstall -c "ansible-playbook -v site.yml"
+            #
+            # Post Deployment Steps
+            #
+            export ANSIBLE_LOG_PATH=$LOG_DIR/post_deployment.log
+            export ANSIBLE_CONFIG=$INSTALL_DIR/common/ansible/playbooks/ansible.cfg
+            /bin/su sasinstall -c "ansible-playbook -v $INSTALL_DIR/common/ansible/playbooks/post_deployment.yml"
+            #
             # Final system update
+            #
             yum -y update
-            touch /home/sasinstall/DONE
+            /bin/su sasinstall -c "echo 'Check /var/log/sas/install for deployment logs.' > /home/sasinstall/SAS_VIYA_DEPLOYMENT_FINISHED"
 
 - name: {{ env["deployment"] }}-services
-  type: compute.v1.instance
+  type: gcp-types/compute-v1:instances
   properties:
     zone: {{ properties["zone"] }}
-    machineType: zones/{{ properties["zone"] }}/machineTypes/g1-small
+    machineType: zones/{{ properties["zone"] }}/machineTypes/n1-highmem-4
     hostname: services.viya.sas
     serviceAccounts:
     - email: $(ref.{{ env['deployment'] }}-ansible-svc-account.email)
@@ -112,7 +148,7 @@ resources:
       autoDelete: true
       initializeParams:
         sourceImage: https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7
-        diskSizeGb: 10
+        diskSizeGb: 25
 
     - deviceName: sashome
       type: PERSISTENT
@@ -143,6 +179,8 @@ resources:
             git clone https://github.com/sassoftware/quickstart-sas-viya-common /tmp/common
             # Bootstrapping all SAS VM
             /bin/su sasinstall -c '/tmp/common/scripts/sasnodes_prereqs.sh'
+            # VIRK requires GID 1001 to be free
+            groupmod -g 2001 sasinstall
             # Final system update
             yum -y update
 
@@ -152,10 +190,10 @@ resources:
         
 
 - name: {{ env["deployment"] }}-controller
-  type: compute.v1.instance
+  type: gcp-types/compute-v1:instances
   properties:
     zone: {{ properties["zone"] }}
-    machineType: zones/{{ properties["zone"] }}/machineTypes/g1-small
+    machineType: zones/{{ properties["zone"] }}/machineTypes/n1-standard-2
     hostname: controller.viya.sas
     serviceAccounts:
     - email: $(ref.{{ env['deployment'] }}-ansible-svc-account.email)
@@ -223,6 +261,8 @@ resources:
             git clone https://github.com/sassoftware/quickstart-sas-viya-common /tmp/common
             # Bootstrapping all SAS VM
             /bin/su sasinstall -c '/tmp/common/scripts/sasnodes_prereqs.sh'
+            # VIRK requires GID 1001 to be free
+            groupmod -g 2001 sasinstall
             # Final system update
             yum -y update
 
