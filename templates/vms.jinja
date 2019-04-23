@@ -135,7 +135,7 @@ resources:
   type: gcp-types/compute-v1:instances
   properties:
     zone: {{ properties["zone"] }}
-    machineType: zones/{{ properties["zone"] }}/machineTypes/n1-highmem-4
+    machineType: zones/{{ properties["zone"] }}/machineTypes/n1-highmem-8
     hostname: services.viya.sas
     serviceAccounts:
     - email: $(ref.{{ env['deployment'] }}-ansible-svc-account.email)
