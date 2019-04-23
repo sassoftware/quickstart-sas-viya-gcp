@@ -39,9 +39,11 @@ Deploying Quick Start for SAS Viya from Google Cloud CLI environment
               gcloud compute machine-types list
             
     - To deploy templates run the following command where STACK represents
-      the name of your deployment:  
+      the name of your deployment:
+      NOTE: Your deployment name must be all lowercase.  
         gcloud deployment-manager deployments create STACK --config <PATH to quickstart-sas-viya-gcp/templates>/sas-viya-config.yaml --automatic-rollback-on-error
     
+      The deployment of Viya takes roughly 2 hours.  You can check the progress by watching the logs in /var/log/sas/install on the ansible-controller machine.
     
     To connect to your deployment, open a terminal with Google Cloud CLI.
     - You will need access to the ssh private key that matches the public key 
