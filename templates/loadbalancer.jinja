@@ -1,0 +1,112 @@
+resources:
+
+# These are all the resources that make up the Load Balanacer
+
+###################################
+# Create external static IP address to be used by the Load Balancer
+###################################
+- name: {{ env["deployment"] }}-loadbalancer-ip
+  type: gcp-types/compute-v1:addresses
+  properties:
+    networkTier: STANDARD
+    region: {{ properties["region"] }}
+
+
+###################################
+# Create Instance Group and set namedPorts
+###################################
+- name: {{ env["deployment"] }}-instance-group
+  type: gcp-types/compute-v1:instanceGroups
+  # type: compute.v1.instanceGroup
+  properties:
+    managed: no
+    zone: {{ properties["zone"] }}
+    network: $(ref.{{ env["deployment"] }}-vpc.selfLink)
+    namedPorts:
+    - name: http
+      port: 80
+    - name: https
+      port: 443
+    
+
+###################################
+# Add instances to the Instance Group
+###################################
+- name: add-to-instance-group
+  action: gcp-types/compute-v1:compute.instanceGroups.addInstances
+  properties:
+    project: {{ env["project"] }}
+    zone: {{ properties["zone"] }}
+    instanceGroup: {{ env["deployment"] }}-instance-group
+    instances: [ instance: $(ref.{{ env["deployment"] }}-services.selfLink) ]
+
+    
+###################################
+# Create HTTP Health Check
+###################################
+- name: {{ env["deployment"] }}-http-healthcheck
+  type: gcp-types/compute-v1:httpHealthChecks
+  properties:
+    requestPath: /SASLogon/login
+    port: 80
+      
+
+###################################
+# Create HTTPS Health Check
+###################################
+- name: {{ env["deployment"] }}-https-healthcheck
+  type: gcp-types/compute-v1:httpsHealthChecks
+  properties:
+    requestPath: /SASLogon/login
+    port: 443
+      
+
+###################################
+# Create backend services
+###################################
+- name: {{ env["deployment"] }}-backend
+  type: gcp-types/compute-v1:backendServices
+  properties:
+    port: 80
+    portName: http
+    protocol: HTTP
+    backends:
+      - group: $(ref.{{ env["deployment"] }}-instance-group.selfLink)
+    healthChecks: [ $(ref.{{ env["deployment"] }}-http-healthcheck.selfLink) ]
+
+
+###################################
+# Create URL Map
+###################################
+- name: {{ env["deployment"] }}-loadbalancer
+  type: gcp-types/compute-v1:urlMaps
+  properties:
+    defaultService: $(ref.{{ env["deployment"] }}-backend.selfLink)
+
+  
+###################################
+# Create Target Proxy
+###################################
+- name: {{ env["deployment"] }}-loadbalancer-target-proxy
+  type: gcp-types/compute-v1:targetHttpProxies
+  properties:
+    protocol: HTTP
+    # sslCertificates: 
+    # #- $(ref.{{ env["deployment"] }}-sslcert.selfLink)
+    # - projects/ace-dev/global/sslCertificates/dante-test-sslcert
+    urlMap: $(ref.{{ env["deployment"] }}-loadbalancer.selfLink)
+    
+
+###################################
+# Create Forwarding Rules "frontend"
+###################################
+- name: {{ env["deployment"] }}-forwarding-rules
+  type: gcp-types/compute-v1:forwardingRules
+  properties:
+    IPAddress: $(ref.{{ env["deployment"] }}-loadbalancer-ip.selfLink)
+    IPProtocol: TCP
+    networkTier: STANDARD
+    portRange: 80
+    region: {{ properties["region"] }}
+    target: $(ref.{{ env["deployment"] }}-loadbalancer-target-proxy.selfLink)
+
