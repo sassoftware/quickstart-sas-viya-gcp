@@ -188,18 +188,7 @@ resources:
             /bin/su sasinstall -c '/tmp/common/scripts/sasnodes_prereqs.sh'
             # VIRK requires GID 1001 to be free
             groupmod -g 2001 sasinstall
-            #################
-            # APACHE testing
-            #################
-            # yum -y install httpd
-            # service httpd start
-            # service httpd status > /home/sasinstall/HTTPD.status
-            # firewall-cmd --zone=public --add-port=80/tcp --permanent
-            # firewall-cmd --reload
-            # echo "APACHE on RHEL7 for deployement {{ env["deployment"] }}" > /var/www/html/index.html
-            #################
-            # END APACHE testing
-            #################
+            # Final system update
             yum -y update
 
     tags:
