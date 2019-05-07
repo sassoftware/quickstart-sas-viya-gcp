@@ -67,7 +67,7 @@ Deploying Quick Start for SAS Viya from Google Cloud CLI environment
     - From there click on the "advanced menu" link at the bottom of the
       list of Load balancer.
     - Click on the Address associated with your deployment in the
-      STACK-forwading-rules row.
+      STACK-forwarding-rules row.
     
     To delete an existing deployment
     - Run the following command where STACK represents the 
