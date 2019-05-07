@@ -9,7 +9,7 @@ resources:
     zone: {{ properties["zone"] }}
     machineType: zones/{{ properties["zone"] }}/machineTypes/g1-small
     serviceAccounts:
-    - email: $(ref.{{ env["deployment"] }}-ansible-svc-account.email)
+    - email: $(ref.{{ env["deployment"] }}-svcacct.email)
       scopes:
       - https://www.googleapis.com/auth/cloud-platform
     disks:
@@ -145,7 +145,7 @@ resources:
     machineType: zones/{{ properties["zone"] }}/machineTypes/n1-highmem-8
     hostname: services.viya.sas
     serviceAccounts:
-    - email: $(ref.{{ env["deployment"] }}-ansible-svc-account.email)
+    - email: $(ref.{{ env["deployment"] }}-svcacct.email)
       scopes:
       - https://www.googleapis.com/auth/cloud-platform    
     disks:
@@ -206,7 +206,7 @@ resources:
     machineType: zones/{{ properties["zone"] }}/machineTypes/n1-standard-2
     hostname: controller.viya.sas
     serviceAccounts:
-    - email: $(ref.{{ env["deployment"] }}-ansible-svc-account.email)
+    - email: $(ref.{{ env["deployment"] }}-svcacct.email)
       scopes:
       - https://www.googleapis.com/auth/cloud-platform    
     disks:

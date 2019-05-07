@@ -2,10 +2,10 @@
 resources:
 
 - type: gcp-types/iam-v1:projects.serviceAccounts
-  name: {{ env['deployment'] }}-ansible-svc-account
+  name: {{ env['deployment'] }}-svcacct
   properties:
-    accountId: {{ env['deployment'] }}-ansible-svc-account   {# TODO: length can only be 6-30 #}
-    displayName: {{ env['deployment'] }}-ansible-svc-account
+    accountId: {{ env['deployment'] }}-svcacct   {# TODO: length can only be 6-30 #}
+    displayName: {{ env['deployment'] }}-svcacct
 
 
 - name: get-iam-policy
@@ -23,13 +23,13 @@ resources:
       add:
       - role: roles/storage.objectAdmin
         members:
-        - serviceAccount:$(ref.{{ env['deployment'] }}-ansible-svc-account.email)
+        - serviceAccount:$(ref.{{ env['deployment'] }}-svcacct.email)
   
 
 - type: gcp-types/iam-v1:projects.serviceAccounts.keys
   name: test-account-key
   properties:
-    parent: $(ref.{{ env['deployment'] }}-ansible-svc-account.name)
+    parent: $(ref.{{ env['deployment'] }}-svcacct.name)
     privateKeyType: TYPE_GOOGLE_CREDENTIALS_FILE
 
 {#
