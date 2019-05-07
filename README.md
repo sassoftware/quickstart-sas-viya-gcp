@@ -58,7 +58,17 @@ Deploying Quick Start for SAS Viya from Google Cloud CLI environment
       or controller machines by simply running "ssh services" or 
       "ssh controller" from the STACK-ansible-controller machine.
 
-
+    To connect the Viya login page:
+    - Login into GCP Console https://console.cloud.google.com/
+    - Ensure that you are connected to the project associated with your
+      deployment.
+    - Using the Navagation Menu at the top left go to "Network services"
+      and then "Load balancing".
+    - From there click on the "advanced menu" link at the bottom of the
+      list of Load balancer.
+    - Click on the Address associated with your deployment in the
+      STACK-forwarding-rules row.
+    
     To delete an existing deployment
     - Run the following command where STACK represents the 
       name of your deployment:  

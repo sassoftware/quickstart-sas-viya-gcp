@@ -19,4 +19,9 @@ resources:
           
 - name: iam
   type: iam.jinja
-  
+
+- name: loadbalancer
+  type: loadbalancer.jinja
+  properties:
+     zone: {{ properties["zone"] }}
+     region: {{ properties["zone"][:-2] }}
