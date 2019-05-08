@@ -104,7 +104,7 @@ resources:
             export ANSIBLE_LOG_PATH=$LOG_DIR/prepare_deployment.log
             /bin/su sasinstall -c "ansible-playbook -v $INSTALL_DIR/common/ansible/playbooks/prepare_deployment.yml \
                 -e DEPLOYMENT_DATA_LOCATION=$DEPLOYMENT_DATA_LOCATION \
-                -e ADMINPASS=$(echo "$OLCROOTPW" | base64) \
+                -e ADMINPASS=$(echo -n "$OLCROOTPW" | base64) \
                 -e VIYA_VERSION=$VIYA_VERSION"
             ###################################
             # Run VIRK
