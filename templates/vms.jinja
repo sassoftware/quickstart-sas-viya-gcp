@@ -92,8 +92,8 @@ resources:
             ###################################
             export ANSIBLE_LOG_PATH=$LOG_DIR/openldapsetup.log
             /bin/su sasinstall -c "ansible-playbook -v $INSTALL_DIR/common/ansible/playbooks/openldapsetup.yml \
-                -e OLCROOTPW=$(echo "$OLCROOTPW" | base64) \
-                -e OLCUSERPW=$(echo "$OLCUSERPW" | base64)"
+                -e OLCROOTPW=$(echo -n "$OLCROOTPW" | base64) \
+                -e OLCUSERPW=$(echo -n "$OLCUSERPW" | base64)"
             ###################################
             # Ansible playbook does additional steps needed before installing SAS,  including
             # - download sas-orchestration
