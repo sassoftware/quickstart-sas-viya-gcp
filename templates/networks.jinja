@@ -5,6 +5,7 @@ resources:
   properties:
     autoCreateSubnetworks: False
 
+
 - name: {{ env["deployment"] }}-public-subnet
   type: gcp-types/compute-v1:subnetworks
   properties:
@@ -12,13 +13,13 @@ resources:
     ipCidrRange: 10.0.128.0/20
     network: $(ref.{{ env["deployment"] }}-vpc.selfLink)
 
+
 - name: {{ env["deployment"] }}-private-subnet
   type: gcp-types/compute-v1:subnetworks
   properties:
     region: {{ properties["region"] }}
     ipCidrRange: 10.20.128.0/20
     network: $(ref.{{ env["deployment"] }}-vpc.selfLink)
-
 
 
 - name: {{ env["deployment"] }}-nat
@@ -36,8 +37,9 @@ resources:
         sourceSubnetworkIpRangesToNat: LIST_OF_SUBNETWORKS
 
 
-
-
+###################
+# Define Firewalls  
+###################
 - name: {{ env["deployment"] }}-allow-ansible-external-access 
   type: gcp-types/compute-v1:firewalls
   properties:
@@ -48,6 +50,7 @@ resources:
       - IPProtocol: tcp
         ports:
         - 22
+
 
 - name: {{ env["deployment"] }}-allow-viya-ssh-from-ansible
   type: gcp-types/compute-v1:firewalls
@@ -60,6 +63,7 @@ resources:
         ports:
         - 22
 
+
 - name: {{ env["deployment"] }}-allow-viya-to-viya
   type: gcp-types/compute-v1:firewalls
   properties:
@@ -68,3 +72,17 @@ resources:
     - sas-viya-vm
     allowed:
       - IPProtocol: tcp
+
+
+- name: {{ env["deployment"] }}-vpc-allow-http
+  type: gcp-types/compute-v1:firewalls
+  properties:
+    description: Incoming http and https allowed.
+    network: $(ref.{{ env["deployment"] }}-vpc.selfLink)
+    targetTags:
+    - sas-viya-vm
+    allowed:
+      - IPProtocol: tcp
+        ports:
+        - 80
+        - 443
