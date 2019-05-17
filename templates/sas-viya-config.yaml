@@ -8,7 +8,7 @@ resources:
     ### DO NOT MODIFY THESE VAULES
     AdminIngressLocation: 149.173.0.0/16
     # Version of Viya to deploy
-    VIYA_VERSION: \3.4
+    VIYA_VERSION: 3.4
     # Tag for specific version of Quick Start Common code to use
     COMMON_CODE_TAG: GCPVIYA-1.1
     
