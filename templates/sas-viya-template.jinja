@@ -1,13 +1,16 @@
 resources:
 
+- name: iam
+  type: iam.py
+
 - name: networks
-  type: networks.jinja
+  type: networks.py
   properties:
     region: {{ properties["zone"][:-2] }}
     AdminIngressLocation: {{ properties["AdminIngressLocation"] }}
 
 - name: vms
-  type: vms.jinja
+  type: vms.py
   properties:
      zone: {{ properties["zone"] }}
      ssh-key: {{ properties["ssh-key"] }}
@@ -16,13 +19,9 @@ resources:
      OLCUSERPW: {{ properties["OLCUSERPW"] }}
      VIYA_VERSION: {{ properties["VIYA_VERSION"] }}
      DEPLOYMENT_DATA_LOCATION: {{ properties["DEPLOYMENT_DATA_LOCATION"] }}
-          
-- name: iam
-  type: iam.jinja
 
 - name: loadbalancer
-  type: loadbalancer.jinja
+  type: loadbalancer.py
   properties:
      zone: {{ properties["zone"] }}
      region: {{ properties["zone"][:-2] }}
-     
