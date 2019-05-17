@@ -5,8 +5,8 @@ def GenerateConfig(context):
     """ Retrieve varable values from the context """
     deployment = context.env['deployment']
     project = context.env['project']
-    region = context.properties['region']
-    zone = context.properties['zone']
+    region = context.properties['Region']
+    zone = context.properties['Zone']
 
     """ Define the Load Balancer resources """
     resources = [
