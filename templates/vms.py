@@ -59,8 +59,8 @@ export ANSIBLE_LOG_PATH=$LOG_DIR/prepare_nodes.log
 ###################################
 export ANSIBLE_LOG_PATH=$LOG_DIR/openldapsetup.log
 /bin/su sasinstall -c "ansible-playbook -v $INSTALL_DIR/common/ansible/playbooks/openldapsetup.yml \
-   -e OLCROOTPW="$OLCROOTPW" \
-   -e OLCUSERPW="$OLCUSERPW"
+   -e OLCROOTPW=$OLCROOTPW \
+   -e OLCUSERPW=$OLCUSERPW"
 ###################################
 # Ansible playbook does additional steps needed before installing SAS,  including
 # - download sas-orchestration
@@ -71,7 +71,7 @@ export ANSIBLE_LOG_PATH=$LOG_DIR/openldapsetup.log
 export ANSIBLE_LOG_PATH=$LOG_DIR/prepare_deployment.log
 /bin/su sasinstall -c "ansible-playbook -v $INSTALL_DIR/common/ansible/playbooks/prepare_deployment.yml \
    -e DEPLOYMENT_DATA_LOCATION=$DEPLOYMENT_DATA_LOCATION \
-   -e ADMINPASS="$OLCROOTPW" \
+   -e ADMINPASS=$OLCROOTPW \
    -e VIYA_VERSION=$VIYA_VERSION"
 ###################################
 # Run VIRK
