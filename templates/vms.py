@@ -1,5 +1,7 @@
 """Creates three VMs: anisble controller, viya services and cas controller"""
 
+import base64
+
 """ Startup script for Ansible Controller """
 ansible_startup_script = '''#!/bin/bash
 # The VM needs a few seconds to come up before executing the startup scripts
@@ -57,8 +59,8 @@ export ANSIBLE_LOG_PATH=$LOG_DIR/prepare_nodes.log
 ###################################
 export ANSIBLE_LOG_PATH=$LOG_DIR/openldapsetup.log
 /bin/su sasinstall -c "ansible-playbook -v $INSTALL_DIR/common/ansible/playbooks/openldapsetup.yml \
-   -e OLCROOTPW=$(echo -n "$OLCROOTPW" | base64) \
-   -e OLCUSERPW=$(echo -n "$OLCUSERPW" | base64)"
+   -e OLCROOTPW="$OLCROOTPW" \
+   -e OLCUSERPW="$OLCUSERPW"
 ###################################
 # Ansible playbook does additional steps needed before installing SAS,  including
 # - download sas-orchestration
@@ -69,7 +71,7 @@ export ANSIBLE_LOG_PATH=$LOG_DIR/openldapsetup.log
 export ANSIBLE_LOG_PATH=$LOG_DIR/prepare_deployment.log
 /bin/su sasinstall -c "ansible-playbook -v $INSTALL_DIR/common/ansible/playbooks/prepare_deployment.yml \
    -e DEPLOYMENT_DATA_LOCATION=$DEPLOYMENT_DATA_LOCATION \
-   -e ADMINPASS=$(echo "$OLCROOTPW" | base64) \
+   -e ADMINPASS="$OLCROOTPW" \
    -e VIYA_VERSION=$VIYA_VERSION"
 ###################################
 # Run VIRK
@@ -138,9 +140,9 @@ def GenerateConfig(context):
 
     """ Retrieve variable values from the context """
     common_code_tag = context.properties['COMMON_CODE_TAG']
-    olc_root_pw = context.properties['OLCROOTPW']
-    olc_user_pw = context.properties['OLCUSERPW']
-    viya_version = context.properties['VIYA_VERSION'].replace('\\', '')
+    olc_root_pw = base64.b64encode(context.properties['OLCROOTPW'])
+    olc_user_pw = base64.b64encode(context.properties['OLCUSERPW'])
+    viya_version = context.properties['VIYA_VERSION']
     deployment_data_location = context.properties['DEPLOYMENT_DATA_LOCATION']
     deployment = context.env['deployment']
     zone = context.properties['zone']
