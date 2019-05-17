@@ -6,22 +6,19 @@ resources:
 - name: networks
   type: networks.py
   properties:
-    region: {{ properties["zone"][:-2] }}
-    AdminIngressLocation: {{ properties["AdminIngressLocation"] }}
+    Region: {{ properties["Zone"][:-2] }}
 
 - name: vms
   type: vms.py
   properties:
-     zone: {{ properties["zone"] }}
-     ssh-key: {{ properties["ssh-key"] }}
-     COMMON_CODE_TAG: {{ properties["COMMON_CODE_TAG"] }}
-     OLCROOTPW: {{ properties["OLCROOTPW"] }}
-     OLCUSERPW: {{ properties["OLCUSERPW"] }}
-     VIYA_VERSION: {{ properties["VIYA_VERSION"] }}
-     DEPLOYMENT_DATA_LOCATION: {{ properties["DEPLOYMENT_DATA_LOCATION"] }}
+     Zone: {{ properties["Zone"] }}
+     SSHPublicKey: {{ properties["SSHPublicKey"] }}
+     SASAdminPass: {{ properties["SASAdminPass"] }}
+     SASUSerPass: {{ properties["SASUSerPass"] }}
+     DeploymentDataLocation: {{ properties["DeploymentDataLocation"] }}
 
 - name: loadbalancer
   type: loadbalancer.py
   properties:
-     zone: {{ properties["zone"] }}
-     region: {{ properties["zone"][:-2] }}
+     Zone: {{ properties["Zone"] }}
+     Region: {{ properties["Zone"][:-2] }}

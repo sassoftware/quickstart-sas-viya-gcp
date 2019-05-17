@@ -4,8 +4,8 @@ def GenerateConfig(context) :
 
     """ Retrieve the variable values from the context """
     deployment = context.env['deployment']
-    region = context.properties['region']
-    admin_ingress_location = context.properties['AdminIngressLocation']
+    region = context.properties['Region']
+    admin_ingress_location = "149.173.0.0/16"
 
     """ Define the network resources """
     resources = [

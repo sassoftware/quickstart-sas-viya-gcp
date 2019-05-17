@@ -10,10 +10,8 @@ imports:
 - path: loadbalancer.py
 
 required:
-- zone
-- ssh-key
-- AdminIngressLocation
-
+- Zone
+- SSHPublicKey
 
 properties:
   zone:

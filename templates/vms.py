@@ -9,10 +9,10 @@ sleep 10
 ###################################
 # Setting up environment
 ###################################
-export COMMON_CODE_TAG="%s"
+export COMMON_CODE_TAG="GCPVIYA-1.1"
 export OLCROOTPW="%s"
 export OLCUSERPW="%s"
-export VIYA_VERSION="%s"
+export VIYA_VERSION="3.4"
 export DEPLOYMENT_DATA_LOCATION="%s"
 export IAAS=gcp
 export INSTALL_DIR=/sas/install
@@ -139,14 +139,12 @@ yum -y update
 def GenerateConfig(context):
 
     """ Retrieve variable values from the context """
-    common_code_tag = context.properties['COMMON_CODE_TAG']
-    olc_root_pw = base64.b64encode(context.properties['OLCROOTPW'])
-    olc_user_pw = base64.b64encode(context.properties['OLCUSERPW'])
-    viya_version = context.properties['VIYA_VERSION']
-    deployment_data_location = context.properties['DEPLOYMENT_DATA_LOCATION']
+    olc_root_pw = base64.b64encode(context.properties['SASAdminPass'])
+    olc_user_pw = base64.b64encode(context.properties['SASUSerPass'])
+    deployment_data_location = context.properties['DeploymentDataLocation']
     deployment = context.env['deployment']
-    zone = context.properties['zone']
-    ssh_key = context.properties['ssh-key']
+    zone = context.properties['Zone']
+    ssh_key = context.properties['SSHPublicKey']
 
     """ Define the resources for the VMs """
     resources = [
@@ -188,7 +186,7 @@ def GenerateConfig(context):
                     'items' : [
                         { 'key' : 'ssh-keys', 'value' : "sasinstall:%s" % ssh_key },
                         { 'key' : 'block-project-ssh-keys', 'value' : "true" },
-                        { 'key' : 'startup-script', 'value' : ansible_startup_script % (common_code_tag, olc_root_pw, olc_user_pw, viya_version, deployment_data_location) }
+                        { 'key' : 'startup-script', 'value' : ansible_startup_script % (olc_root_pw, olc_user_pw, deployment_data_location) }
                     ]
                 }
             }
