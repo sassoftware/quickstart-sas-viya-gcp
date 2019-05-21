@@ -139,6 +139,10 @@ yum -y update
 def GenerateConfig(context):
 
     """ Retrieve variable values from the context """
+    ansible_controller_machinetype = context.properties['AnsibleControllerMachineType']
+    services_machinetype = context.properties['ServicesMachineType']
+    services_disk_size = context.properties['ServicesDiskSize']
+    controller_machinetype = context.properties['ControllerMachineType']
     olc_root_pw = base64.b64encode(context.properties['SASAdminPass'])
     olc_user_pw = base64.b64encode(context.properties['SASUSerPass'])
     deployment_data_location = context.properties['DeploymentDataLocation']
@@ -153,7 +157,7 @@ def GenerateConfig(context):
             'type' : 'gcp-types/compute-v1:instances',
             'properties' : {
                 'zone' : zone,
-                'machineType' : "zones/%s/machineTypes/g1-small" % zone,
+                'machineType' : "zones/%s/machineTypes/%s" % (zone, ansible_controller_machinetype),
                 'serviceAccounts' : [{
                     'email' : "$(ref.%s-ansible-svc-account.email)" % deployment,
                     'scopes' : [
@@ -196,7 +200,7 @@ def GenerateConfig(context):
             'type' : "gcp-types/compute-v1:instances",
             'properties': {
                 'zone' : zone,
-                'machineType' : "zones/%s/machineTypes/n1-highmem-8" % zone,
+                'machineType' : "zones/%s/machineTypes/%s" % (zone, services_machinetype),
                 'hostname' : "services.viya.sas",
                 'serviceAccounts' : [{
                     'email' : "$(ref.%s-ansible-svc-account.email)" % deployment,
@@ -212,7 +216,7 @@ def GenerateConfig(context):
                         'autoDelete' : True,
                         'initializeParams': {
                             'sourceImage' : "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7",
-                            'diskSizeGb' : 25
+                            'diskSizeGb' : '%s' % services_disk_size
                         }
                     },
                     {
@@ -249,7 +253,7 @@ def GenerateConfig(context):
             'type' : "gcp-types/compute-v1:instances",
             'properties': {
                 'zone' : zone,
-                'machineType' : "zones/%s/machineTypes/n1-standard-2" % zone,
+                'machineType' : "zones/%s/machineTypes/%s" % (zone, controller_machinetype),
                 'hostname' : "controller.viya.sas",
                 'serviceAccounts' : [{
                     'email' : "$(ref.%s-ansible-svc-account.email)" % deployment,
