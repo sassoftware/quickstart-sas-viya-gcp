@@ -10,19 +10,49 @@ imports:
 - path: loadbalancer.py
 
 required:
+- AnsibleControllerMachineType
+- ServicesMachineType
+- ServicesDiskSize
+- ControllerMachineType
 - Zone
 - SSHPublicKey
+- SASAdminPass
+- SASUSerPass
 - AdminIngressAccess
 - WebIngressAccess
 
 properties:
-  zone:
+  AnsibleControllerMachineType:
+    type: string
+    description: Anisible Controller machine type defined in GCP
+
+  ServicesMachineType:
+    type: string
+    description: Viya Services machine type defined in GCP
+
+  ServicesDiskSize:
+    type: integer
+    description: Viya Services boot disk size, minimum required is 25GB
+
+  ControllerMachineType:
+    type: string
+    description: CAS Controller machine type defined in GCP
+
+  Zone:
     type: string
     description: GCP zone for the deployment
 
-  ssh-key:
+  SSHPublicKey:
     type: string
     description: Public SSH key for ansible controller
+
+  SASAdminPass:
+    type: string
+    description: SASAdmin initial password
+
+  SASUserPass:
+    type: string
+    description: SASUser initial password
 
   AdminIngressLocation:
     type: string
@@ -33,7 +63,7 @@ properties:
 
   WebIngressLocation:
     type: string
-    description: Allow inbound SSH traffic to the Services VM from this CIDR block (IP address range). Must be a valid IP CIDR range of the form x.x.x.x/x.
+    description: Allow inbound HTTP(S) traffic to the Services VM from this CIDR block (IP address range). Must be a valid IP CIDR range of the form x.x.x.x/x.
     MinLength: '9'
     MaxLength: '18'
     pattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$

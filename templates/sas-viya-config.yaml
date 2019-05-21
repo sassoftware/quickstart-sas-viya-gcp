@@ -6,13 +6,26 @@ resources:
   type: sas-viya-template.jinja
   properties:
     ### Replace these variables with customer provided values
-    AdminIngressAccess: CIDR address
-    WebIngressAccess: CIDR address
+
+    ## Minimum machineType resources set below.  For a complete list of machineType and resources run in GCP cli:
+    ## "gcloud compute machine-types list"
+    # Anisible Controller machineType
+    AnsibleControllerMachineType: g1-small
+    # Viya Services machineType and boot drive size (min 25GB)
+    ServicesMachineType: n1-highmem-8
+    ServicesDiskSize: 25
+    # CAS Controller machineType
+    ControllerMachineType: n1-standard-2
+
+    # Google Cloud Platform deployment zone
     Zone: GCP_ZONE
+
+    # SSH Public Key added to Anisible Controller for ssh access.
     SSHPublicKey: The full ssh public key that will be added to the servers
+
     # Used by openldapsetup playbook
     SASAdminPass: PASSWORD
     SASUSerPass: PASSWORD
+
     # Google storage bucket location and file name of SAS License file
     DeploymentDataLocation: gs://BUCKET_PATH/LICENSE_FILENAME.ZIP
-    
