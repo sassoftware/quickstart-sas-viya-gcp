@@ -12,6 +12,8 @@ imports:
 required:
 - Zone
 - SSHPublicKey
+- AdminIngressAccess
+- WebIngressAccess
 
 properties:
   zone:
@@ -24,7 +26,14 @@ properties:
 
   AdminIngressLocation:
     type: string
-    descriptionn: Allow inbound SSH traffic to the Ansible Controller from this CIDR block (IP address range). Must be a valid IP CIDR range of the form x.x.x.x/x.
+    description: Allow inbound SSH traffic to the Ansible Controller from this CIDR block (IP address range). Must be a valid IP CIDR range of the form x.x.x.x/x.
+    MinLength: '9'
+    MaxLength: '18'
+    pattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
+
+  WebIngressLocation:
+    type: string
+    description: Allow inbound SSH traffic to the Services VM from this CIDR block (IP address range). Must be a valid IP CIDR range of the form x.x.x.x/x.
     MinLength: '9'
     MaxLength: '18'
     pattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$

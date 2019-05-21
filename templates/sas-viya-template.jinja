@@ -7,6 +7,8 @@ resources:
   type: networks.py
   properties:
     Region: {{ properties["Zone"][:-2] }}
+    AdminIngressAccess: {{ properties["AdminIngressAccess"] }}
+    WebIngressAccess: {{ properties["AdminIngressAccess"] }}
 
 - name: vms
   type: vms.py
