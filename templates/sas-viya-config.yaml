@@ -6,11 +6,13 @@ resources:
   type: sas-viya-template.jinja
   properties:
     ### Replace these variables with customer provided values
+    AdminIngressAccess: CIDR address
+    WebIngressAccess: CIDR address
     Zone: GCP_ZONE
     SSHPublicKey: The full ssh public key that will be added to the servers
     # Used by openldapsetup playbook
-    SASAdminPass: ROOT_PASSWORD
-    SASUSerPass: USER_PASSWORD
+    SASAdminPass: PASSWORD
+    SASUSerPass: PASSWORD
     # Google storage bucket location and file name of SAS License file
     DeploymentDataLocation: gs://BUCKET_PATH/LICENSE_FILENAME.ZIP
     

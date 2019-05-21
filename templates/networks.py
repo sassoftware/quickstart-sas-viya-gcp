@@ -5,7 +5,12 @@ def GenerateConfig(context) :
     """ Retrieve the variable values from the context """
     deployment = context.env['deployment']
     region = context.properties['Region']
-    admin_ingress_location = "149.173.0.0/16"
+    admin_ingress_location = context.properties['AdminIngressAccess']
+    web_ingress_location = context.properties['WebIngressAccess']
+    # allows traffic from both the load balancer and the health checker
+    health_check_range1 = "35.191.0.0/16"
+    health_check_range2 = "130.211.0.0/22"
+
 
     """ Define the network resources """
     resources = [
@@ -104,6 +109,11 @@ def GenerateConfig(context) :
             'properties' : {
                 'description' : "Incoming http and https allowed.",
                 'network' : "$(ref.%s-vpc.selfLink)" % deployment,
+                'sourceRanges': [
+                    web_ingress_location,
+                    health_check_range1,
+                    health_check_range2,
+                ],
                 'targetTags' : [
                     "sas-viya-vm"
                 ],
