@@ -5,8 +5,8 @@ def GenerateConfig(context) :
     """ Retrieve the variable values from the context """
     deployment = context.env['deployment']
     region = context.properties['Region']
-    admin_ingress_location = context.properties['AdminIngressAccess']
-    web_ingress_location = context.properties['WebIngressAccess']
+    admin_ingress_location = context.properties['AdminIngressLocation']
+    web_ingress_location = context.properties['WebIngressLocation']
     # allows traffic from both the load balancer and the health checker
     health_check_range1 = "35.191.0.0/16"
     health_check_range2 = "130.211.0.0/22"
