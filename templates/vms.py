@@ -79,7 +79,7 @@ export ANSIBLE_LOG_PATH=$LOG_DIR/prepare_deployment.log
 ###################################
 export ANSIBLE_LOG_PATH=$LOG_DIR/virk.log
 export ANSIBLE_INVENTORY=$INSTALL_DIR/ansible/sas_viya_playbook/inventory.ini
-/bin/su sasinstall -c "ansible-playbook -v $INSTALL_DIR/ansible/sas_viya_playbook/virk/playbooks/pre-install-playbook/viya_pre_install_playbook.yml \
+/bin/su sasinstall -c "ansible-playbook -v $INSTALL_DIR/ansible/sas_viya_playbook/virk-ark/playbooks/pre-install-playbook/viya_pre_install_playbook.yml \
   -e "use_pause=false" \
   --skip-tags skipmemfail,skipcoresfail,skipstoragefail,skipnicssfail,bandwidth"
 ##################################
