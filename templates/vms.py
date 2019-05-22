@@ -9,7 +9,7 @@ sleep 10
 ###################################
 # Setting up environment
 ###################################
-export COMMON_CODE_TAG="GCPVIYA-1.1"
+export COMMON_CODE_COMMIT="3640aae263bb808003b9e6e7d89739ea01a22635"
 export OLCROOTPW="%s"
 export OLCUSERPW="%s"
 export VIYA_VERSION="3.4"
@@ -34,7 +34,7 @@ popd
 # Getting specific release of quick start common code from Github
 git clone https://github.com/sassoftware/quickstart-sas-viya-common $INSTALL_DIR/common
 pushd $INSTALL_DIR/common
-git checkout tags/$COMMON_CODE_TAG -b $COMMON_CODE_TAG
+git checkout $COMMON_CODE_COMMIT -b $COMMON_CODE_COMMIT
 # Clean up GitHub identifier files
 rm -rf .git*
 popd
@@ -79,7 +79,7 @@ export ANSIBLE_LOG_PATH=$LOG_DIR/prepare_deployment.log
 ###################################
 export ANSIBLE_LOG_PATH=$LOG_DIR/virk.log
 export ANSIBLE_INVENTORY=$INSTALL_DIR/ansible/sas_viya_playbook/inventory.ini
-/bin/su sasinstall -c "ansible-playbook -v $INSTALL_DIR/ansible/sas_viya_playbook/virk/playbooks/pre-install-playbook/viya_pre_install_playbook.yml \
+/bin/su sasinstall -c "ansible-playbook -v $INSTALL_DIR/ansible/sas_viya_playbook/viya-ark/playbooks/pre-install-playbook/viya_pre_install_playbook.yml \
   -e "use_pause=false" \
   --skip-tags skipmemfail,skipcoresfail,skipstoragefail,skipnicssfail,bandwidth"
 ##################################
