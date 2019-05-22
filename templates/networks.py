@@ -120,7 +120,6 @@ def GenerateConfig(context) :
                 'allowed' : [{
                     'IPProtocol' : "tcp",
                     'ports' : [
-                        80,
                         443
                     ]
                 }]

@@ -44,9 +44,9 @@ Before you can deploy the Quick Start templates you need to modify the following
         DeploymentDataLocation: Enter the CGP bucket location of the SAS License zip file.
               ex. gs://<bucket name>/<path>/<filename>.zip
               
-        AdminIngressAccess: CIDR address range for machines that can access the Bastian Host. 
+        AdminIngressLocation: CIDR address range for machines that can access the Bastian Host. 
       
-        WebIngressAccess: CIDR address range for machines that can access the Viya HTTP(S) server.
+        WebIngressLocation: CIDR address range for machines that can access the Viya HTTP(S) server.
       
             
 To deploy templates run the following command where STACK represents the name of your deployment:

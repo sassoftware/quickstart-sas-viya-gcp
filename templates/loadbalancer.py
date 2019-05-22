@@ -2,7 +2,7 @@
 
 def GenerateConfig(context):
 
-    """ Retrieve varable values from the context """
+    """ Retrieve variable values from the context """
     deployment = context.env['deployment']
     project = context.env['project']
     region = context.properties['Region']
@@ -26,7 +26,6 @@ def GenerateConfig(context):
                 'zone' : zone,
                 'network' : "$(ref.%s-vpc.selfLink)" % deployment,
                 'namedPorts' : [
-                    { 'name' : "http", 'port' : 80 },
                     { 'name' : "https", 'port' : 443}
                 ]
             }
@@ -46,14 +45,6 @@ def GenerateConfig(context):
             }
         },
         {
-            'name' : "%s-http-healthcheck" % deployment,
-            'type' : "gcp-types/compute-v1:httpHealthChecks",
-            'properties' : {
-                'requestPath' : "/SASLogon/login",
-                'port' : 80
-            }
-        },
-        {
             'name' : "%s-https-healthcheck" % deployment,
             'type' : "gcp-types/compute-v1:httpsHealthChecks",
             'properties' : {
@@ -65,14 +56,14 @@ def GenerateConfig(context):
             'name' : "%s-backend" % deployment,
             'type' : "gcp-types/compute-v1:backendServices",
             'properties': {
-                'port' : 80,
-                'portName' : "http",
-                'protcol' : "HTTP",
+                'port' : 443,
+                'portName' : "https",
+                'protocol' : "HTTPS",
                 'backends' : [
                     { 'group' : "$(ref.%s-instance-group.selfLink)" % deployment }
                 ],
                 'healthChecks' : [
-                    "$(ref.%s-http-healthcheck.selfLink)" % deployment
+                    "$(ref.%s-https-healthcheck.selfLink)" % deployment
                 ]
             }
         },
@@ -85,9 +76,12 @@ def GenerateConfig(context):
         },
         {
             'name' : "%s-loadbalancer-target-proxy" % deployment,
-            'type' : "gcp-types/compute-v1:targetHttpProxies",
+            'type' : "gcp-types/compute-v1:targetHttpsProxies",
             'properties' : {
-                'protocol' : "HTTP",
+                'protocol' : "HTTPS",
+                'sslCertificates' : [
+                    "global/sslCertificates/viya-sslcert"
+                ],
                 'urlMap' : "$(ref.%s-loadbalancer.selfLink)" % deployment
             }
         },
@@ -98,7 +92,7 @@ def GenerateConfig(context):
                 'IPAddress' : "$(ref.%s-loadbalancer-ip.selfLink)" % deployment,
                 'IPProtocol' : "TCP",
                 'networkTier' : "STANDARD",
-                'portRange' : 80,
+                'portRange' : 443,
                 'region' : region,
                 'target' : "$(ref.%s-loadbalancer-target-proxy.selfLink)" % deployment
             }
