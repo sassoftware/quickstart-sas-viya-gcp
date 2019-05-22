@@ -18,8 +18,8 @@ required:
 - SSHPublicKey
 - SASAdminPass
 - SASUSerPass
-- AdminIngressAccess
-- WebIngressAccess
+- AdminIngressLocation
+- WebIngressLocation
 
 properties:
   AnsibleControllerMachineType:
