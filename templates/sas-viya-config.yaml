@@ -31,7 +31,7 @@ resources:
     DeploymentDataLocation: gs://BUCKET_PATH/LICENSE_FILENAME.ZIP
 
     # Allow inbound SSH traffic to the Ansible Controller from this CIDR block (IP address range). Must be a valid IP CIDR range of the form x.x.x.x/x.
-    AdminIngressLocation: x.x.x.x/x
+    AdminIngressAccess: x.x.x.x/x
     # Allow inbound HTTP(S) traffic to the Web Server from this CIDR block (IP address range). Must be a valid IP CIDR range of the form x.x.x.x/x.
-    WebIngressLocation: x.x.x.x/x
+    WebIngressAccess: x.x.x.x/x
     
