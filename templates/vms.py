@@ -22,7 +22,7 @@ export LOG_DIR=/var/log/sas/install
 ###################################
 # Getting quick start scripts from Github  # TODO: Remove '-b develop' before push to master
 ###################################
-git clone https://github.com/sassoftware/quickstart-sas-viya-gcp $INSTALL_DIR -b test-gcpviya-19
+git clone https://github.com/sassoftware/quickstart-sas-viya-gcp $INSTALL_DIR -b develop
 # Clean up GitHub identifier files
 pushd $INSTALL_DIR
 rm -rf .git*
