@@ -10,14 +10,6 @@ sleep 10
 # Setting up environment
 ###################################
 export COMMON_CODE_COMMIT="3640aae263bb808003b9e6e7d89739ea01a22635"
-export OLCROOTPW="%s"
-export OLCUSERPW="%s"
-export VIYA_VERSION="3.4"
-export DEPLOYMENT_DATA_LOCATION="%s"
-export IAAS=gcp
-export INSTALL_DIR=/sas/install
-export LOG_DIR=/var/log/sas/install
-/bin/su sasinstall -c "export > /home/sasinstall/SAS_VIYA_DEPLOYMENT_ENVIRONMENT"
 ###################################
 # Installing dependencies
 ###################################
@@ -25,13 +17,43 @@ yum install -y java-1.8.0-openjdk
 yum install -y epel-release
 yum install -y python-pip
 yum install -y git
+export INSTALL_DIR=/sas/install
+export LOG_DIR=/var/log/sas/install
+###################################
 # Getting quick start scripts from Github  # TODO: Remove '-b develop' before push to master
-git clone https://github.com/sassoftware/quickstart-sas-viya-gcp $INSTALL_DIR -b develop
+###################################
+git clone https://github.com/sassoftware/quickstart-sas-viya-gcp $INSTALL_DIR -b test-gcpviya-19
 # Clean up GitHub identifier files
 pushd $INSTALL_DIR
 rm -rf .git*
 popd
+###################################
+# Setting up environment
+###################################
+export COMMON_CODE_TAG="%s"
+export OLCROOTPW="%s"
+export OLCUSERPW="%s"
+export DEPLOYMENT_DATA_LOCATION="%s"
+export IAAS=gcp
+###################################
+# Verify the license file exists. The startup script will exit if it does not exist.
+###################################
+set +e
+LICENSE_STAT=$(gsutil stat $DEPLOYMENT_DATA_LOCATION 2>&1)
+set -e
+if [[ $LICENSE_STAT =~ "No URLs matched" ]]; then
+   echo "The specified license file '$DEPLOYMENT_DATA_LOCATION' does not exist."
+   exit 1
+fi
+###################################
+#  Download license file and extract Viya version
+###################################
+gsutil cp $DEPLOYMENT_DATA_LOCATION /tmp/license.zip
+export VIYA_VERSION=$(python $INSTALL_DIR/functions/getviyaversion.py)
+/bin/su sasinstall -c "export > /home/sasinstall/SAS_VIYA_DEPLOYMENT_ENVIRONMENT"
+###################################
 # Getting specific release of quick start common code from Github
+###################################
 git clone https://github.com/sassoftware/quickstart-sas-viya-common $INSTALL_DIR/common
 pushd $INSTALL_DIR/common
 git checkout $COMMON_CODE_COMMIT -b $COMMON_CODE_COMMIT
@@ -143,6 +165,7 @@ def GenerateConfig(context):
     services_machinetype = context.properties['ServicesMachineType']
     services_disk_size = context.properties['ServicesDiskSize']
     controller_machinetype = context.properties['ControllerMachineType']
+    common_code_tag = "3640aae263bb808003b9e6e7d89739ea01a22635"
     olc_root_pw = base64.b64encode(context.properties['SASAdminPass'])
     olc_user_pw = base64.b64encode(context.properties['SASUSerPass'])
     deployment_data_location = context.properties['DeploymentDataLocation']
@@ -190,7 +213,7 @@ def GenerateConfig(context):
                     'items' : [
                         { 'key' : 'ssh-keys', 'value' : "sasinstall:%s" % ssh_key },
                         { 'key' : 'block-project-ssh-keys', 'value' : "true" },
-                        { 'key' : 'startup-script', 'value' : ansible_startup_script % (olc_root_pw, olc_user_pw, deployment_data_location) }
+                        { 'key' : 'startup-script', 'value' : ansible_startup_script % (common_code_tag, olc_root_pw, olc_user_pw, deployment_data_location) }
                     ]
                 }
             }
