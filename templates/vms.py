@@ -30,7 +30,6 @@ popd
 ###################################
 # Setting up environment
 ###################################
-export COMMON_CODE_TAG="%s"
 export OLCROOTPW="%s"
 export OLCUSERPW="%s"
 export DEPLOYMENT_DATA_LOCATION="%s"
@@ -165,7 +164,6 @@ def GenerateConfig(context):
     services_machinetype = context.properties['ServicesMachineType']
     services_disk_size = context.properties['ServicesDiskSize']
     controller_machinetype = context.properties['ControllerMachineType']
-    common_code_tag = "3640aae263bb808003b9e6e7d89739ea01a22635"
     olc_root_pw = base64.b64encode(context.properties['SASAdminPass'])
     olc_user_pw = base64.b64encode(context.properties['SASUSerPass'])
     deployment_data_location = context.properties['DeploymentDataLocation']
@@ -213,7 +211,7 @@ def GenerateConfig(context):
                     'items' : [
                         { 'key' : 'ssh-keys', 'value' : "sasinstall:%s" % ssh_key },
                         { 'key' : 'block-project-ssh-keys', 'value' : "true" },
-                        { 'key' : 'startup-script', 'value' : ansible_startup_script % (common_code_tag, olc_root_pw, olc_user_pw, deployment_data_location) }
+                        { 'key' : 'startup-script', 'value' : ansible_startup_script % (olc_root_pw, olc_user_pw, deployment_data_location) }
                     ]
                 }
             }
