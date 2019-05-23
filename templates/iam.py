@@ -1,10 +1,12 @@
 """ Creates the IAM resources """
+import uuid
 
 def GenerateConfig(context):
 
     """ Retrieve variable values from the context """
     deployment = context.env['deployment']
     project = context.env['project']
+    accountId = uuid.uuid4()
 
     """ Define the IAM resources """
     resources = [
@@ -12,7 +14,7 @@ def GenerateConfig(context):
             'type' : "gcp-types/iam-v1:projects.serviceAccounts",
             'name' : "%s-ansible-svc-account" % deployment,
             'properties' : {
-                'accountId' : "%s-ansible-svc-account" % deployment,
+                'accountId' : str(uuid.UUID(bytes=accountId.bytes))[:30],
                 'displayName' : "%s-ansible-svc-account" % deployment
             }
         },

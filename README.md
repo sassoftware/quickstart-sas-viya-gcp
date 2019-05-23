@@ -87,16 +87,3 @@ To delete an existing deployment
         
             gcloud deployment-manager deployments delete STACK
     
-- Remove service account from deployment. STACK represents
-      the name of your deployment and PROJECT represents the name
-      of the Google Project that you deployed into.
-      NOTE: If you do not remove this service account then future
-      deployments of the same STACK name may not have access to GCP 
-      resources. This command is sending output to NULL to avoid 
-      unnecessarily printing a list of all role bindings in the project. 
-      If the command fails for any reason it will print out the error 
-      message.
-      
-            gcloud projects remove-iam-policy-binding PROJECT --member  serviceAccount:STACK-ansible-svc-account@PROJECT.iam.gserviceaccount.com --role roles/storage.objectAdmin 1>/dev/null
-
-    
