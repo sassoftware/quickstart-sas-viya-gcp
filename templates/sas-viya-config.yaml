@@ -11,7 +11,7 @@ resources:
     ## "gcloud compute machine-types list"
     # Anisible Controller machineType
     AnsibleControllerMachineType: g1-small
-    # Viya Services machineType and boot drive size (min 25GB)
+    # Viya Services machineType
     ServicesMachineType: n1-highmem-8
     # CAS Controller machineType
     ControllerMachineType: n1-standard-2
