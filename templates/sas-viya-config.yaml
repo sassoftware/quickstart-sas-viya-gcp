@@ -13,7 +13,6 @@ resources:
     AnsibleControllerMachineType: g1-small
     # Viya Services machineType and boot drive size (min 25GB)
     ServicesMachineType: n1-highmem-8
-    ServicesDiskSize: 25
     # CAS Controller machineType
     ControllerMachineType: n1-standard-2
 

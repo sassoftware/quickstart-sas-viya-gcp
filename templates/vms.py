@@ -138,6 +138,8 @@ git clone https://github.com/sassoftware/quickstart-sas-viya-common /tmp/common
 groupmod -g 2001 sasinstall
 # Final system update
 yum -y update
+# Moving yum cache to /opt/sas where there is more room to retrieve sas viya repo
+sed -i '/cachedir/s/var/opt\/sas/' /etc/yum.conf
 '''
 
 """ Startup script for cas controller """
@@ -162,7 +164,6 @@ def GenerateConfig(context):
     """ Retrieve variable values from the context """
     ansible_controller_machinetype = context.properties['AnsibleControllerMachineType']
     services_machinetype = context.properties['ServicesMachineType']
-    services_disk_size = context.properties['ServicesDiskSize']
     controller_machinetype = context.properties['ControllerMachineType']
     olc_root_pw = base64.b64encode(context.properties['SASAdminPass'])
     olc_user_pw = base64.b64encode(context.properties['SASUSerPass'])
@@ -237,7 +238,7 @@ def GenerateConfig(context):
                         'autoDelete' : True,
                         'initializeParams': {
                             'sourceImage' : "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7",
-                            'diskSizeGb' : '%s' % services_disk_size
+                            'diskSizeGb': 10
                         }
                     },
                     {
