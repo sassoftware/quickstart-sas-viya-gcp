@@ -12,7 +12,6 @@ imports:
 required:
 - AnsibleControllerMachineType
 - ServicesMachineType
-- ServicesDiskSize
 - ControllerMachineType
 - Zone
 - SSHPublicKey
