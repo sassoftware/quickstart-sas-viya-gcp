@@ -139,6 +139,10 @@ groupmod -g 2001 sasinstall
 # Final system update
 yum -y update
 # Moving yum cache to /opt/sas where there is more room to retrieve sas viya repo
+while [ ! -d /opt/sas ]
+do
+  sleep 2
+done
 sed -i '/cachedir/s/var/opt\/sas/' /etc/yum.conf
 '''
 
