@@ -4,12 +4,18 @@ import base64
 
 """ Startup script for Ansible Controller """
 ansible_startup_script = '''#!/bin/bash
-# The VM needs a few seconds to come up before executing the startup scripts
-sleep 10
 ###################################
 # Setting up environment
 ###################################
 export COMMON_CODE_COMMIT="3640aae263bb808003b9e6e7d89739ea01a22635"
+export DEPLOYMENT="%s"
+export OLCROOTPW="%s"
+export OLCUSERPW="%s"
+export DEPLOYMENT_DATA_LOCATION="%s"
+export IAAS=gcp
+export INSTALL_DIR=/sas/install
+export LOG_DIR=/var/log/sas/install
+/bin/su sasinstall -c "export >> /home/sasinstall/SAS_VIYA_DEPLOYMENT_ENVIRONMENT"
 ###################################
 # Installing dependencies
 ###################################
@@ -17,8 +23,6 @@ yum install -y java-1.8.0-openjdk
 yum install -y epel-release
 yum install -y python-pip
 yum install -y git
-export INSTALL_DIR=/sas/install
-export LOG_DIR=/var/log/sas/install
 ###################################
 # Getting quick start scripts from Github  # TODO: Remove '-b develop' before push to master
 ###################################
@@ -27,13 +31,6 @@ git clone https://github.com/sassoftware/quickstart-sas-viya-gcp $INSTALL_DIR -b
 pushd $INSTALL_DIR
 rm -rf .git*
 popd
-###################################
-# Setting up environment
-###################################
-export OLCROOTPW="%s"
-export OLCUSERPW="%s"
-export DEPLOYMENT_DATA_LOCATION="%s"
-export IAAS=gcp
 ###################################
 # Verify the license file exists. The startup script will exit if it does not exist.
 ###################################
@@ -49,7 +46,7 @@ fi
 ###################################
 gsutil cp $DEPLOYMENT_DATA_LOCATION /tmp/license.zip
 export VIYA_VERSION=$(python $INSTALL_DIR/functions/getviyaversion.py)
-/bin/su sasinstall -c "export > /home/sasinstall/SAS_VIYA_DEPLOYMENT_ENVIRONMENT"
+/bin/su sasinstall -c "export >> /home/sasinstall/SAS_VIYA_DEPLOYMENT_ENVIRONMENT"
 ###################################
 # Getting specific release of quick start common code from Github
 ###################################
@@ -121,13 +118,25 @@ export ANSIBLE_CONFIG=$INSTALL_DIR/common/ansible/playbooks/ansible.cfg
 ##################################
 yum -y update
 /bin/su sasinstall -c "echo 'Check /var/log/sas/install for deployment logs.' > /home/sasinstall/SAS_VIYA_DEPLOYMENT_FINISHED"
+export SAS_VIYA_HTTP_LOG=/home/sasinstall/SAS_VIYA_HTTP_STATUS
+set +e
+LOADBALANCERIP=$(gcloud compute addresses list | grep $DEPLOYMENT-loadbalancer | awk '{print $2}')
+set -e
+while [[ $(curl -sk -o /dev/null -w "%%{http_code}" https://$LOADBALANCERIP/SASLogon/login) != 200 ]];
+do
+  echo "STATUSCODE = " $(curl -sk -o /dev/null -w "%%{http_code}" https://$LOADBALANCERIP/SASLogon/login) >> $SAS_VIYA_HTTP_LOG
+  echo "Viya is not ready yet" >> $SAS_VIYA_HTTP_LOG
+  sleep 2
+done
+echo "Viya is open for business" >> $SAS_VIYA_HTTP_LOG
+gcloud beta runtime-config configs variables set success/deploy-status success --config-name $DEPLOYMENT-runtime-config
 '''
 
 """ Startup script for viya services """
 services_startup_script = '''#! /bin/bash
 # Setting up environment
 export NFS_SERVER=%s-ansible-controller
-export HOST=`hostname`
+export HOST=$(hostname)
 # Installing dependencies
 yum -y install git
 # Getting quick start scripts
@@ -139,7 +148,7 @@ groupmod -g 2001 sasinstall
 # Final system update
 yum -y update
 # Moving yum cache to /opt/sas where there is more room to retrieve sas viya repo
-while [ ! -d /opt/sas ]
+while [[ ! -d /opt/sas ]];
 do
   sleep 2
 done
@@ -150,7 +159,7 @@ sed -i '/cachedir/s/var/opt\/sas/' /etc/yum.conf
 controller_startup_script = '''#!/bin/bash
 # Setting up environment
 export NFS_SERVER=%s-ansible-controller
-export HOST=`hostname`
+export HOST=$(hostname)
 # Installing dependencies
 yum -y install git
 # Getting quick start scripts
@@ -216,7 +225,7 @@ def GenerateConfig(context):
                     'items' : [
                         { 'key' : 'ssh-keys', 'value' : "sasinstall:%s" % ssh_key },
                         { 'key' : 'block-project-ssh-keys', 'value' : "true" },
-                        { 'key' : 'startup-script', 'value' : ansible_startup_script % (olc_root_pw, olc_user_pw, deployment_data_location) }
+                        { 'key' : 'startup-script', 'value' : ansible_startup_script % (deployment, olc_root_pw, olc_user_pw, deployment_data_location) }
                     ]
                 }
             }
