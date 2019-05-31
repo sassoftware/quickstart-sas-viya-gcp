@@ -8,6 +8,7 @@ imports:
 - path: networks.py
 - path: vms.py
 - path: loadbalancer.py
+- path: runtimeconfig.py
 
 required:
 - AnsibleControllerMachineType
@@ -28,10 +29,6 @@ properties:
   ServicesMachineType:
     type: string
     description: Viya Services machine type defined in GCP
-
-  ServicesDiskSize:
-    type: integer
-    description: Viya Services boot disk size, minimum required is 25GB
 
   ControllerMachineType:
     type: string
