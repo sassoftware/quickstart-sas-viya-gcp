@@ -106,30 +106,66 @@ export ANSIBLE_INVENTORY=$INSTALL_DIR/ansible/sas_viya_playbook/inventory.ini
 export ANSIBLE_LOG_PATH=$LOG_DIR/viya_deployment.log
 export ANSIBLE_CONFIG=$INSTALL_DIR/ansible/sas_viya_playbook
 pushd /sas/install/ansible/sas_viya_playbook
-/bin/su sasinstall -c "ansible-playbook -v site.yml"
+/bin/su sasinstall -c "ansible-playbook -v site.yml" &
+##################################
+# Waiting on Viya deployment to be ready, checking HTTPS
+##################################
+export SAS_VIYA_HTTP_LOG=/home/sasinstall/SAS_VIYA_HTTP_STATUS
+set +e
+LOADBALANCERIP=$(gcloud compute addresses list | grep $DEPLOYMENT-loadbalancer | awk '{print $2}')
+set -e
+end=$((SECONDS+1800)) # Wait for 30 minutes
+while [[ $SECONDS -lt $end ]] && [[ $(curl -sk -o /dev/null -w "%%{http_code}" https://$LOADBALANCERIP/SASLogon/login) != 200 ]];
+do
+  echo "STATUSCODE = " $(curl -sk -o /dev/null -w "%%{http_code}" https://$LOADBALANCERIP/SASLogon/login) >> $SAS_VIYA_HTTP_LOG
+  echo "Viya is not ready yet" >> $SAS_VIYA_HTTP_LOG
+  sleep 60
+done
+if [[ $(curl -sk -o /dev/null -w "%%{http_code}" https://$LOADBALANCERIP/SASLogon/login) == 200 ]]; then
+  echo "Viya is open for business during  waiter 1" >> $SAS_VIYA_HTTP_LOG
+else
+  echo "Times  up waiter 1. Moving on to waiter 2." >> $SAS_VIYA_HTTP_LOG
+fi
+gcloud beta runtime-config configs variables set success1/deploy-status success --config-name $DEPLOYMENT-runtime-config &>> $SAS_VIYA_HTTP_LOG
+end=$((SECONDS+3000)) # Wait for 50 minutes
+while [[ $SECONDS -lt $end ]] && [[ $(curl -sk -o /dev/null -w "%%{http_code}" https://$LOADBALANCERIP/SASLogon/login) != 200 ]];
+do
+  echo "STATUSCODE = " $(curl -sk -o /dev/null -w "%%{http_code}" https://$LOADBALANCERIP/SASLogon/login) >> $SAS_VIYA_HTTP_LOG
+  echo "Viya is not ready yet" >> $SAS_VIYA_HTTP_LOG
+  sleep 60
+done
+if [[ $(curl -sk -o /dev/null -w "%%{http_code}" https://$LOADBALANCERIP/SASLogon/login) == 200 ]]; then
+  echo "Viya is open for business during waiter 2" >> $SAS_VIYA_HTTP_LOG
+else
+  echo "Times up on waiter 2. Moving on to waiter 3....last chance" >> $SAS_VIYA_HTTP_LOG
+fi
+gcloud beta runtime-config configs variables set success2/deploy-status success --config-name $DEPLOYMENT-runtime-config &>> $SAS_VIYA_HTTP_LOG
+end=$((SECONDS+3000)) # Wait for 50 minutes
+while [[ $SECONDS -lt $end ]] && [[ $(curl -sk -o /dev/null -w "%%{http_code}" https://$LOADBALANCERIP/SASLogon/login) != 200 ]];
+do
+  echo "STATUSCODE = " $(curl -sk -o /dev/null -w "%%{http_code}" https://$LOADBALANCERIP/SASLogon/login) >> $SAS_VIYA_HTTP_LOG
+  echo "Viya is not ready yet" >> $SAS_VIYA_HTTP_LOG
+  sleep 60
+done
+if [[ $(curl -sk -o /dev/null -w "%%{http_code}" https://$LOADBALANCERIP/SASLogon/login) == 200 ]]; then
+  echo "Viya is open for business during waiter 3" >> $SAS_VIYA_HTTP_LOG
+  gcloud beta runtime-config configs variables set success3/deploy-status success --config-name $DEPLOYMENT-runtime-config &>> $SAS_VIYA_HTTP_LOG
+else
+  echo "Viya is not ready and we're all out of time." >> $SAS_VIYA_HTTP_LOG
+  gcloud beta runtime-config configs variables set failure3/deploy-status failed --config-name $DEPLOYMENT-runtime-config &>> $SAS_VIYA_HTTP_LOG
+  exit 1
+fi
 ##################################
 # Post Deployment Steps
 ##################################
 export ANSIBLE_LOG_PATH=$LOG_DIR/post_deployment.log
 export ANSIBLE_CONFIG=$INSTALL_DIR/common/ansible/playbooks/ansible.cfg
 /bin/su sasinstall -c "ansible-playbook -v $INSTALL_DIR/common/ansible/playbooks/post_deployment.yml"
+/bin/su sasinstall -c "echo 'Check /var/log/sas/install for deployment logs.' > /home/sasinstall/SAS_VIYA_DEPLOYMENT_FINISHED"
 ##################################
 # Final system update
 ##################################
-yum -y update
-/bin/su sasinstall -c "echo 'Check /var/log/sas/install for deployment logs.' > /home/sasinstall/SAS_VIYA_DEPLOYMENT_FINISHED"
-export SAS_VIYA_HTTP_LOG=/home/sasinstall/SAS_VIYA_HTTP_STATUS
-set +e
-LOADBALANCERIP=$(gcloud compute addresses list | grep $DEPLOYMENT-loadbalancer | awk '{print $2}')
-set -e
-while [[ $(curl -sk -o /dev/null -w "%%{http_code}" https://$LOADBALANCERIP/SASLogon/login) != 200 ]];
-do
-  echo "STATUSCODE = " $(curl -sk -o /dev/null -w "%%{http_code}" https://$LOADBALANCERIP/SASLogon/login) >> $SAS_VIYA_HTTP_LOG
-  echo "Viya is not ready yet" >> $SAS_VIYA_HTTP_LOG
-  sleep 2
-done
-echo "Viya is open for business" >> $SAS_VIYA_HTTP_LOG
-gcloud beta runtime-config configs variables set success/deploy-status success --config-name $DEPLOYMENT-runtime-config
+yum -y update 
 '''
 
 """ Startup script for viya services """

@@ -30,6 +30,10 @@ properties:
     type: string
     description: Viya Services machine type defined in GCP
 
+  ServicesDiskSize:
+    type: integer
+    description: Viya Services boot disk size, minimum required is 25GB
+
   ControllerMachineType:
     type: string
     description: CAS Controller machine type defined in GCP
