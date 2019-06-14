@@ -99,4 +99,17 @@ def GenerateConfig(context):
         }
     ]
 
-    return { 'resources' : resources }
+
+    outputs = [
+        {
+            'name' : 'SASDrive',
+            'value' : "https://$(ref.%s-loadbalancer-ip.address)/SASDrive" % deployment
+        },
+        {
+            'name' : 'SASStudio',
+            'value' : "https://$(ref.%s-loadbalancer-ip.address)/SASStudioV" % deployment
+        }
+    ]
+    
+
+    return { 'resources' : resources, 'outputs' : outputs }
