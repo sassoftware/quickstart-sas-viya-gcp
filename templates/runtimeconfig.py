@@ -93,6 +93,32 @@ def GenerateConfig(context):
                     }
                 }
             }
+        },
+        {
+            'name': "%s-startup-waiter4" % deployment,
+            'type': 'gcp-types/runtimeconfig-v1beta1:projects.configs.waiters',
+            'metadata': {
+                'dependsOn': [
+                    "%s-startup-waiter3" % deployment
+                ]
+            },
+            'properties': {
+                'parent': "$(ref.%s-waiter-config.name)" % deployment,
+                'waiter': 'viya-runtime-waiter4',
+                'timeout': "5000s",
+                'success': {
+                    'cardinality': {
+                        'number': 1,
+                        'path': '/success4'
+                    }
+                },
+                'failure': {
+                    'cardinality': {
+                        'number': 1,
+                        'path': '/failure4'
+                    }
+                }
+            }
         }
     ]
 
