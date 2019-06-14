@@ -11,10 +11,10 @@ def GenerateConfig(context):
     resources = [
         {
             'type': "gcp-types/iam-v1:projects.serviceAccounts",
-            'name': "%s-ansible-svc-account" % deployment,
+            'name': "{}-ansible-svc-account".format(deployment),
             'properties': {
                 'accountId': ''.join("v" + str(uuid.uuid4())[:29]),
-                'displayName': "%s-ansible-svc-account" % deployment
+                'displayName': "{}-ansible-svc-account".format(deployment)
             }
         },
         {
@@ -33,16 +33,16 @@ def GenerateConfig(context):
                 'gcpIamPolicyPatch': {
                     'add': [
                         {
-                        'role': "roles/storage.objectAdmin",
-                        'members': ["serviceAccount:$(ref.%s-ansible-svc-account.email)" % deployment]
+                            'role': "roles/storage.objectAdmin",
+                            'members': ["serviceAccount:$(ref.{}-ansible-svc-account.email)".format(deployment)]
                         },
                         {
-                        'role': "roles/compute.viewer",
-                        'members': ["serviceAccount:$(ref.%s-ansible-svc-account.email)" % deployment]
+                            'role': "roles/compute.viewer",
+                            'members': ["serviceAccount:$(ref.{}-ansible-svc-account.email)".format(deployment)]
                         },
                         {
-                        'role': "roles/runtimeconfig.admin",
-                        'members': ["serviceAccount:$(ref.%s-ansible-svc-account.email)" % deployment]
+                            'role': "roles/runtimeconfig.admin",
+                            'members': ["serviceAccount:$(ref.{}-ansible-svc-account.email)".format(deployment)]
                         }
                     ]
                 }
@@ -52,7 +52,7 @@ def GenerateConfig(context):
             'name': "test-account-key",
             'type': "gcp-types/iam-v1:projects.serviceAccounts.keys",
             'properties': {
-                'parent': "$(ref.%s-ansible-svc-account.name)" % deployment,
+                'parent': "$(ref.{}-ansible-svc-account.name)".format(deployment),
                 'privateKeyType': "TYPE_GOOGLE_CREDENTIALS_FILE"
             }
         }

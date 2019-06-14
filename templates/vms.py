@@ -220,8 +220,8 @@ groupmod -g 2001 sasinstall
 yum -y update
 '''
 
-def GenerateConfig(context):
 
+def GenerateConfig(context):
     """ Retrieve variable values from the context """
     ansible_controller_machinetype = context.properties['AnsibleControllerMachineType']
     services_machinetype = context.properties['ServicesMachineType']
@@ -236,177 +236,178 @@ def GenerateConfig(context):
     """ Define the resources for the VMs """
     resources = [
         {
-            'name' : "{}-ansible-controller".format(deployment),
-            'type' : 'gcp-types/compute-v1:instances',
-            'properties' : {
-                'zone' : zone,
-                'machineType' : "zones/{}/machineTypes/{}".format(zone, ansible_controller_machinetype),
-                'serviceAccounts' : [{
-                    'email' : "$(ref.{}-ansible-svc-account.email)" .format(deployment),
-                    'scopes' : [
+            'name': "{}-ansible-controller".format(deployment),
+            'type': 'gcp-types/compute-v1:instances',
+            'properties': {
+                'zone': zone,
+                'machineType': "zones/{}/machineTypes/{}".format(zone, ansible_controller_machinetype),
+                'serviceAccounts': [{
+                    'email': "$(ref.{}-ansible-svc-account.email)".format(deployment),
+                    'scopes': [
                         "https://www.googleapis.com/auth/cloud-platform"
                     ]
                 }],
-                'disks' : [{
-                    'deviceName' : 'boot',
-                    'type' : 'PERSISTENT',
-                    'boot' : True,
-                    'autoDelete' : True,
+                'disks': [{
+                    'deviceName': 'boot',
+                    'type': 'PERSISTENT',
+                    'boot': True,
+                    'autoDelete': True,
                     'initializeParams': {
-                        'sourceImage' : "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7",
-                        'diskSizeGb' : 10
+                        'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7",
+                        'diskSizeGb': 10
                     }
                 }],
-                'networkInterfaces' : [{
-                    'subnetwork' : "$(ref.{}-public-subnet.selfLink)".format(deployment),
-                    'accessConfigs' : [{
-                        'name' : 'External NAT',
-                        'type' : 'ONE_TO_ONE_NAT'
+                'networkInterfaces': [{
+                    'subnetwork': "$(ref.{}-public-subnet.selfLink)".format(deployment),
+                    'accessConfigs': [{
+                        'name': 'External NAT',
+                        'type': 'ONE_TO_ONE_NAT'
                     }],
                 }],
-                'tags' : {
-                    'items' : [
+                'tags': {
+                    'items': [
                         'sas-viya-ansible-controller'
                     ]
                 },
-                'metadata' : {
-                    'items' : [
-                        { 'key' : 'ssh-keys', 'value' : "sasinstall:{}".format(ssh_key) },
-                        { 'key' : 'block-project-ssh-keys', 'value' : "true" },
-                        { 'key' : 'startup-script', 'value' : ansible_startup_script.format(deployment=deployment, olc_root_pw=olc_root_pw, olc_user_pw=olc_user_pw, deployment_data_location=deployment_data_location)}
+                'metadata': {
+                    'items': [
+                        {'key': 'ssh-keys', 'value': "sasinstall:{}".format(ssh_key)},
+                        {'key': 'block-project-ssh-keys', 'value': "true"},
+                        {'key': 'startup-script',
+                         'value': ansible_startup_script.format(deployment=deployment, olc_root_pw=olc_root_pw, olc_user_pw=olc_user_pw, deployment_data_location=deployment_data_location)}
                     ]
                 }
             }
         },
         {
-            'name' : "{}-services".format(deployment),
-            'type' : "gcp-types/compute-v1:instances",
+            'name': "{}-services".format(deployment),
+            'type': "gcp-types/compute-v1:instances",
             'properties': {
-                'zone' : zone,
-                'machineType' : "zones/{}/machineTypes/{}".format(zone, services_machinetype),
-                'hostname' : "services.viya.sas",
-                'serviceAccounts' : [{
-                    'email' : "$(ref.{}-ansible-svc-account.email)".format(deployment),
-                    'scopes' : [
+                'zone': zone,
+                'machineType': "zones/{}/machineTypes/{}".format(zone, services_machinetype),
+                'hostname': "services.viya.sas",
+                'serviceAccounts': [{
+                    'email': "$(ref.{}-ansible-svc-account.email)".format(deployment),
+                    'scopes': [
                         "https://www.googleapis.com/auth/cloud-platform"
                     ]
                 }],
-                'disks' : [
+                'disks': [
                     {
-                        'deviceName' : 'boot',
+                        'deviceName': 'boot',
                         'type': "PERSISTENT",
-                        'boot' : True,
-                        'autoDelete' : True,
+                        'boot': True,
+                        'autoDelete': True,
                         'initializeParams': {
-                            'sourceImage' : "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7",
+                            'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7",
                             'diskSizeGb': 10
                         }
                     },
                     {
-                        'deviceName' : 'sashome',
-                        'type' : "PERSISTENT",
-                        'boot' : False,
-                        'autoDelete' : True,
-                        'initializeParams' : {
-                            'diskName' : "{}-sashome-services".format(deployment),
-                            'diskSizeGb' : 100,
-                            'description' : "SAS_INSTALL_DISK"
+                        'deviceName': 'sashome',
+                        'type': "PERSISTENT",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskName': "{}-sashome-services".format(deployment),
+                            'diskSizeGb': 100,
+                            'description': "SAS_INSTALL_DISK"
                         }
                     }
                 ],
-                'networkInterfaces' : [{
-                    'subnetwork' : "$(ref.{}-private-subnet.selfLink)".format(deployment)
+                'networkInterfaces': [{
+                    'subnetwork': "$(ref.{}-private-subnet.selfLink)".format(deployment)
                 }],
-                'metadata' : {
-                    'items' : [
-                        { 'key' : 'ssh-keys', 'value' : "sasinstall:{}".format(ssh_key) },
-                        { 'key' : 'block-project-ssh-keys', 'value' : "true" },
+                'metadata': {
+                    'items': [
+                        {'key': 'ssh-keys', 'value': "sasinstall:{}".format(ssh_key)},
+                        {'key': 'block-project-ssh-keys', 'value': "true"},
                         {'key': 'startup-script', 'value': services_startup_script.format(deployment=deployment)}
                     ]
                 },
-                'tags' : {
-                    'items' : [
+                'tags': {
+                    'items': [
                         'sas-viya-vm'
                     ]
                 }
             }
         },
         {
-            'name' : "{}-controller".format(deployment),
-            'type' : "gcp-types/compute-v1:instances",
+            'name': "{}-controller".format(deployment),
+            'type': "gcp-types/compute-v1:instances",
             'properties': {
-                'zone' : zone,
-                'machineType' : "zones/{}/machineTypes/{}".format(zone, controller_machinetype),
-                'hostname' : "controller.viya.sas",
-                'serviceAccounts' : [{
-                    'email' : "$(ref.{}-ansible-svc-account.email)".format(deployment),
-                    'scopes' : [
+                'zone': zone,
+                'machineType': "zones/{}/machineTypes/{}".format(zone, controller_machinetype),
+                'hostname': "controller.viya.sas",
+                'serviceAccounts': [{
+                    'email': "$(ref.{}-ansible-svc-account.email)".format(deployment),
+                    'scopes': [
                         "https://www.googleapis.com/auth/cloud-platform"
                     ]
                 }],
-                'disks' : [
+                'disks': [
                     {
-                        'deviceName' : "boot",
-                        'type' : "PERSISTENT",
-                        'boot' : True,
-                        'autoDelete' : True,
-                        'initializeParams' : {
-                            'sourceImage' : "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7",
-                            'diskSizeGb' : 10
+                        'deviceName': "boot",
+                        'type': "PERSISTENT",
+                        'boot': True,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7",
+                            'diskSizeGb': 10
                         }
                     },
                     {
-                        'deviceName' : "sashome",
-                        'type' : "PERSISTENT",
-                        'boot' : False,
-                        'autoDelete' : True,
-                        'initializeParams' : {
-                            'diskName' : "{}-sashome-controller".format(deployment),
-                            'diskSizeGb' : 50,
-                            'description' : "SAS_INSTALL_DISK"
+                        'deviceName': "sashome",
+                        'type': "PERSISTENT",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskName': "{}-sashome-controller".format(deployment),
+                            'diskSizeGb': 50,
+                            'description': "SAS_INSTALL_DISK"
                         }
                     },
                     {
-                        'deviceName' : "userlib",
-                        'type' : "PERSISTENT",
-                        'boot' : False,
-                        'autoDelete' : True,
-                        'kind' : "compute",
-                        'mode' : "READ_WRITE",
-                        'initializeParams' : {
-                            'diskName' : "{}-userlib".format(deployment),
-                            'diskType' : "projects/ace-dev/zones/{}/diskTypes/pd-standard".format(zone),
-                            'diskSizeGb' : 50,
-                            'description' : "USERLIB_DISK"
+                        'deviceName': "userlib",
+                        'type': "PERSISTENT",
+                        'boot': False,
+                        'autoDelete': True,
+                        'kind': "compute",
+                        'mode': "READ_WRITE",
+                        'initializeParams': {
+                            'diskName': "{}-userlib".format(deployment),
+                            'diskType': "projects/ace-dev/zones/{}/diskTypes/pd-standard".format(zone),
+                            'diskSizeGb': 50,
+                            'description': "USERLIB_DISK"
                         }
                     },
                     {
-                        'deviceName' : "cascache",
-                        'type' : "PERSISTENT",
-                        'boot' : False,
-                        'autoDelete' : True,
-                        'kind' : "compute",
-                        'mode' : "READ_WRITE",
-                        'initializeParams' : {
-                            'diskName' : "{}-cascache".format(deployment),
-                            'diskType' : "projects/ace-dev/zones/{}/diskTypes/pd-standard".format(zone),
-                            'diskSizeGb' : 50,
-                            'description' : "CASCACHE_DISK"
+                        'deviceName': "cascache",
+                        'type': "PERSISTENT",
+                        'boot': False,
+                        'autoDelete': True,
+                        'kind': "compute",
+                        'mode': "READ_WRITE",
+                        'initializeParams': {
+                            'diskName': "{}-cascache".format(deployment),
+                            'diskType': "projects/ace-dev/zones/{}/diskTypes/pd-standard".format(zone),
+                            'diskSizeGb': 50,
+                            'description': "CASCACHE_DISK"
                         }
                     }
                 ],
-                'networkInterfaces' : [{
-                    'subnetwork' : "$(ref.{}-private-subnet.selfLink)".format(deployment)
+                'networkInterfaces': [{
+                    'subnetwork': "$(ref.{}-private-subnet.selfLink)".format(deployment)
                 }],
-                'metadata' : {
-                    'items' : [
-                        { 'key' : "ssh-keys", 'value' : "sasinstall:{}".format(ssh_key) },
-                        { 'key' : "block-project-ssh-keys", 'value' : "true" },
-                        { 'key' : 'startup-script', 'value': controller_startup_script.format(deployment=deployment) }
+                'metadata': {
+                    'items': [
+                        {'key': "ssh-keys", 'value': "sasinstall:{}".format(ssh_key)},
+                        {'key': "block-project-ssh-keys", 'value': "true"},
+                        {'key': 'startup-script', 'value': controller_startup_script.format(deployment=deployment)}
                     ]
                 },
-                'tags' : {
-                    'items' : [
+                'tags': {
+                    'items': [
                         "sas-viya-vm"
                     ]
                 }
@@ -414,4 +415,4 @@ def GenerateConfig(context):
         }
     ]
 
-    return { 'resources' : resources }
+    return {'resources': resources}
