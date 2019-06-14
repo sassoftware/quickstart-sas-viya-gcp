@@ -1,7 +1,7 @@
 """Load balancer resources"""
 
-def GenerateConfig(context):
 
+def GenerateConfig(context):
     """ Retrieve variable values from the context """
     deployment = context.env['deployment']
     project = context.env['project']
@@ -11,105 +11,103 @@ def GenerateConfig(context):
     """ Define the Load Balancer resources """
     resources = [
         {
-            'name' : "%s-loadbalancer-ip" % deployment,
-            'type' : "gcp-types/compute-v1:addresses",
-            'properties' : {
-                'networkTier' : "STANDARD",
-                'region' : region
+            'name': "{}-loadbalancer-ip".format(deployment),
+            'type': "gcp-types/compute-v1:addresses",
+            'properties': {
+                'networkTier': "STANDARD",
+                'region': region
             }
         },
         {
-            'name' : "%s-instance-group" % deployment,
-            'type' : "gcp-types/compute-v1:instanceGroups",
-            'properties' : {
-                'managed' : "no",
-                'zone' : zone,
-                'network' : "$(ref.%s-vpc.selfLink)" % deployment,
-                'namedPorts' : [
-                    { 'name' : "https", 'port' : 443}
+            'name': "{}-instance-group".format(deployment),
+            'type': "gcp-types/compute-v1:instanceGroups",
+            'properties': {
+                'managed': "no",
+                'zone': zone,
+                'network': "$(ref.{}-vpc.selfLink)".format(deployment),
+                'namedPorts': [
+                    {'name': "https", 'port': 443}
                 ]
             }
         },
         {
-            'name' : "add-to-instance-group",
-            'action' : "gcp-types/compute-v1:compute.instanceGroups.addInstances",
-            'properties' : {
-                'project' : project,
-                'zone' : zone,
-                'instanceGroup' : "%s-instance-group" % deployment,
-                'instances' : [
+            'name': "add-to-instance-group",
+            'action': "gcp-types/compute-v1:compute.instanceGroups.addInstances",
+            'properties': {
+                'project': project,
+                'zone': zone,
+                'instanceGroup': "{}-instance-group".format(deployment),
+                'instances': [
                     {
-                        'instance' : "$(ref.%s-services.selfLink)" % deployment
+                        'instance': "$(ref.{}-services.selfLink)".format(deployment)
                     }
                 ]
             }
         },
         {
-            'name' : "%s-https-healthcheck" % deployment,
-            'type' : "gcp-types/compute-v1:httpsHealthChecks",
-            'properties' : {
-                'requestPath' : "/SASLogon/login",
-                'port' : 443
+            'name': "{}-https-healthcheck".format(deployment),
+            'type': "gcp-types/compute-v1:httpsHealthChecks",
+            'properties': {
+                'requestPath': "/SASLogon/login",
+                'port': 443
             }
         },
         {
-            'name' : "%s-backend" % deployment,
-            'type' : "gcp-types/compute-v1:backendServices",
+            'name': "{}-backend".format(deployment),
+            'type': "gcp-types/compute-v1:backendServices",
             'properties': {
-                'port' : 443,
-                'portName' : "https",
-                'protocol' : "HTTPS",
-                'backends' : [
-                    { 'group' : "$(ref.%s-instance-group.selfLink)" % deployment }
+                'port': 443,
+                'portName': "https",
+                'protocol': "HTTPS",
+                'backends': [
+                    {'group': "$(ref.{}-instance-group.selfLink)".format(deployment)}
                 ],
-                'healthChecks' : [
-                    "$(ref.%s-https-healthcheck.selfLink)" % deployment
+                'healthChecks': [
+                    "$(ref.{}-https-healthcheck.selfLink)".format(deployment)
                 ]
             }
         },
         {
-            'name' : "%s-loadbalancer" % deployment,
-            'type' : "gcp-types/compute-v1:urlMaps",
-            'properties' : {
-                'defaultService' : "$(ref.%s-backend.selfLink)" % deployment
+            'name': "{}-loadbalancer".format(deployment),
+            'type': "gcp-types/compute-v1:urlMaps",
+            'properties': {
+                'defaultService': "$(ref.{}-backend.selfLink)".format(deployment)
             }
         },
         {
-            'name' : "%s-loadbalancer-target-proxy" % deployment,
-            'type' : "gcp-types/compute-v1:targetHttpsProxies",
-            'properties' : {
-                'protocol' : "HTTPS",
-                'sslCertificates' : [
+            'name': "{}-loadbalancer-target-proxy".format(deployment),
+            'type': "gcp-types/compute-v1:targetHttpsProxies",
+            'properties': {
+                'protocol': "HTTPS",
+                'sslCertificates': [
                     "global/sslCertificates/viya-sslcert"
                 ],
-                'urlMap' : "$(ref.%s-loadbalancer.selfLink)" % deployment
+                'urlMap': "$(ref.{}-loadbalancer.selfLink)".format(deployment)
             }
         },
         {
-            'name' : "%s-forwarding-rules" % deployment,
-            'type' : "gcp-types/compute-v1:forwardingRules",
-            'properties' : {
-                'IPAddress' : "$(ref.%s-loadbalancer-ip.selfLink)" % deployment,
-                'IPProtocol' : "TCP",
-                'networkTier' : "STANDARD",
-                'portRange' : 443,
-                'region' : region,
-                'target' : "$(ref.%s-loadbalancer-target-proxy.selfLink)" % deployment
+            'name': "{}-forwarding-rules".format(deployment),
+            'type': "gcp-types/compute-v1:forwardingRules",
+            'properties': {
+                'IPAddress': "$(ref.{}-loadbalancer-ip.selfLink)".format(deployment),
+                'IPProtocol': "TCP",
+                'networkTier': "STANDARD",
+                'portRange': 443,
+                'region': region,
+                'target': "$(ref.{}-loadbalancer-target-proxy.selfLink)".format(deployment)
             }
         }
     ]
-
 
     outputs = [
         {
-            'name' : 'SASDrive',
-            'value' : "https://$(ref.%s-loadbalancer-ip.address)/SASDrive" % deployment
+            'name': 'SASDrive',
+            'value': "https://$(ref.{}-loadbalancer-ip.address)/SASDrive".format(deployment)
         },
         {
-            'name' : 'SASStudio',
-            'value' : "https://$(ref.%s-loadbalancer-ip.address)/SASStudioV" % deployment
+            'name': 'SASStudio',
+            'value': "https://$(ref.{}-loadbalancer-ip.address)/SASStudioV".format(deployment)
         }
     ]
-    
 
-    return { 'resources' : resources, 'outputs' : outputs }
+    return {'resources': resources, 'outputs': outputs}
