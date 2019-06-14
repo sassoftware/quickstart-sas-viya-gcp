@@ -8,24 +8,24 @@ def GenerateConfig(context):
     """ Define the resources for the Runtime Config """
     resources = [
         {
-            'name': "%s-waiter-config" % deployment,
+            'name': "{}-waiter-config".format(deployment),
             'type': 'gcp-types/runtimeconfig-v1beta1:projects.configs',
             'properties': {
-                'config': '%s-runtime-config' % deployment
+                'config': '{}-runtime-config'.format(deployment)
             }
 
         },
         # Triggers for the following waiters are in ansible_startup_script  contained in file vms.py
         {
-            'name': "%s-startup-waiter1" % deployment,
+            'name': "{}-startup-waiter1".format(deployment),
             'type': 'gcp-types/runtimeconfig-v1beta1:projects.configs.waiters',
             'metadata': {
                 'dependsOn': [
-                    "%s-ansible-controller" % deployment
+                    "{}-ansible-controller".format(deployment)
                 ]
             },
             'properties': {
-                'parent': "$(ref.%s-waiter-config.name)" % deployment,
+                'parent': "$(ref.{}-waiter-config.name)".format(deployment),
                 'waiter': 'viya-runtime-waiter1',
                 'timeout': "5000s",
                 'success': {
@@ -43,15 +43,15 @@ def GenerateConfig(context):
             }
         },
         {
-            'name': "%s-startup-waiter2" % deployment,
+            'name': "{}-startup-waiter2".format(deployment),
             'type': 'gcp-types/runtimeconfig-v1beta1:projects.configs.waiters',
             'metadata': {
                 'dependsOn': [
-                    "%s-startup-waiter1" % deployment
+                    "{}-startup-waiter1".format(deployment)
                 ]
             },
             'properties': {
-                'parent': "$(ref.%s-waiter-config.name)" % deployment,
+                'parent': "$(ref.{}-waiter-config.name)".format(deployment),
                 'waiter': 'viya-runtime-waiter2',
                 'timeout': "5000s",
                 'success': {
@@ -69,15 +69,15 @@ def GenerateConfig(context):
             }
         },
         {
-            'name': "%s-startup-waiter3" % deployment,
+            'name': "{}-startup-waiter3".format(deployment),
             'type': 'gcp-types/runtimeconfig-v1beta1:projects.configs.waiters',
             'metadata': {
                 'dependsOn': [
-                    "%s-startup-waiter2" % deployment
+                    "{}-startup-waiter2".format(deployment)
                 ]
             },
             'properties': {
-                'parent': "$(ref.%s-waiter-config.name)" % deployment,
+                'parent': "$(ref.{}-waiter-config.name)".format(deployment),
                 'waiter': 'viya-runtime-waiter3',
                 'timeout': "5000s",
                 'success': {
@@ -95,15 +95,15 @@ def GenerateConfig(context):
             }
         },
         {
-            'name': "%s-startup-waiter4" % deployment,
+            'name': "{}-startup-waiter4".format(deployment),
             'type': 'gcp-types/runtimeconfig-v1beta1:projects.configs.waiters',
             'metadata': {
                 'dependsOn': [
-                    "%s-startup-waiter3" % deployment
+                    "{}-startup-waiter3".format(deployment)
                 ]
             },
             'properties': {
-                'parent': "$(ref.%s-waiter-config.name)" % deployment,
+                'parent': "$(ref.{}-waiter-config.name)".format(deployment),
                 'waiter': 'viya-runtime-waiter4',
                 'timeout': "5000s",
                 'success': {
