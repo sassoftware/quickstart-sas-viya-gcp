@@ -124,11 +124,11 @@ echo Running Waiters
 # Waiters 1-3, deploying Viya
 for ((WAITER_COUNT=1 ; WAITER_COUNT<4 ; WAITER_COUNT++))
 do
-    # first time through only wait 30 minutes, then wait 50 minutes
+    # first time through only wait 30 minutes, then wait 60 minutes
     if [ $WAITER_COUNT -eq "1" ]; then
         TIME_TO_LIVE_IN_SECONDS=$((SECONDS+30*60)) # 30 minutes
     else
-        TIME_TO_LIVE_IN_SECONDS=$((SECONDS+50*60)) # 50 minutes
+        TIME_TO_LIVE_IN_SECONDS=$((SECONDS+60*60)) # 60 minutes
     fi
     # wait for about an hour or until the child process finishes.
     while [ "$SECONDS" -lt "$TIME_TO_LIVE_IN_SECONDS" ] && kill -s 0 $PID; do
@@ -149,9 +149,9 @@ export ANSIBLE_CONFIG=$INSTALL_DIR/common/ansible/playbooks/ansible.cfg
 # Final Waiter 4, checking on Viya services
 # wait for 50 minutes or until the login service is available for three consecutive tests
 LOADBALANCERIP=$(gcloud compute addresses list | grep $DEPLOYMENT-loadbalancer | awk '{{print $2}}')
-TIME_TO_LIVE_IN_SECONDS=$((SECONDS+50*60)) # 50 minutes
+TIME_TO_LIVE_IN_SECONDS=$((SECONDS+60*60)) # 60 minutes
 uriCheck=0
-while [[ "$SECONDS" -lt "$TIME_TO_LIVE_IN_SECONDS" && $uriCheck -lt 3 ]]; do
+while [[ "$SECONDS" -lt "$TIME_TO_LIVE_IN_SECONDS" && $uriCheck -lt 5 ]]; do
     if [ $(curl -sk -o /dev/null -w "%{{http_code}}" https://$LOADBALANCERIP/SASLogon/login) -eq 200 ]; then
         uriCheck=$((uriCheck+1))
         echo "Viya is open for business. Check: $uriCheck"
@@ -164,7 +164,7 @@ while [[ "$SECONDS" -lt "$TIME_TO_LIVE_IN_SECONDS" && $uriCheck -lt 3 ]]; do
         sleep 60
     fi
 done
-if [[ $(curl -sk -o /dev/null -w "%{{http_code}}" https://$LOADBALANCERIP/SASLogon/login) -eq 200 && $uriCheck -eq 3 ]]; then
+if [[ $(curl -sk -o /dev/null -w "%{{http_code}}" https://$LOADBALANCERIP/SASLogon/login) -eq 200 && $uriCheck -eq 5 ]]; then
     echo "Viya deployment was successful."
     # complete final waiter
     gcloud beta runtime-config configs variables set success4/deploy-status success --config-name $DEPLOYMENT-runtime-config
