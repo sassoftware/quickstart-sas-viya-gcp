@@ -227,7 +227,7 @@ def GenerateConfig(context):
     services_machinetype = context.properties['ServicesMachineType']
     controller_machinetype = context.properties['ControllerMachineType']
     olc_root_pw = base64.b64encode(context.properties['SASAdminPass'])
-    olc_user_pw = base64.b64encode(context.properties['SASUSerPass'])
+    olc_user_pw = base64.b64encode(context.properties['SASUserPass'])
     deployment_data_location = context.properties['DeploymentDataLocation']
     deployment = context.env['deployment']
     zone = context.properties['Zone']
