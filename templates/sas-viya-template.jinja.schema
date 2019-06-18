@@ -17,7 +17,7 @@ required:
 - Zone
 - SSHPublicKey
 - SASAdminPass
-- SASUSerPass
+- SASUserPass
 - AdminIngressLocation
 - WebIngressLocation
 
