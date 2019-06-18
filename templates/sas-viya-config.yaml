@@ -24,7 +24,7 @@ resources:
 
     # Used by openldapsetup playbook
     SASAdminPass: PASSWORD
-    SASUSerPass: PASSWORD
+    SASUserPass: PASSWORD
 
     # Google storage bucket location and file name of SAS License file
     DeploymentDataLocation: gs://BUCKET_PATH/LICENSE_FILENAME.ZIP
