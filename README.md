@@ -31,7 +31,7 @@ When you deploy the Quickstart with default parameters, the following SAS Viya e
 
   
 
-[Network Diagram]($GCP_Topology.png) 
+![Network Diagram](/images/GCP_Topology.jpg) 
 
   
 
