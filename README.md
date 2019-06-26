@@ -119,7 +119,7 @@ See ["Configuration File"](#configfile) for more information.
 
 From a terminal with the gcloud CLI configured, run the following command:
 ```
-cloud deployment-manager deployments create stack --config <path to quickstart-sas-viya-gcp/templates>/sas-viya-config.yaml --async
+gcloud deployment-manager deployments create stack --config <path to quickstart-sas-viya-gcp/templates>/sas-viya-config.yaml --async
 ```
 
 The deployment takes between 1 and 2 hours, depending on the quantity of software licensed. 
