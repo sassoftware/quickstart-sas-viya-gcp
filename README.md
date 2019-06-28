@@ -16,7 +16,22 @@ This README for  SAS Viya Quickstart Template for Google Cloud Platform (GCP) is
 
 This Quickstart is a reference architecture for users who want to deploy the SAS platform, using microservices and other cloud-friendly technologies. By deploying the SAS platform in GCP, you get SAS analytics, data visualization, and machine-learning capabilities in a GCP-validated environment. 
 
- 
+## Contents
+1. [Solution Summary](#Summary)
+    1. [Costs and Licenses](#Costs)
+1. [Prerequisites](#Prerequisites)
+1. [Deployment Steps](#Deployment)
+1. [Additional Deployment Details](#deploydetails)
+   1. [User Accounts](#useraccounts)
+   1. [Monitoring the Deployment](#depmonitoring)
+1. [Usage](#usage)
+1. [Configuration File](#configFile)
+   1. [Parameters](#parameters)
+   1. [Path to SAS License Zip File](#zipfilepath)
+1. [Troubleshooting](#Tshoot)
+   
+
+<a name="Summary"></a>
 ## Solution Summary 
 
 By default, Quickstart deployments enable Transport Layer Security (TLS) for secure communication. 
@@ -37,6 +52,7 @@ When you deploy the Quickstart with default parameters, the following SAS Viya e
 
 For details, see [SAS Viya 3.4 for Linux: Deployment Guide](https://go.documentation.sas.com/?docsetId=dplyml0phy0lax&docsetTarget=titlepage.htm&docsetVersion=3.4&locale=en). 
 
+<a name="Costs"></a>
 ### Costs and Licenses 
 
 You are responsible for the cost of the GCP services used while running this Quickstart deployment. There is no additional cost for using the Quickstart. 
@@ -53,22 +69,18 @@ SAS Viya Quickstart Template for GCP creates three instances, including:
 
 Here are the estimated monthly costs of running these instances with their default sizes:
 
-|Resource Name|Type|Resource Sizing|Monthly Cost|Monthly Cost (no sustained use discount)|
-|-------------|-------------|-------------|-------------|-----------------|
-|ansible-controller|g1-small|1 vCPU, 1.7GB RAM|$14.20|$19.71|
-|CAS controller|n1-standard-2|2 vCPU, 7.5GB RAM|$48.95|$69.35|
-|SAS Viya services|n1-highmem-8|8 vCPU, 52GB RAM|$242.41|$345.73|
-
-
 **Note:** Resource costs vary by region.  These costs include the sustained use discount. 
 
-For more information:
-* see ["Google Compute Engine Pricing"](https://cloud.google.com/compute/pricing?hl=en_US&_ga=2.63550635.-507342883.1553610379#sustained_use) about the sustained use discount.
-* see ["Cloud Storage Pricing"](https://cloud.google.com/storage/pricing#price-tables) about pricing.
+|Resource Name|Type|Resource Sizing|Monthly Cost|
+|-------------|-------------|-------------|-------------|
+|ansible-controller|g1-small|1 vCPU, 1.7GB RAM|$14.20|
+|CAS controller|n1-standard-2|2 vCPU, 7.5GB RAM|$48.95|
+|SAS Viya services|n1-highmem-8|8 vCPU, 52GB RAM|$242.41|
+
+See ["Cloud Storage Pricing"](https://cloud.google.com/storage/pricing#price-tables) for additional information about pricing.
  
 
 <a name="Prerequisites"></a> 
-
 ## Prerequisites 
 
 Before deploying SAS Viya Quickstart Template for GCP, you must have the following: 
@@ -124,6 +136,32 @@ gcloud deployment-manager deployments create stack --config <path to quickstart-
 
 The deployment takes between 1 and 2 hours, depending on the quantity of software licensed. 
 For information about how to monitor the deployment, see ["Additional Deployment Details"](#deploydetails). 
+
+<a name=deploydetails></a>
+## Additional Deployment Details
+
+<a name="useraccounts"></a> 
+### User Accounts
+The *sasinstall* host operating system account is created during deployment. Use this account to log in via SSH to any of the machines.
+
+The *sasadmin* and *sasuser* SAS Viya user accounts are also created during deployment.  These accounts exist in LDAP, and are the default user accounts for logging into SAS Viya.  You cannot directly log onto the host operating system with these accounts.
+
+<a name="depmonitoring"></a> 
+### Monitoring the Deployment
+To monitor your deployment:
+*  Log into the Ansible controller to monitor the deployment log messages in real time. 
+
+\<Content under construction\>
+
+*  Check the components that are deployed from the Deployment Manager window.
+
+\<Content under construction\>
+
+*  Verify that you can log into SAS VIya from the load balancer IP address.
+
+\<Content under construction\>
+
+<a name=usage></a>
 ## Usage
 To connect to the SAS Viya login page:
 1. Log in to the GCP Console [here](https://console.cloud.google.com/).
@@ -133,8 +171,10 @@ To connect to the SAS Viya login page:
 5. Click on the *Advanced menu* link at the bottom of the list of load balancers.
 6. Click on the address associated with your deployment from the *Forwarding rules* tab to open the SAS Viya login page. 
 
-<a name=configfile></a>
+<a name=configFile></a>
 ## Configuration File
+
+<a name=parameters></a>
 ### Parameters
 You must modify the configuration file, /\<path_to_quickstart-sas-viya-gcp\>/templates/sas-viya-config.yaml, with values that are specific to your deployment. The parameters in the file are as follows:
 
@@ -147,11 +187,11 @@ You must modify the configuration file, /\<path_to_quickstart-sas-viya-gcp\>/tem
 |SSHPublicKey|Specifies your SSH public key.  This will get added to the authorized_keys file on the Bastian host so that you can connect using ssh.
 |SASAdminPass|Specifies the password for the SAS Viya adminuser. Used for the initial identity for the SAS Viya adminuser.
 |SASUserPass|Specifies the password for the SAS Viya sasuser. Used for the initial identity for the SAS Viya sasuser.
-|DeploymentDataLocation|Specifies the GCP bucket location of the SAS license zip file (for example, gs://\<bucket name\>/\<path\>/\<filename\>.zip). See ["Path to SAS License Zip File"](#depnote) for more information.
+|DeploymentDataLocation|Specifies the GCP bucket location of the SAS license zip file (for example, gs://\<bucket name\>/\<path\>/\<filename\>.zip). See ["Path to SAS License Zip File"](#zipfilepath) for more information.
 |AdminIngressLocation|Specifies the CIDR address range for machines that can access the Bastian host.
 |WebIngressLocation|Specifies the CIDR address range for machines that can access the SAS Viya HTTP(S) server.
 
-<a name=depnote><a/>
+<a name=zipfilepath></a>
 ### Path to SAS License Zip File 
 The DeploymentDataLocation parameter refers to the path to the SAS license zip file that was included with the Software Order Email (SOE), and subsequently uploaded to a storage bucket. You need the name of the bucket as well any embedded folders (if any) to construct the path to the SAS license zip file. 
 The path consists of the following:
@@ -174,13 +214,10 @@ Therefore, the value of the DeploymentDataLocation parameter would be the follow
 gs://testbucket-deployment-data/viya3.4/SAS_Viya_deployment_data.zip
 ```
 
-
-<a name=deploydetailse></a>
-## Additional Deployment Details
-\<Content under construction\>
-
+<a name="Tshoot"></a> 
 ## Troubleshooting
-\<Content under construction\>
+
+
 
     ```        
 
