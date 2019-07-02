@@ -33,7 +33,7 @@ def GenerateConfig(context):
                 'gcpIamPolicyPatch': {
                     'add': [
                         {
-                            'role': "roles/storage.objectAdmin",
+                            'role': "roles/storage.objectViewer",
                             'members': ["serviceAccount:$(ref.{}-ansible-svc-account.email)".format(deployment)]
                         },
                         {
@@ -42,6 +42,10 @@ def GenerateConfig(context):
                         },
                         {
                             'role': "roles/runtimeconfig.admin",
+                            'members': ["serviceAccount:$(ref.{}-ansible-svc-account.email)".format(deployment)]
+                        },
+                        {
+                            'role': "roles/compute.loadBalancerAdmin",
                             'members': ["serviceAccount:$(ref.{}-ansible-svc-account.email)".format(deployment)]
                         }
                     ]

@@ -11,7 +11,7 @@ def GenerateConfig(context):
             'name': "{}-waiter-config".format(deployment),
             'type': 'gcp-types/runtimeconfig-v1beta1:projects.configs',
             'properties': {
-                'config': '{}-runtime-config'.format(deployment)
+                'config': '{}-waiter-config'.format(deployment)
             }
 
         },
@@ -31,13 +31,13 @@ def GenerateConfig(context):
                 'success': {
                     'cardinality': {
                         'number': 1,
-                        'path': '/success1'
+                        'path': 'startup/success'
                     }
                 },
                 'failure': {
                     'cardinality': {
                         'number': 1,
-                        'path': '/failure1'
+                        'path': 'startup/failure'
                     }
                 }
             }
@@ -56,14 +56,14 @@ def GenerateConfig(context):
                 'timeout': "5000s",
                 'success': {
                     'cardinality': {
-                        'number': 1,
-                        'path': '/success2'
+                        'number': 2,
+                        'path': 'startup/success'
                     }
                 },
                 'failure': {
                     'cardinality': {
                         'number': 1,
-                        'path': '/failure2'
+                        'path': 'startup/failure'
                     }
                 }
             }
@@ -82,14 +82,14 @@ def GenerateConfig(context):
                 'timeout': "5000s",
                 'success': {
                     'cardinality': {
-                        'number': 1,
-                        'path': '/success3'
+                        'number': 3,
+                        'path': 'startup/success'
                     }
                 },
                 'failure': {
                     'cardinality': {
                         'number': 1,
-                        'path': '/failure3'
+                        'path': 'startup/failure'
                     }
                 }
             }
@@ -108,18 +108,18 @@ def GenerateConfig(context):
                 'timeout': "5000s",
                 'success': {
                     'cardinality': {
-                        'number': 1,
-                        'path': '/success4'
+                        'number': 4,
+                        'path': 'startup/success'
                     }
                 },
                 'failure': {
                     'cardinality': {
                         'number': 1,
-                        'path': '/failure4'
+                        'path': 'startup/failure'
                     }
                 }
             }
-        }
+        },
     ]
 
     return {'resources': resources}
