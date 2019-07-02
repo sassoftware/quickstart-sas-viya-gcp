@@ -38,9 +38,9 @@ set +e
 LICENSE_STAT=$(gsutil stat $DEPLOYMENT_DATA_LOCATION 2>&1)
 set -e
 if [[ $LICENSE_STAT =~ "No URLs matched" ]]; then
-   echo "The specified license file '$DEPLOYMENT_DATA_LOCATION' does not exist."
+   echo "*** ERROR: The specified license file '$DEPLOYMENT_DATA_LOCATION' does not exist."
    # failing waiter, which fails deployment.
-   gcloud beta runtime-config configs variables set failure1/deploy-status failed --config-name $DEPLOYMENT-runtime-config
+   gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: The specified license file '$DEPLOYMENT_DATA_LOCATION' does not exist." --config-name $DEPLOYMENT-waiter-config
    exit 1
 fi
 ###################################
@@ -49,6 +49,32 @@ fi
 gsutil cp $DEPLOYMENT_DATA_LOCATION /tmp/license.zip
 export VIYA_VERSION=$(python $INSTALL_DIR/functions/getviyaversion.py)
 /bin/su sasinstall -c "export >> /home/sasinstall/SAS_VIYA_DEPLOYMENT_ENVIRONMENT"
+###################################
+#  Generate Self Signed SSL Certificate
+###################################
+pip install pyOpenSSL
+# Generating new SSL Cert and Key
+LOADBALANCERIP=$(gcloud compute addresses list | grep $DEPLOYMENT-loadbalancer | awk '{{print $2}}')
+python $INSTALL_DIR/functions/create-self-signed-cert.py $LOADBALANCERIP
+ret="$?"
+if [ "$ret" -ne "0" ]; then
+    echo "*** ERROR: SSL Certificate generation failed"
+    # Viya deployment failed, exiting
+    gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: SSL Certificate generation failed" --config-name $DEPLOYMENT-waiter-config
+    exit $ret
+elif [[ -f /tmp/selfsigned.crt && -f /tmp/private.key  ]]; then
+    echo "Assign new SSL Cert to target-https-proxy resource and clean up." 
+    gcloud compute ssl-certificates create $DEPLOYMENT-sslcert-tmp --certificate /tmp/selfsigned.crt --private-key /tmp/private.key
+    gcloud compute target-https-proxies update $DEPLOYMENT-loadbalancer-target-proxy --ssl-certificates=https://www.googleapis.com/compute/v1/projects/ace-dev/global/sslCertificates/$DEPLOYMENT-sslcert-tmp
+    gcloud compute ssl-certificates delete $DEPLOYMENT-sslcert --quiet
+    gcloud compute ssl-certificates create $DEPLOYMENT-sslcert --certificate /tmp/selfsigned.crt --private-key /tmp/private.key
+    gcloud compute target-https-proxies update $DEPLOYMENT-loadbalancer-target-proxy --ssl-certificates=https://www.googleapis.com/compute/v1/projects/ace-dev/global/sslCertificates/$DEPLOYMENT-sslcert
+    gcloud compute ssl-certificates delete $DEPLOYMENT-sslcert-tmp --quiet   
+else
+   echo "The specified ssl certs do not exist. Failing sslcert-waiter and startup-waiter then exit."
+   gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: The specified ssl certs do not exist. Failing sslcert-waiter and startup-waiter then exit." --config-name $DEPLOYMENT-waiter-config
+   exit 1
+fi
 ###################################
 # Getting specific release of quick start common code from Github
 ###################################
@@ -116,8 +142,9 @@ echo $PID > "$PID_FILE"
 ret="$?"
 echo "$ret" > "$RETURN_FILE"
 if [ "$ret" -ne "0" ]; then
+    echo "*** ERROR: Viya Deployment script did not start"
     # viya deployment failed, exiting
-    gcloud beta runtime-config configs variables set failure1/deploy-status failed --config-name $DEPLOYMENT-runtime-config
+    gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: Viya Deployment script did not start" --config-name $DEPLOYMENT-waiter-config
     exit $ret
 fi
 echo Running Waiters
@@ -128,7 +155,7 @@ do
     if [ $WAITER_COUNT -eq "1" ]; then
         TIME_TO_LIVE_IN_SECONDS=$((SECONDS+30*60)) # 30 minutes
     else
-        TIME_TO_LIVE_IN_SECONDS=$((SECONDS+55*60)) # 55 minutes
+        TIME_TO_LIVE_IN_SECONDS=$((SECONDS+60*60)) # 60 minutes
     fi
     # wait for about an hour or until the child process finishes.
     while [ "$SECONDS" -lt "$TIME_TO_LIVE_IN_SECONDS" ] && kill -s 0 $PID; do
@@ -137,7 +164,7 @@ do
         sleep 60
     done
     # complete waiter
-    gcloud beta runtime-config configs variables set success$WAITER_COUNT/deploy-status success --config-name $DEPLOYMENT-runtime-config
+    gcloud beta runtime-config configs variables set startup/success/message$WAITER_COUNT success --config-name $DEPLOYMENT-waiter-config
 done
 ##################################
 # Post Deployment Steps
@@ -148,8 +175,7 @@ export ANSIBLE_CONFIG=$INSTALL_DIR/common/ansible/playbooks/ansible.cfg
 /bin/su sasinstall -c "echo 'Check /var/log/sas/install for deployment logs.' > /home/sasinstall/SAS_VIYA_DEPLOYMENT_FINISHED"
 # Final Waiter 4, checking on Viya services
 # wait for 50 minutes or until the login service is available for three consecutive tests
-LOADBALANCERIP=$(gcloud compute addresses list | grep $DEPLOYMENT-loadbalancer | awk '{{print $2}}')
-TIME_TO_LIVE_IN_SECONDS=$((SECONDS+55*60)) # 55 minutes
+TIME_TO_LIVE_IN_SECONDS=$((SECONDS+60*60)) # 60 minutes
 uriCheck=0
 while [[ "$SECONDS" -lt "$TIME_TO_LIVE_IN_SECONDS" && $uriCheck -lt 5 ]]; do
     if [ $(curl -sk -o /dev/null -w "%{{http_code}}" https://$LOADBALANCERIP/SASLogon/login) -eq 200 ]; then
@@ -167,11 +193,11 @@ done
 if [[ $(curl -sk -o /dev/null -w "%{{http_code}}" https://$LOADBALANCERIP/SASLogon/login) -eq 200 && $uriCheck -eq 5 ]]; then
     echo "Viya deployment was successful."
     # complete final waiter
-    gcloud beta runtime-config configs variables set success4/deploy-status success --config-name $DEPLOYMENT-runtime-config
+    gcloud beta runtime-config configs variables set startup/success/message4 success --config-name $DEPLOYMENT-waiter-config
 else
     echo "Viya Services are not available and we're out of time.  Please check install logs on ansible-controller in /var/log/sas/install."
     # failing final waiter
-    gcloud beta runtime-config configs variables set failure4/deploy-status failed --config-name $DEPLOYMENT-runtime-config
+    gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: Viya Services are not available and we're out of time.  Please check install logs on ansible-controller in /var/log/sas/install." --config-name $DEPLOYMENT-waiter-config
     exit 1
 fi
 ##################################
