@@ -8,6 +8,7 @@ ansible_startup_script = '''#!/bin/bash
 # Setting up environment
 ###################################
 export COMMON_CODE_COMMIT="f23e258fdc405a750c9bc51036208f4415c201af"
+export PROJECT="{project}"
 export DEPLOYMENT="{deployment}"
 export OLCROOTPW="{olc_root_pw}"
 export OLCUSERPW="{olc_user_pw}"
@@ -65,10 +66,10 @@ if [ "$ret" -ne "0" ]; then
 elif [[ -f /tmp/selfsigned.crt && -f /tmp/private.key  ]]; then
     echo "Assign new SSL Cert to target-https-proxy resource and clean up." 
     gcloud compute ssl-certificates create $DEPLOYMENT-sslcert-tmp --certificate /tmp/selfsigned.crt --private-key /tmp/private.key
-    gcloud compute target-https-proxies update $DEPLOYMENT-loadbalancer-target-proxy --ssl-certificates=https://www.googleapis.com/compute/v1/projects/ace-dev/global/sslCertificates/$DEPLOYMENT-sslcert-tmp
+    gcloud compute target-https-proxies update $DEPLOYMENT-loadbalancer-target-proxy --ssl-certificates=https://www.googleapis.com/compute/v1/projects/$PROJECT/global/sslCertificates/$DEPLOYMENT-sslcert-tmp
     gcloud compute ssl-certificates delete $DEPLOYMENT-sslcert --quiet
     gcloud compute ssl-certificates create $DEPLOYMENT-sslcert --certificate /tmp/selfsigned.crt --private-key /tmp/private.key
-    gcloud compute target-https-proxies update $DEPLOYMENT-loadbalancer-target-proxy --ssl-certificates=https://www.googleapis.com/compute/v1/projects/ace-dev/global/sslCertificates/$DEPLOYMENT-sslcert
+    gcloud compute target-https-proxies update $DEPLOYMENT-loadbalancer-target-proxy --ssl-certificates=https://www.googleapis.com/compute/v1/projects/$PROJECT/global/sslCertificates/$DEPLOYMENT-sslcert
     gcloud compute ssl-certificates delete $DEPLOYMENT-sslcert-tmp --quiet   
 else
    echo "The specified ssl certs do not exist. Failing sslcert-waiter and startup-waiter then exit."
@@ -255,6 +256,7 @@ def GenerateConfig(context):
     olc_root_pw = base64.b64encode(context.properties['SASAdminPass'])
     olc_user_pw = base64.b64encode(context.properties['SASUserPass'])
     deployment_data_location = context.properties['DeploymentDataLocation']
+    project = context.env['project']
     deployment = context.env['deployment']
     zone = context.properties['Zone']
     ssh_key = context.properties['SSHPublicKey']
@@ -300,7 +302,7 @@ def GenerateConfig(context):
                         {'key': 'ssh-keys', 'value': "sasinstall:{}".format(ssh_key)},
                         {'key': 'block-project-ssh-keys', 'value': "true"},
                         {'key': 'startup-script',
-                         'value': ansible_startup_script.format(deployment=deployment, olc_root_pw=olc_root_pw, olc_user_pw=olc_user_pw, deployment_data_location=deployment_data_location)}
+                         'value': ansible_startup_script.format(project=project, deployment=deployment, olc_root_pw=olc_root_pw, olc_user_pw=olc_user_pw, deployment_data_location=deployment_data_location)}
                     ]
                 }
             }
@@ -402,7 +404,7 @@ def GenerateConfig(context):
                         'mode': "READ_WRITE",
                         'initializeParams': {
                             'diskName': "{}-userlib".format(deployment),
-                            'diskType': "projects/ace-dev/zones/{}/diskTypes/pd-standard".format(zone),
+                            'diskType': "projects/{}/zones/{}/diskTypes/pd-standard".format(project, zone),
                             'diskSizeGb': 50,
                             'description': "USERLIB_DISK"
                         }
@@ -416,7 +418,7 @@ def GenerateConfig(context):
                         'mode': "READ_WRITE",
                         'initializeParams': {
                             'diskName': "{}-cascache".format(deployment),
-                            'diskType': "projects/ace-dev/zones/{}/diskTypes/pd-standard".format(zone),
+                            'diskType': "projects/{}/zones/{}/diskTypes/pd-standard".format(project, zone),
                             'diskSizeGb': 50,
                             'description': "CASCACHE_DISK"
                         }
