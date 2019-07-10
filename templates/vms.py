@@ -168,6 +168,8 @@ do
     # complete waiter
     gcloud beta runtime-config configs variables set startup/success/message$WAITER_COUNT success --config-name $DEPLOYMENT-waiter-config
 done
+echo "Scrubbing passwords from deployment log"
+sed -i s/$OLCROOTPW/scrubbedpw/g $ANSIBLE_LOG_PATH
 ##################################
 # Post Deployment Steps
 ##################################
