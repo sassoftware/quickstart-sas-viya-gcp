@@ -15,6 +15,7 @@ export OLCUSERPW="{olc_user_pw}"
 export DEPLOYMENT_DATA_LOCATION="{deployment_data_location}"
 export IAAS="gcp"
 export INSTALL_DIR="/sas/install"
+mkdir "$INSTALL_DIR/ansible"
 export LOG_DIR="/var/log/sas/install"
 /bin/su sasinstall -c "export >> /home/sasinstall/SAS_VIYA_DEPLOYMENT_ENVIRONMENT"
 ###################################
