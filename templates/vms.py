@@ -15,7 +15,6 @@ export OLCUSERPW="{olc_user_pw}"
 export DEPLOYMENT_DATA_LOCATION="{deployment_data_location}"
 export IAAS="gcp"
 export INSTALL_DIR="/sas/install"
-mkdir "$INSTALL_DIR/ansible"
 export LOG_DIR="/var/log/sas/install"
 /bin/su sasinstall -c "export >> /home/sasinstall/SAS_VIYA_DEPLOYMENT_ENVIRONMENT"
 ###################################
@@ -87,6 +86,7 @@ git checkout $COMMON_CODE_COMMIT -b $COMMON_CODE_COMMIT
 rm -rf .git*
 popd
 # Updating ownership so that sasinstall user can read/write
+mkdir "$INSTALL_DIR/ansible"
 chown -R sasinstall:sasinstall $INSTALL_DIR
 # Bootstrapping ansible controller machine
 /bin/su sasinstall -c "$INSTALL_DIR/common/scripts/ansiblecontroller_prereqs.sh"
