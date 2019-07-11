@@ -98,7 +98,7 @@ Before deploying SAS Viya Quickstart Template for GCP, you must have the followi
 
         SAS Visual Data Mining and Machine Learning 8.3.1 on Linux 
 
-*  The license file in .zip format (attached to your Software Order Email) available in a storage bucket from your GCP project. See  ["Creating Storage Buckets"](https://cloud.google.com/storage/docs/creating-buckets) and ["Uploading Objects"](https://cloud.google.com/storage/docs/uploading-objects) for more information.
+*  The license file in .zip format (attached to your Software Order Email) available in a storage bucket from your GCP project. The storage bucket must be in the same project as your deployment. See  ["Creating Storage Buckets"](https://cloud.google.com/storage/docs/creating-buckets) and ["Uploading Objects"](https://cloud.google.com/storage/docs/uploading-objects) for more information.
 
 
 <a name="Deployment"></a> 
@@ -157,7 +157,7 @@ To monitor your deployment:
 
 \<Content under construction\>
 
-*  Verify that you can log into SAS VIya from the load balancer IP address.
+*  Verify that you can log into SAS Viya from the load balancer IP address.
 
 \<Content under construction\>
 
