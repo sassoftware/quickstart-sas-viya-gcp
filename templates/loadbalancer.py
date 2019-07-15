@@ -12,9 +12,9 @@ def GenerateConfig(context):
     resources = [
         {
             'name': "{}-loadbalancer-ip".format(deployment),
-            'type': "gcp-types/compute-v1:addresses",
+            'type': "gcp-types/compute-v1:globalAddresses",
             'properties': {
-                'networkTier': "STANDARD",
+                'networkTier': "PREMIUM",
                 'region': region
             }
         },
@@ -96,11 +96,11 @@ def GenerateConfig(context):
         },
         {
             'name': "{}-forwarding-rules".format(deployment),
-            'type': "gcp-types/compute-v1:forwardingRules",
+            'type': "gcp-types/compute-v1:globalForwardingRules",
             'properties': {
                 'IPAddress': "$(ref.{}-loadbalancer-ip.selfLink)".format(deployment),
                 'IPProtocol': "TCP",
-                'networkTier': "STANDARD",
+                'networkTier': "PREMIUM",
                 'portRange': 443,
                 'region': region,
                 'target': "$(ref.{}-loadbalancer-target-proxy.selfLink)".format(deployment)
