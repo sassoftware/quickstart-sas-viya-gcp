@@ -21,7 +21,8 @@ resources:
      SASAdminPass: {{ properties["SASAdminPass"] }}
      SASUserPass: {{ properties["SASUserPass"] }}
      DeploymentDataLocation: {{ properties["DeploymentDataLocation"] }}
-
+     DeploymentMirror: {{ properties["DeploymentMirror"] }}
+     
 - name: loadbalancer
   type: loadbalancer.py
   properties:

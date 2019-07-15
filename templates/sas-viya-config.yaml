@@ -28,6 +28,8 @@ resources:
 
     # Google storage bucket location and file name of SAS License file
     DeploymentDataLocation: gs://BUCKET_PATH/LICENSE_FILENAME.ZIP
+    # Google storage bucket location of mirror
+    # DeploymentMirror: gs://BUCKET_PATH/MIRROR_DIRECTORY
 
     # Allow inbound SSH traffic to the Ansible Controller from this CIDR block (IP address range). Must be a valid IP CIDR range of the form x.x.x.x/x.
     AdminIngressLocation: x.x.x.x/x
