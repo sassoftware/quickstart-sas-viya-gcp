@@ -1,0 +1,46 @@
+---
+
+
+- name: create {{ MIRROR_DIR }} directory
+  file:
+    path: "{{ MIRROR_DIR }}"
+    state: directory
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
+    mode: 0777
+    setype: httpd_sys_content_t
+
+
+
+- name: Download mirror
+  shell: |
+    gsutil -m cp -r {{ DEPLOYMENT_MIRROR }}/* /opt/sas/mirror
+
+- name: install httpd
+  yum: name=httpd
+
+- name: set httpd port to 8008
+  replace:
+    dest: /etc/httpd/conf/httpd.conf
+    regexp:  'Listen.*'
+    replace: 'Listen 8008'
+
+- name: configure httpd
+  blockinfile:
+    dest: /etc/httpd/conf.d/repo.conf
+    create: yes
+    marker: '# {mark} sas mirror repo'
+    block: |
+      <Directory "/opt/sas/mirror/">
+        Options All
+        AllowOverride All
+        Require all granted
+        Satisfy any
+      </Directory>
+      Alias "/repo_mirror" "/opt/sas/mirror/"
+
+- name: start httpd
+  service:
+    name: httpd
+    enabled: yes
+    state: started
