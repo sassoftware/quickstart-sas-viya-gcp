@@ -148,18 +148,34 @@ The *sasadmin* and *sasuser* SAS Viya user accounts are also created during depl
 
 <a name="depmonitoring"></a> 
 ### Monitoring the Deployment
+
 To monitor your deployment:
 *  Log into the Ansible controller to monitor the deployment log messages in real time. 
 
-\<Content under construction\>
+1. Log into the GCP console [here](https://console.cloud.google.com/) with the correct Google account, and connect to the project that is associated with your deployment.
+2. From the *Navigation Menu* at the top left, click on *Compute Engine* and then *VM instances*.
+3. Click on the Ansible controller that is associated with your deployment.
+4. From the "Logs" section, click on "Serial port 1 (console)".
+5. You will see the log in real time from the Ansible controller.  Click *REFRESH* from the top to reload the log.
 
 *  Check the components that are deployed from the Deployment Manager window.
 
-\<Content under construction\>
+1. Log into the GCP console [here](https://console.cloud.google.com/) with the correct Google account, and connect to the project that is associated with your deployment.
+2. From the *Navigation Menu* at the top left, click on *Deployment Manager* and then *Deployments*.
+3. Click on your deployment.
+4. You will see a list of the components that are installed with your deployment. Click on each component to get detailed property information.
 
-*  Verify that you can log into SAS Viya from the load balancer IP address.
+*  Verify that you can log on to SAS Viya from the load balancer IP address.
 
-\<Content under construction\>
+1. Log into the GCP console [here](https://console.cloud.google.com/) with the correct Google account, and connect to the project that is associated with your deployment.
+2. From the *Navigation Menu* at the top left, click on *Network services* and then *Load balancing*.
+3. Click on the load balancer that is associated with your deployment.
+4. From the *Frontend* section, copy the IP address and port.
+5. From a browser window, enter the following using the IP address and port from step 3:
+```
+https://<IP address>:<port>
+```
+6. You should see a SAS log on screen.  Confirm that you can log on to SAS Viya.
 
 <a name=usage></a>
 ## Usage
