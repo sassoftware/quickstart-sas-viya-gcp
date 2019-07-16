@@ -7,12 +7,16 @@ ansible_startup_script = '''#!/bin/bash
 ###################################
 # Setting up environment
 ###################################
-export COMMON_CODE_COMMIT="ba0f1d7ac7c2e9dd50640d9120780a678258d6a9"
+export COMMON_CODE_COMMIT="c8d9d46d8f78268b93c67ff5cdf58d92357eb4b5"
 export PROJECT="{project}"
 export DEPLOYMENT="{deployment}"
 export OLCROOTPW="{olc_root_pw}"
 export OLCUSERPW="{olc_user_pw}"
 export DEPLOYMENT_DATA_LOCATION="{deployment_data_location}"
+export DEPLOYMENT_MIRROR="{deployment_mirror}"
+if [ "$DEPLOYMENT_MIRROR" == "None" ]; then
+  export DEPLOYMENT_MIRROR=""
+fi
 export IAAS="gcp"
 export INSTALL_DIR="/sas/install"
 export LOG_DIR="/var/log/sas/install"
@@ -57,12 +61,12 @@ pip install pyOpenSSL
 # Generating new SSL Cert and Key
 LOADBALANCERIP=$(gcloud compute addresses list | grep $DEPLOYMENT-loadbalancer | awk '{{print $2}}')
 python $INSTALL_DIR/functions/create-self-signed-cert.py $LOADBALANCERIP
-ret="$?"
-if [ "$ret" -ne "0" ]; then
+rc="$?"
+if [ "$rc" -ne "0" ]; then
     echo "*** ERROR: SSL Certificate generation failed"
     # Viya deployment failed, exiting
     gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: SSL Certificate generation failed" --config-name $DEPLOYMENT-waiter-config
-    exit $ret
+    exit $rc
 elif [[ -f /tmp/selfsigned.crt && -f /tmp/private.key  ]]; then
     echo "Assign new SSL Cert to target-https-proxy resource and clean up." 
     gcloud compute ssl-certificates create $DEPLOYMENT-sslcert-tmp --certificate /tmp/selfsigned.crt --private-key /tmp/private.key
@@ -72,7 +76,7 @@ elif [[ -f /tmp/selfsigned.crt && -f /tmp/private.key  ]]; then
     gcloud compute target-https-proxies update $DEPLOYMENT-loadbalancer-target-proxy --ssl-certificates=https://www.googleapis.com/compute/v1/projects/$PROJECT/global/sslCertificates/$DEPLOYMENT-sslcert
     gcloud compute ssl-certificates delete $DEPLOYMENT-sslcert-tmp --quiet   
 else
-   echo "The specified ssl certs do not exist. Failing sslcert-waiter and startup-waiter then exit."
+   echo "*** ERROR: The specified ssl certs do not exist. Failing sslcert-waiter and startup-waiter then exit."
    gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: The specified ssl certs do not exist. Failing sslcert-waiter and startup-waiter then exit." --config-name $DEPLOYMENT-waiter-config
    exit 1
 fi
@@ -86,7 +90,7 @@ git checkout $COMMON_CODE_COMMIT -b $COMMON_CODE_COMMIT
 rm -rf .git*
 popd
 # Updating ownership so that sasinstall user can read/write
-mkdir "$INSTALL_DIR/ansible"
+mkdir -p "$INSTALL_DIR/ansible"
 chown -R sasinstall:sasinstall $INSTALL_DIR
 # Bootstrapping ansible controller machine
 /bin/su sasinstall -c "$INSTALL_DIR/common/scripts/ansiblecontroller_prereqs.sh"
@@ -102,6 +106,12 @@ export ANSIBLE_LOG_PATH=$LOG_DIR/prepare_nodes.log
    -e SAS_INSTALL_DISK=/dev/disk/by-id/google-sashome \
    -e USERLIB_DISK=/dev/disk/by-id/google-userlib \
    -e CASCACHE_DISK=/dev/disk/by-id/google-cascache"
+rc="$?"
+if [ "$rc" -ne "0" ]; then
+   echo "*** ERROR: prepare_nodes.yml failed.  Return Code: $rc"
+   gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: prepare_nodes.yml failed. Failing startup-waiter then exit." --config-name $DEPLOYMENT-waiter-config
+   exit $rc
+fi   
 ###################################
 # Ansible playbook sets up an OpenLDAP server that can be used as initial identity provider for SAS Viya.
 ###################################
@@ -109,6 +119,12 @@ export ANSIBLE_LOG_PATH=$LOG_DIR/openldapsetup.log
 /bin/su sasinstall -c "ansible-playbook -v $INSTALL_DIR/common/ansible/playbooks/openldapsetup.yml \
    -e OLCROOTPW=$OLCROOTPW \
    -e OLCUSERPW=$OLCUSERPW"
+rc="$?"
+if [ "$rc" -ne "0" ]; then
+   echo "*** ERROR: openldapsetup.yml failed.  Return Code: $rc"
+   gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: openldapsetup.yml failed. Failing startup-waiter then exit." --config-name $DEPLOYMENT-waiter-config
+   exit $rc
+fi   
 ###################################
 # Ansible playbook does additional steps needed before installing SAS,  including
 # - download sas-orchestration
@@ -118,9 +134,16 @@ export ANSIBLE_LOG_PATH=$LOG_DIR/openldapsetup.log
 ###################################
 export ANSIBLE_LOG_PATH=$LOG_DIR/prepare_deployment.log
 /bin/su sasinstall -c "ansible-playbook -v $INSTALL_DIR/common/ansible/playbooks/prepare_deployment.yml \
+   -e DEPLOYMENT_MIRROR=$DEPLOYMENT_MIRROR\
    -e DEPLOYMENT_DATA_LOCATION=$DEPLOYMENT_DATA_LOCATION \
    -e ADMINPASS=$OLCROOTPW \
    -e VIYA_VERSION=$VIYA_VERSION"
+rc="$?"
+if [ "$rc" -ne "0" ]; then
+   echo "*** ERROR: prepare_deployment.yml failed.  Return Code: $rc"
+   gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: prepare_deployment.yml failed. Failing startup-waiter then exit." --config-name $DEPLOYMENT-waiter-config
+   exit $rc
+fi   
 ###################################
 # Run VIRK
 # The VIRK pre-install playbook covers most of the Viya Deployment Guide prereqs in one fell swoop.
@@ -130,6 +153,12 @@ export ANSIBLE_INVENTORY=$INSTALL_DIR/ansible/sas_viya_playbook/inventory.ini
 /bin/su sasinstall -c "ansible-playbook -v $INSTALL_DIR/ansible/sas_viya_playbook/viya-ark/playbooks/pre-install-playbook/viya_pre_install_playbook.yml \
   -e "use_pause=false" \
   --skip-tags skipmemfail,skipcoresfail,skipstoragefail,skipnicssfail,bandwidth"
+rc="$?"
+if [ "$rc" -ne "0" ]; then
+   echo "*** ERROR: viya_pre_install_playbook.yml failed.  Return Code: $rc"
+   gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: viya_pre_install_playbook.yml failed. Failing startup-waiter then exit." --config-name $DEPLOYMENT-waiter-config
+   exit $rc
+fi   
 ##################################
 # Install Viya
 ##################################
@@ -141,13 +170,13 @@ pushd $INSTALL_DIR/ansible/sas_viya_playbook
 nohup /bin/su sasinstall -c "ansible-playbook -v site.yml" &
 PID=$!
 echo $PID > "$PID_FILE"
-ret="$?"
-echo "$ret" > "$RETURN_FILE"
-if [ "$ret" -ne "0" ]; then
-    echo "*** ERROR: Viya Deployment script did not start"
+rc="$?"
+echo "$rc" > "$RETURN_FILE"
+if [ "$rc" -ne "0" ]; then
+    echo "*** ERROR: Viya Deployment script did not start.  Return Code: $rc"
     # viya deployment failed, exiting
     gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: Viya Deployment script did not start" --config-name $DEPLOYMENT-waiter-config
-    exit $ret
+    exit $rc
 fi
 echo Running Waiters
 # Waiters 1-3, deploying Viya
@@ -259,6 +288,7 @@ def GenerateConfig(context):
     olc_root_pw = base64.b64encode(context.properties['SASAdminPass'])
     olc_user_pw = base64.b64encode(context.properties['SASUserPass'])
     deployment_data_location = context.properties['DeploymentDataLocation']
+    deployment_mirror = context.properties['DeploymentMirror']
     project = context.env['project']
     deployment = context.env['deployment']
     zone = context.properties['Zone']
@@ -305,7 +335,7 @@ def GenerateConfig(context):
                         {'key': 'ssh-keys', 'value': "sasinstall:{}".format(ssh_key)},
                         {'key': 'block-project-ssh-keys', 'value': "true"},
                         {'key': 'startup-script',
-                         'value': ansible_startup_script.format(project=project, deployment=deployment, olc_root_pw=olc_root_pw, olc_user_pw=olc_user_pw, deployment_data_location=deployment_data_location)}
+                         'value': ansible_startup_script.format(project=project, deployment=deployment, olc_root_pw=olc_root_pw, olc_user_pw=olc_user_pw, deployment_data_location=deployment_data_location, deployment_mirror=deployment_mirror)}
                     ]
                 }
             }
