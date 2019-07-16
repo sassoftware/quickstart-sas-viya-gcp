@@ -84,7 +84,7 @@ def GenerateConfig(context):
                 'allowed': [{
                     'IPProtocol': "tcp",
                     'ports': [
-                        22
+                        22, 8008
                     ]
                 }]
             }
