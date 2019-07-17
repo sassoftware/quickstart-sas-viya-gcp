@@ -18,6 +18,7 @@ required:
 - SSHPublicKey
 - SASAdminPass
 - SASUserPass
+- DeploymentDataLocation
 - AdminIngressLocation
 - WebIngressLocation
 
@@ -53,6 +54,14 @@ properties:
   SASUserPass:
     type: string
     description: SASUser initial password
+
+  DeploymentDataLocation:
+    type: string
+    description: Google storage bucket location and file name of SAS License file
+
+  DeploymentMirror:
+    type: string
+    description: OPTIONAL - Google storage bucket location of Viya mirror
 
   AdminIngressLocation:
     type: string
