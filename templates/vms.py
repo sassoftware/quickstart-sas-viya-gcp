@@ -39,14 +39,14 @@ popd
 ###################################
 # Verify the license file exists. The startup script will exit if it does not exist.
 ###################################
-set +e
-LICENSE_STAT=$(gsutil stat $DEPLOYMENT_DATA_LOCATION 2>&1)
-set -e
-if [[ $LICENSE_STAT =~ "No URLs matched" ]]; then
-   echo "*** ERROR: The specified license file '$DEPLOYMENT_DATA_LOCATION' does not exist."
-   # failing waiter, which fails deployment.
+echo "Verify License File $DEPLOYMENT_DATA_LOCATION exists."
+gsutil stat $DEPLOYMENT_DATA_LOCATION
+rc="$?"
+echo "Verify License File Return Code: $rc"
+if [ "$rc" -ne "0" ]; then
+   echo "*** ERROR: The specified license file '$DEPLOYMENT_DATA_LOCATION' does not exist.  Return Code: $rc"
    gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: The specified license file '$DEPLOYMENT_DATA_LOCATION' does not exist." --config-name $DEPLOYMENT-waiter-config
-   exit 1
+   exit $rc
 fi
 ###################################
 #  Download license file and extract Viya version
@@ -62,8 +62,9 @@ pip install pyOpenSSL
 LOADBALANCERIP=$(gcloud compute addresses list | grep $DEPLOYMENT-loadbalancer | awk '{{print $2}}')
 python $INSTALL_DIR/functions/create-self-signed-cert.py $LOADBALANCERIP
 rc="$?"
+echo "create-self-signed-cert.py Return Code: $rc"
 if [ "$rc" -ne "0" ]; then
-    echo "*** ERROR: SSL Certificate generation failed"
+    echo "*** ERROR: SSL Certificate generation failed.  Return Code: $rc"
     # Viya deployment failed, exiting
     gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: SSL Certificate generation failed" --config-name $DEPLOYMENT-waiter-config
     exit $rc
@@ -76,7 +77,7 @@ elif [[ -f /tmp/selfsigned.crt && -f /tmp/private.key  ]]; then
     gcloud compute target-https-proxies update $DEPLOYMENT-loadbalancer-target-proxy --ssl-certificates=https://www.googleapis.com/compute/v1/projects/$PROJECT/global/sslCertificates/$DEPLOYMENT-sslcert
     gcloud compute ssl-certificates delete $DEPLOYMENT-sslcert-tmp --quiet   
 else
-   echo "*** ERROR: The specified ssl certs do not exist. Failing sslcert-waiter and startup-waiter then exit."
+   echo "*** ERROR: The specified ssl certs do not exist. Failing sslcert-waiter and startup-waiter then exit.  Return Code: $rc"
    gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: The specified ssl certs do not exist. Failing sslcert-waiter and startup-waiter then exit." --config-name $DEPLOYMENT-waiter-config
    exit 1
 fi
@@ -107,6 +108,7 @@ export ANSIBLE_LOG_PATH=$LOG_DIR/prepare_nodes.log
    -e USERLIB_DISK=/dev/disk/by-id/google-userlib \
    -e CASCACHE_DISK=/dev/disk/by-id/google-cascache"
 rc="$?"
+echo "prepare_nodes.yml Return Code: $rc"
 if [ "$rc" -ne "0" ]; then
    echo "*** ERROR: prepare_nodes.yml failed.  Return Code: $rc"
    gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: prepare_nodes.yml failed. Failing startup-waiter then exit." --config-name $DEPLOYMENT-waiter-config
@@ -120,6 +122,7 @@ export ANSIBLE_LOG_PATH=$LOG_DIR/openldapsetup.log
    -e OLCROOTPW=$OLCROOTPW \
    -e OLCUSERPW=$OLCUSERPW"
 rc="$?"
+echo "openldapsetup.yml Return Code: $rc"
 if [ "$rc" -ne "0" ]; then
    echo "*** ERROR: openldapsetup.yml failed.  Return Code: $rc"
    gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: openldapsetup.yml failed. Failing startup-waiter then exit." --config-name $DEPLOYMENT-waiter-config
@@ -139,6 +142,7 @@ export ANSIBLE_LOG_PATH=$LOG_DIR/prepare_deployment.log
    -e ADMINPASS=$OLCROOTPW \
    -e VIYA_VERSION=$VIYA_VERSION"
 rc="$?"
+echo "prepare_deployment.yml Return Code: $rc"
 if [ "$rc" -ne "0" ]; then
    echo "*** ERROR: prepare_deployment.yml failed.  Return Code: $rc"
    gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: prepare_deployment.yml failed. Failing startup-waiter then exit." --config-name $DEPLOYMENT-waiter-config
@@ -154,6 +158,7 @@ export ANSIBLE_INVENTORY=$INSTALL_DIR/ansible/sas_viya_playbook/inventory.ini
   -e "use_pause=false" \
   --skip-tags skipmemfail,skipcoresfail,skipstoragefail,skipnicssfail,bandwidth"
 rc="$?"
+echo "viya_pre_install_playbook.yml Return Code: $rc"
 if [ "$rc" -ne "0" ]; then
    echo "*** ERROR: viya_pre_install_playbook.yml failed.  Return Code: $rc"
    gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: viya_pre_install_playbook.yml failed. Failing startup-waiter then exit." --config-name $DEPLOYMENT-waiter-config
