@@ -45,7 +45,8 @@ properties:
 
   SSHPublicKey:
     type: string
-    description: Public SSH key for ansible controller
+    description: The full ssh public key that will be added to the servers.
+    pattern: ^ssh-rsa?
 
   SASAdminPass:
     type: string
