@@ -1,12 +1,12 @@
 """Load balancer resources"""
 
+
 def GenerateConfig(context):
     """ Retrieve variable values from the context """
     deployment = context.env['deployment']
     project = context.env['project']
     region = context.properties['Region']
     zone = context.properties['Zone']
-
 
     """ Define the Load Balancer resources """
     resources = [
@@ -83,6 +83,20 @@ def GenerateConfig(context):
             }
         },
         {
+            'name': "{}-sslpolicy".format(deployment),
+            'type': "gcp-types/compute-v1:sslPolicies",
+            'properties': {
+                'profile': 'CUSTOM',
+                'minTlsVersion': 'TLS_1_2',
+                'customFeatures': [
+                    'TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384',
+                    'TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384',
+                    'TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256',
+                    'TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256'
+                ]
+            }
+        },
+        {
             'name': "{}-loadbalancer-target-proxy".format(deployment),
             'type': "gcp-types/compute-v1:targetHttpsProxies",
             'properties': {
@@ -91,6 +105,7 @@ def GenerateConfig(context):
                     "$(ref.{}-sslcert.selfLink)".format(deployment)
                     # "global/sslCertificates/viya-sslcert"
                 ],
+                'sslPolicy': "$(ref.{}-sslpolicy.selfLink)".format(deployment),
                 'urlMap': "$(ref.{}-loadbalancer.selfLink)".format(deployment)
             }
         },
