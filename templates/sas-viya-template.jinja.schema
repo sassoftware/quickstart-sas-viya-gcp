@@ -31,10 +31,6 @@ properties:
     type: string
     description: Viya Services machine type defined in GCP
 
-  ServicesDiskSize:
-    type: integer
-    description: Viya Services boot disk size, minimum required is 25GB
-
   ControllerMachineType:
     type: string
     description: CAS Controller machine type defined in GCP
@@ -46,7 +42,7 @@ properties:
   SSHPublicKey:
     type: string
     description: The full ssh public key that will be added to the servers.
-    pattern: ^rsa1|rsa|dsa|ecdsa|ed25519?
+    pattern: ^2048|ssh-rsa|ssh-dsa|ecdsa-sha2-nistp256|ssh-ed25519?
 
   SASAdminPass:
     type: string
