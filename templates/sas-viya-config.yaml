@@ -22,8 +22,9 @@ resources:
     # SSH Public Key added to Anisible Controller for ssh access.
     SSHPublicKey: The full ssh public key that will be added to the servers
 
-    # Used by openldapsetup playbook
+    # Password of the SAS Admin Users (sasboot, optionally sasadmin). Must have at least 6 and no more than 255 characters.
     SASAdminPass: PASSWORD
+    # Password of the default SAS User (sasuser). If left empty, no default users are being created (WARNING: If not set, deployment will require additional setup steps before being usable).
     SASUserPass: PASSWORD
 
     # Google storage bucket location and file name of SAS License file
