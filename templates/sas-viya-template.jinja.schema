@@ -17,7 +17,6 @@ required:
 - Zone
 - SSHPublicKey
 - SASAdminPass
-- SASUserPass
 - DeploymentDataLocation
 - AdminIngressLocation
 - WebIngressLocation
@@ -46,19 +45,26 @@ properties:
 
   SASAdminPass:
     type: string
-    description: SASAdmin initial password
+    description: Password of the SAS Admin Users (sasboot, optionally sasadmin). Must have at least 6 and no more than 255 characters.
+    MinLength: '6'
+    MaxLength: '255'
+    pattern: ^([^$|^']*)$
 
   SASUserPass:
     type: string
-    description: SASUser initial password
+    description: Password of the default SAS User (sasuser). If left empty, no default users are being created (*WARNING* If not set, deployment will require additional setup steps before being usable).
+    MaxLength: '255'
+    pattern: ^([^$|^']*)$
 
   DeploymentDataLocation:
     type: string
-    description: Google storage bucket location and file name of SAS License file
+    description: Google storage bucket location and file name of SAS License file. gs://BUCKET_PATH/LICENSE_FILENAME.zip
+    pattern: (?i)^(^$|gs:\/\/).*zip$
 
   DeploymentMirror:
     type: string
-    description: OPTIONAL - Google storage bucket location of Viya mirror
+    description: OPTIONAL - Google storage bucket location of Viya mirror. gs://BUCKET_PATH/MIRROR_DIRECTORY
+    pattern: (?i)^(^$|gs:\/\/).*
 
   AdminIngressLocation:
     type: string

@@ -14,13 +14,15 @@ export OLCROOTPW="{olc_root_pw}"
 export OLCUSERPW="{olc_user_pw}"
 export DEPLOYMENT_DATA_LOCATION="{deployment_data_location}"
 export DEPLOYMENT_MIRROR="{deployment_mirror}"
-if [ "$DEPLOYMENT_MIRROR" == "None" ]; then
-  export DEPLOYMENT_MIRROR=""
-fi
 export IAAS="gcp"
 export INSTALL_DIR="/sas/install"
 export LOG_DIR="/var/log/sas/install"
 /bin/su sasinstall -c "export >> /home/sasinstall/SAS_VIYA_DEPLOYMENT_ENVIRONMENT"
+if [ "$OLCROOTPW" == "" ]; then
+   echo "*** ERROR: SASAdminPass is not set. Please check the templates/sas-viya-config.yml file in your deployment."
+   gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: SASAdminPass is not set. Please check the templates/sas-viya-config.yml file in your deployment." --config-name $DEPLOYMENT-waiter-config
+   exit $rc
+fi
 ###################################
 # Installing dependencies
 ###################################
@@ -110,24 +112,34 @@ export ANSIBLE_LOG_PATH=$LOG_DIR/prepare_nodes.log
 rc="$?"
 echo "prepare_nodes.yml Return Code: $rc"
 if [ "$rc" -ne "0" ]; then
-   echo "*** ERROR: prepare_nodes.yml failed.  Return Code: $rc"
-   gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: prepare_nodes.yml failed. Failing startup-waiter then exit." --config-name $DEPLOYMENT-waiter-config
+   echo "*** ERROR: prepare_nodes.yml failed.  Check $ANSIBLE_LOG_PATH on the ansible controller VM.  Return Code: $rc"
+   gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: prepare_nodes.yml failed. Failing startup-waiter then exit.  Check $ANSIBLE_LOG_PATH on the ansible controller VM." --config-name $DEPLOYMENT-waiter-config
    exit $rc
-fi   
+fi
+# #### DEBUG
+# while [ ! -f /home/sasinstall/dante ]; do
+#   echo "Waiting for dante"
+#   sleep 5
+# done
+# ####/DEBUG   
 ###################################
 # Ansible playbook sets up an OpenLDAP server that can be used as initial identity provider for SAS Viya.
 ###################################
-export ANSIBLE_LOG_PATH=$LOG_DIR/openldapsetup.log
-/bin/su sasinstall -c "ansible-playbook -v $INSTALL_DIR/common/ansible/playbooks/openldapsetup.yml \
-   -e OLCROOTPW=$OLCROOTPW \
-   -e OLCUSERPW=$OLCUSERPW"
-rc="$?"
-echo "openldapsetup.yml Return Code: $rc"
-if [ "$rc" -ne "0" ]; then
-   echo "*** ERROR: openldapsetup.yml failed.  Return Code: $rc"
-   gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: openldapsetup.yml failed. Failing startup-waiter then exit." --config-name $DEPLOYMENT-waiter-config
-   exit $rc
-fi   
+if [ "$OLCUSERPW" != "" ]; then
+  export ANSIBLE_LOG_PATH=$LOG_DIR/openldapsetup.log
+  /bin/su sasinstall -c "ansible-playbook -v $INSTALL_DIR/common/ansible/playbooks/openldapsetup.yml \
+     -e OLCROOTPW=$OLCROOTPW \
+     -e OLCUSERPW=$OLCUSERPW"
+  rc="$?"
+  echo "openldapsetup.yml Return Code: $rc"
+  if [ "$rc" -ne "0" ]; then
+     echo "*** ERROR: openldapsetup.yml failed.  Check $ANSIBLE_LOG_PATH on the ansible controller VM.  Return Code: $rc"
+     gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: openldapsetup.yml failed. Failing startup-waiter then exit.  Check $ANSIBLE_LOG_PATH on the ansible controller VM." --config-name $DEPLOYMENT-waiter-config
+     exit $rc
+  fi
+else
+  echo "SASUserPass is not setup, skipping OPEN LDAP setup."
+fi     
 ###################################
 # Ansible playbook does additional steps needed before installing SAS,  including
 # - download sas-orchestration
@@ -144,8 +156,8 @@ export ANSIBLE_LOG_PATH=$LOG_DIR/prepare_deployment.log
 rc="$?"
 echo "prepare_deployment.yml Return Code: $rc"
 if [ "$rc" -ne "0" ]; then
-   echo "*** ERROR: prepare_deployment.yml failed.  Return Code: $rc"
-   gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: prepare_deployment.yml failed. Failing startup-waiter then exit." --config-name $DEPLOYMENT-waiter-config
+   echo "*** ERROR: prepare_deployment.yml failed.  Check $ANSIBLE_LOG_PATH on the ansible controller VM.  Return Code: $rc"
+   gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: prepare_deployment.yml failed. Failing startup-waiter then exit.  Check $ANSIBLE_LOG_PATH on the ansible controller VM." --config-name $DEPLOYMENT-waiter-config
    exit $rc
 fi   
 ###################################
@@ -161,7 +173,7 @@ rc="$?"
 echo "viya_pre_install_playbook.yml Return Code: $rc"
 if [ "$rc" -ne "0" ]; then
    echo "*** ERROR: viya_pre_install_playbook.yml failed.  Return Code: $rc"
-   gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: viya_pre_install_playbook.yml failed. Failing startup-waiter then exit." --config-name $DEPLOYMENT-waiter-config
+   gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: viya_pre_install_playbook.yml failed. Failing startup-waiter then exit.  Check $ANSIBLE_LOG_PATH on the ansible controller VM." --config-name $DEPLOYMENT-waiter-config
    exit $rc
 fi   
 ##################################
@@ -178,9 +190,9 @@ echo $PID > "$PID_FILE"
 rc="$?"
 echo "$rc" > "$RETURN_FILE"
 if [ "$rc" -ne "0" ]; then
-    echo "*** ERROR: Viya Deployment script did not start.  Return Code: $rc"
+    echo "*** ERROR: Viya Deployment script did not start.  Check $ANSIBLE_LOG_PATH on the ansible controller VM.  Return Code: $rc"
     # viya deployment failed, exiting
-    gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: Viya Deployment script did not start" --config-name $DEPLOYMENT-waiter-config
+    gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: Viya Deployment script did not start.  Check $ANSIBLE_LOG_PATH on the ansible controller VM." --config-name $DEPLOYMENT-waiter-config
     exit $rc
 fi
 echo Running Waiters
@@ -202,6 +214,15 @@ do
     # complete waiter
     gcloud beta runtime-config configs variables set startup/success/message$WAITER_COUNT success --config-name $DEPLOYMENT-waiter-config
 done
+# Check deployment log for failure
+grep failed=1 $ANSIBLE_LOG_PATH
+rc="$?"
+if [ "$rc" -eq "0" ]; then
+    echo "*** ERROR: Viya Deployment did not complete successfully.  Check $ANSIBLE_LOG_PATH on the ansible controller VM.  Return Code: $rc"
+    # viya deployment failed, exiting
+    gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: Viya Deployment script did not complete successfully.  Check $ANSIBLE_LOG_PATH on the ansible controller VM." --config-name $DEPLOYMENT-waiter-config
+    exit $rc
+fi
 echo "Scrubbing passwords from deployment log"
 sed -i s/`echo "$OLCROOTPW" | base64 --decode`/scrubbedpw/g $ANSIBLE_LOG_PATH
 ##################################
@@ -212,7 +233,7 @@ export ANSIBLE_CONFIG=$INSTALL_DIR/common/ansible/playbooks/ansible.cfg
 /bin/su sasinstall -c "ansible-playbook -v $INSTALL_DIR/common/ansible/playbooks/post_deployment.yml"
 /bin/su sasinstall -c "echo 'Check /var/log/sas/install for deployment logs.' > /home/sasinstall/SAS_VIYA_DEPLOYMENT_FINISHED"
 # Final Waiter 4, checking on Viya services
-# wait for 50 minutes or until the login service is available for three consecutive tests
+# wait for 60 minutes or until the login service is available for three consecutive tests
 TIME_TO_LIVE_IN_SECONDS=$((SECONDS+60*60)) # 60 minutes
 uriCheck=0
 while [[ "$SECONDS" -lt "$TIME_TO_LIVE_IN_SECONDS" && $uriCheck -lt 5 ]]; do
@@ -233,9 +254,9 @@ if [[ $(curl -sk -o /dev/null -w "%{{http_code}}" https://$LOADBALANCERIP/SASLog
     # complete final waiter
     gcloud beta runtime-config configs variables set startup/success/message4 success --config-name $DEPLOYMENT-waiter-config
 else
-    echo "Viya Services are not available and we're out of time.  Please check install logs on ansible-controller in /var/log/sas/install."
+    echo "Viya Services are not available and we're out of time.  Please check install logs on the ansible controller in /var/log/sas/install."
     # failing final waiter
-    gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: Viya Services are not available and we're out of time.  Please check install logs on ansible-controller in /var/log/sas/install." --config-name $DEPLOYMENT-waiter-config
+    gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: Viya Services are not available and we're out of time.  Please check install logs on the ansible controller in /var/log/sas/install." --config-name $DEPLOYMENT-waiter-config
     exit 1
 fi
 ##################################
@@ -290,10 +311,19 @@ def GenerateConfig(context):
     ansible_controller_machinetype = context.properties['AnsibleControllerMachineType']
     services_machinetype = context.properties['ServicesMachineType']
     controller_machinetype = context.properties['ControllerMachineType']
-    olc_root_pw = base64.b64encode(context.properties['SASAdminPass'])
-    olc_user_pw = base64.b64encode(context.properties['SASUserPass'])
+    if context.properties['SASAdminPass'] is None:
+        olc_root_pw = ''
+    else:
+        olc_root_pw = base64.b64encode(context.properties['SASAdminPass'])
+    if context.properties['SASUserPass'] is None:
+        olc_user_pw = ''
+    else:
+        olc_user_pw = base64.b64encode(context.properties['SASUserPass'])
     deployment_data_location = context.properties['DeploymentDataLocation']
-    deployment_mirror = context.properties['DeploymentMirror']
+    if context.properties['DeploymentMirror'] is None:
+        deployment_mirror = ''
+    else:
+        deployment_mirror = context.properties['DeploymentMirror']
     project = context.env['project']
     deployment = context.env['deployment']
     zone = context.properties['Zone']
