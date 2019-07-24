@@ -42,7 +42,7 @@ properties:
   SSHPublicKey:
     type: string
     description: The full ssh public key that will be added to the servers.
-    pattern: ^2048|ssh-rsa|ssh-dsa|ecdsa-sha2-nistp256|ssh-ed25519?
+    pattern: ^2048|ssh-rsa|ssh-dss|ecdsa-sha2-nistp256|ssh-ed25519?
 
   SASAdminPass:
     type: string
