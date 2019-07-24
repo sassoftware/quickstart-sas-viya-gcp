@@ -7,7 +7,7 @@ ansible_startup_script = '''#!/bin/bash
 ###################################
 # Setting up environment
 ###################################
-export COMMON_CODE_COMMIT="c8d9d46d8f78268b93c67ff5cdf58d92357eb4b5"
+export COMMON_CODE_COMMIT="8b2b495de09f0f34616e0d611feee07c450461b3"
 export PROJECT="{project}"
 export DEPLOYMENT="{deployment}"
 export OLCROOTPW="{olc_root_pw}"
