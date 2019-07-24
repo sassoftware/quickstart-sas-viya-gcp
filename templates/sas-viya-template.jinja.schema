@@ -46,15 +46,15 @@ properties:
   SASAdminPass:
     type: string
     description: Password of the SAS Admin Users (sasboot, optionally sasadmin). Must have at least 6 and no more than 255 characters.
-    MinLength: '6'
-    MaxLength: '255'
-    pattern: ^([^$|^']*)$
+    minLength: 6
+    maxLength: 255
+    pattern: ^([^']*)$
 
   SASUserPass:
     type: string
     description: Password of the default SAS User (sasuser). If left empty, no default users are being created (*WARNING* If not set, deployment will require additional setup steps before being usable).
-    MaxLength: '255'
-    pattern: ^([^$|^']*)$
+    maxLength: 255
+    pattern: ^([^']*)$
 
   DeploymentDataLocation:
     type: string
@@ -69,13 +69,13 @@ properties:
   AdminIngressLocation:
     type: string
     description: Allow inbound SSH traffic to the Ansible Controller from this CIDR block (IP address range). Must be a valid IP CIDR range of the form x.x.x.x/x.
-    MinLength: '9'
-    MaxLength: '18'
+    minLength: 9
+    maxLength: 18
     pattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
 
   WebIngressLocation:
     type: string
     description: Allow inbound HTTP(S) traffic to the Services VM from this CIDR block (IP address range). Must be a valid IP CIDR range of the form x.x.x.x/x.
-    MinLength: '9'
-    MaxLength: '18'
+    minLength: 9
+    maxLength: 18
     pattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
