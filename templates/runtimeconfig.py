@@ -8,10 +8,10 @@ def GenerateConfig(context):
     """ Define the resources for the Runtime Config """
     resources = [
         {
-            'name': "{}-deployment-waiter".format(deployment),
+            'name': "{}-deployment-waiters".format(deployment),
             'type': 'gcp-types/runtimeconfig-v1beta1:projects.configs',
             'properties': {
-                'config': '{}-deployment-waiter'.format(deployment)
+                'config': '{}-deployment-waiters'.format(deployment)
             }
 
         },
@@ -25,7 +25,7 @@ def GenerateConfig(context):
                 ]
             },
             'properties': {
-                'parent': "$(ref.{}-deployment-waiter.name)".format(deployment),
+                'parent': "$(ref.{}-deployment-waiters.name)".format(deployment),
                 'waiter': 'viya-runtime-waiter1',
                 'timeout': "5000s",
                 'success': {
@@ -51,7 +51,7 @@ def GenerateConfig(context):
                 ]
             },
             'properties': {
-                'parent': "$(ref.{}-deployment-waiter.name)".format(deployment),
+                'parent': "$(ref.{}-deployment-waiters.name)".format(deployment),
                 'waiter': 'viya-runtime-waiter2',
                 'timeout': "5000s",
                 'success': {
@@ -77,7 +77,7 @@ def GenerateConfig(context):
                 ]
             },
             'properties': {
-                'parent': "$(ref.{}-deployment-waiter.name)".format(deployment),
+                'parent': "$(ref.{}-deployment-waiters.name)".format(deployment),
                 'waiter': 'viya-runtime-waiter3',
                 'timeout': "5000s",
                 'success': {
@@ -103,7 +103,7 @@ def GenerateConfig(context):
                 ]
             },
             'properties': {
-                'parent': "$(ref.{}-deployment-waiter.name)".format(deployment),
+                'parent': "$(ref.{}-deployment-waiters.name)".format(deployment),
                 'waiter': 'viya-runtime-waiter4',
                 'timeout': "5000s",
                 'success': {
@@ -129,7 +129,7 @@ def GenerateConfig(context):
                 ]
             },
             'properties': {
-                'parent': "$(ref.{}-deployment-waiter.name)".format(deployment),
+                'parent': "$(ref.{}-deployment-waiters.name)".format(deployment),
                 'waiter': 'viya-runtime-waiter5',
                 'timeout': "5000s",
                 'success': {

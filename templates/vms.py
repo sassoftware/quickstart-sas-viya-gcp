@@ -19,8 +19,8 @@ export INSTALL_DIR="/sas/install"
 export LOG_DIR="/var/log/sas/install"
 /bin/su sasinstall -c "export >> /home/sasinstall/SAS_VIYA_DEPLOYMENT_ENVIRONMENT"
 if [ "$OLCROOTPW" == "" ]; then
-   echo "*** ERROR: SASAdminPass is not set. Please check the templates/sas-viya-config.yml file in your deployment."
-   gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: SASAdminPass is not set. Please check the templates/sas-viya-config.yml file in your deployment." --config-name $DEPLOYMENT-deployment-waiter
+   echo "*** ERROR: SASAdminPass is not set. Check the templates/sas-viya-config.yml file in your deployment."
+   gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: SASAdminPass is not set.  Check the templates/sas-viya-config.yml file in your deployment." --config-name $DEPLOYMENT-deployment-waiters
    exit $rc
 fi
 ###################################
@@ -47,7 +47,7 @@ rc="$?"
 echo "Verify License File Return Code: $rc"
 if [ "$rc" -ne "0" ]; then
    echo "*** ERROR: The specified license file '$DEPLOYMENT_DATA_LOCATION' does not exist.  Return Code: $rc"
-   gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: The specified license file '$DEPLOYMENT_DATA_LOCATION' does not exist." --config-name $DEPLOYMENT-deployment-waiter
+   gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: The specified license file '$DEPLOYMENT_DATA_LOCATION' does not exist." --config-name $DEPLOYMENT-deployment-waiters
    exit $rc
 fi
 ###################################
@@ -68,7 +68,7 @@ echo "create-self-signed-cert.py Return Code: $rc"
 if [ "$rc" -ne "0" ]; then
     echo "*** ERROR: SSL Certificate generation failed.  Return Code: $rc"
     # Viya deployment failed, exiting
-    gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: SSL Certificate generation failed" --config-name $DEPLOYMENT-deployment-waiter
+    gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: SSL Certificate generation failed" --config-name $DEPLOYMENT-deployment-waiters
     exit $rc
 elif [[ -f /tmp/selfsigned.crt && -f /tmp/private.key  ]]; then
     echo "Assign new SSL Cert to target-https-proxy resource and clean up." 
@@ -79,8 +79,8 @@ elif [[ -f /tmp/selfsigned.crt && -f /tmp/private.key  ]]; then
     gcloud compute target-https-proxies update $DEPLOYMENT-loadbalancer-target-proxy --ssl-certificates=https://www.googleapis.com/compute/v1/projects/$PROJECT/global/sslCertificates/$DEPLOYMENT-sslcert
     gcloud compute ssl-certificates delete $DEPLOYMENT-sslcert-tmp --quiet   
 else
-   echo "*** ERROR: The specified ssl certs do not exist. Failing sslcert-waiter and startup-waiter then exit.  Return Code: $rc"
-   gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: The specified ssl certs do not exist. Failing sslcert-waiter and startup-waiter then exit." --config-name $DEPLOYMENT-deployment-waiter
+   echo "*** ERROR: The SSL Certificate files do not exist.  Return Code: $rc"
+   gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: The SSL Certificate files do not exist." --config-name $DEPLOYMENT-deployment-waiters
    exit 1
 fi
 ###################################
@@ -113,7 +113,7 @@ rc="$?"
 echo "prepare_nodes.yml Return Code: $rc"
 if [ "$rc" -ne "0" ]; then
    echo "*** ERROR: prepare_nodes.yml failed.  Check $ANSIBLE_LOG_PATH on the ansible controller VM.  Return Code: $rc"
-   gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: prepare_nodes.yml failed. Failing startup-waiter then exit.  Check $ANSIBLE_LOG_PATH on the ansible controller VM." --config-name $DEPLOYMENT-deployment-waiter
+   gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: prepare_nodes.yml failed. Check $ANSIBLE_LOG_PATH on the ansible controller VM." --config-name $DEPLOYMENT-deployment-waiters
    exit $rc
 fi
 # #### DEBUG
@@ -134,7 +134,7 @@ if [ "$OLCUSERPW" != "" ]; then
   echo "openldapsetup.yml Return Code: $rc"
   if [ "$rc" -ne "0" ]; then
      echo "*** ERROR: openldapsetup.yml failed.  Check $ANSIBLE_LOG_PATH on the ansible controller VM.  Return Code: $rc"
-     gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: openldapsetup.yml failed. Failing startup-waiter then exit.  Check $ANSIBLE_LOG_PATH on the ansible controller VM." --config-name $DEPLOYMENT-deployment-waiter
+     gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: openldapsetup.yml failed.  Check $ANSIBLE_LOG_PATH on the ansible controller VM." --config-name $DEPLOYMENT-deployment-waiters
      exit $rc
   fi
 else
@@ -157,7 +157,7 @@ rc="$?"
 echo "prepare_deployment.yml Return Code: $rc"
 if [ "$rc" -ne "0" ]; then
    echo "*** ERROR: prepare_deployment.yml failed.  Check $ANSIBLE_LOG_PATH on the ansible controller VM.  Return Code: $rc"
-   gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: prepare_deployment.yml failed. Failing startup-waiter then exit.  Check $ANSIBLE_LOG_PATH on the ansible controller VM." --config-name $DEPLOYMENT-deployment-waiter
+   gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: prepare_deployment.yml failed.  Check $ANSIBLE_LOG_PATH on the ansible controller VM." --config-name $DEPLOYMENT-deployment-waiters
    exit $rc
 fi   
 ###################################
@@ -172,13 +172,13 @@ export ANSIBLE_INVENTORY=$INSTALL_DIR/ansible/sas_viya_playbook/inventory.ini
 rc="$?"
 echo "viya_pre_install_playbook.yml Return Code: $rc"
 if [ "$rc" -ne "0" ]; then
-   echo "*** ERROR: viya_pre_install_playbook.yml failed.  Return Code: $rc"
-   gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: viya_pre_install_playbook.yml failed. Failing startup-waiter then exit.  Check $ANSIBLE_LOG_PATH on the ansible controller VM." --config-name $DEPLOYMENT-deployment-waiter
+   echo "*** ERROR: viya_pre_install_playbook.yml failed.  Check $ANSIBLE_LOG_PATH on the ansible controller VM.  Return Code: $rc"
+   gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: viya_pre_install_playbook.yml failed.  Check $ANSIBLE_LOG_PATH on the ansible controller VM." --config-name $DEPLOYMENT-deployment-waiters
    exit $rc
 fi
 # Waiters 1, initialization-status
 # complete waiter
-gcloud beta runtime-config configs variables set startup/success/initialization-status success --config-name $DEPLOYMENT-deployment-waiter   
+gcloud beta runtime-config configs variables set startup/success/initialization-status success --config-name $DEPLOYMENT-deployment-waiters   
 ##################################
 # Install Viya
 ##################################
@@ -195,7 +195,7 @@ echo "$rc" > "$RETURN_FILE"
 if [ "$rc" -ne "0" ]; then
     echo "*** ERROR: Viya Deployment script did not start.  Check $ANSIBLE_LOG_PATH on the ansible controller VM.  Return Code: $rc"
     # viya deployment failed, exiting
-    gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: Viya Deployment script did not start.  Check $ANSIBLE_LOG_PATH on the ansible controller VM." --config-name $DEPLOYMENT-deployment-waiter
+    gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: Viya Deployment script did not start.  Check $ANSIBLE_LOG_PATH on the ansible controller VM." --config-name $DEPLOYMENT-deployment-waiters
     exit $rc
 fi
 echo Running Deployment Status Waiters
@@ -210,7 +210,7 @@ do
         sleep 60
     done
     # complete waiter
-    gcloud beta runtime-config configs variables set startup/success/deployment-status$WAITER_COUNT success --config-name $DEPLOYMENT-deployment-waiter
+    gcloud beta runtime-config configs variables set startup/success/deployment-status$WAITER_COUNT success --config-name $DEPLOYMENT-deployment-waiters
 done
 # Check deployment log for failure
 grep failed=1 $ANSIBLE_LOG_PATH
@@ -218,7 +218,7 @@ rc="$?"
 if [ "$rc" -eq "0" ]; then
     echo "*** ERROR: Viya Deployment did not complete successfully.  Check $ANSIBLE_LOG_PATH on the ansible controller VM.  Return Code: $rc"
     # viya deployment failed, exiting
-    gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: Viya Deployment script did not complete successfully.  Check $ANSIBLE_LOG_PATH on the ansible controller VM." --config-name $DEPLOYMENT-deployment-waiter
+    gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: Viya Deployment script did not complete successfully.  Check $ANSIBLE_LOG_PATH on the ansible controller VM." --config-name $DEPLOYMENT-deployment-waiters
     exit $rc
 fi
 echo "Scrubbing passwords from deployment log"
@@ -250,11 +250,11 @@ done
 if [[ $(curl -sk -o /dev/null -w "%{{http_code}}" https://$LOADBALANCERIP/SASLogon/login) -eq 200 && $uriCheck -eq 5 ]]; then
     echo "Viya deployment was successful."
     # complete final waiter
-    gcloud beta runtime-config configs variables set startup/success/services-status success --config-name $DEPLOYMENT-deployment-waiter
+    gcloud beta runtime-config configs variables set startup/success/services-status success --config-name $DEPLOYMENT-deployment-waiters
 else
     echo "Viya Services are not available and we're out of time.  Please check install logs on the ansible controller in $LOG_DIR."
     # failing final waiter
-    gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: Viya Services are not available and we're out of time.  Please check install logs on the ansible controller in $LOG_DIR." --config-name $DEPLOYMENT-deployment-waiter
+    gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: Viya Services are not available and we're out of time.  Please check install logs on the ansible controller in $LOG_DIR." --config-name $DEPLOYMENT-deployment-waiters
     exit 1
 fi
 ##################################
