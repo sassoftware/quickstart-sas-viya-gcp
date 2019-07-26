@@ -176,9 +176,9 @@ if [ "$rc" -ne "0" ]; then
    gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: viya_pre_install_playbook.yml failed.  Check $ANSIBLE_LOG_PATH on the ansible controller VM." --config-name $DEPLOYMENT-deployment-waiters
    exit $rc
 fi
-# Waiters 1, initialization-status
+# Waiters 1, initialization-phase
 # complete waiter
-gcloud beta runtime-config configs variables set startup/success/initialization-status success --config-name $DEPLOYMENT-deployment-waiters   
+gcloud beta runtime-config configs variables set startup/success/initialization-phase success --config-name $DEPLOYMENT-deployment-waiters   
 ##################################
 # Install Viya
 ##################################
@@ -202,15 +202,15 @@ echo Running Deployment Status Waiters
 # Waiters 1-3, deploying Viya
 for ((WAITER_COUNT=1 ; WAITER_COUNT<4 ; WAITER_COUNT++))
 do
-    # wait for 60 minutes or until the child process finishes.
-    TIME_TO_LIVE_IN_SECONDS=$((SECONDS+60*60)) # 60 minutes
+    # wait for 55 minutes or until the child process finishes.
+    TIME_TO_LIVE_IN_SECONDS=$((SECONDS+55*60)) # 55 minutes
     while [ "$SECONDS" -lt "$TIME_TO_LIVE_IN_SECONDS" ] && kill -s 0 $PID; do
         echo "Viya deployment is still running."
         echo "Deployment Status Waiter: $WAITER_COUNT has $(($((TIME_TO_LIVE_IN_SECONDS-SECONDS))/60)) minutes left"
         sleep 60
     done
     # complete waiter
-    gcloud beta runtime-config configs variables set startup/success/deployment-status$WAITER_COUNT success --config-name $DEPLOYMENT-deployment-waiters
+    gcloud beta runtime-config configs variables set startup/success/deployment-phase$WAITER_COUNT success --config-name $DEPLOYMENT-deployment-waiters
 done
 # Check deployment log for failure
 grep failed=1 $ANSIBLE_LOG_PATH
@@ -231,8 +231,8 @@ export ANSIBLE_CONFIG=$INSTALL_DIR/common/ansible/playbooks/ansible.cfg
 /bin/su sasinstall -c "ansible-playbook -v $INSTALL_DIR/common/ansible/playbooks/post_deployment.yml"
 /bin/su sasinstall -c "echo 'Check $LOG_DIR for deployment logs.' > /home/sasinstall/SAS_VIYA_DEPLOYMENT_FINISHED"
 # Final Waiter 5, checking on Viya services
-# wait for 60 minutes or until the login service is available for three consecutive tests
-TIME_TO_LIVE_IN_SECONDS=$((SECONDS+60*60)) # 60 minutes
+# wait for 55 minutes or until the login service is available for three consecutive tests
+TIME_TO_LIVE_IN_SECONDS=$((SECONDS+55*60)) # 55 minutes
 uriCheck=0
 while [[ "$SECONDS" -lt "$TIME_TO_LIVE_IN_SECONDS" && $uriCheck -lt 5 ]]; do
     if [ $(curl -sk -o /dev/null -w "%{{http_code}}" https://$LOADBALANCERIP/SASLogon/login) -eq 200 ]; then
