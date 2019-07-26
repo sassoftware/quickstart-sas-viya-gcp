@@ -17,7 +17,7 @@ def GenerateConfig(context):
         },
         # Triggers for the following waiters are in ansible_startup_script  contained in file vms.py
         {
-            'name': "{}-initialization-status".format(deployment),
+            'name': "{}-initialization-phase".format(deployment),
             'type': 'gcp-types/runtimeconfig-v1beta1:projects.configs.waiters',
             'metadata': {
                 'dependsOn': [
@@ -43,11 +43,11 @@ def GenerateConfig(context):
             }
         },
         {
-            'name': "{}-deployment-status1".format(deployment),
+            'name': "{}-deployment-phase1".format(deployment),
             'type': 'gcp-types/runtimeconfig-v1beta1:projects.configs.waiters',
             'metadata': {
                 'dependsOn': [
-                    "{}-initialization-status".format(deployment)
+                    "{}-initialization-phase".format(deployment)
                 ]
             },
             'properties': {
@@ -69,11 +69,11 @@ def GenerateConfig(context):
             }
         },
         {
-            'name': "{}-deployment-status2".format(deployment),
+            'name': "{}-deployment-phase2".format(deployment),
             'type': 'gcp-types/runtimeconfig-v1beta1:projects.configs.waiters',
             'metadata': {
                 'dependsOn': [
-                    "{}-deployment-status1".format(deployment)
+                    "{}-deployment-phase1".format(deployment)
                 ]
             },
             'properties': {
@@ -95,11 +95,11 @@ def GenerateConfig(context):
             }
         },
         {
-            'name': "{}-deployment-status3".format(deployment),
+            'name': "{}-deployment-phase3".format(deployment),
             'type': 'gcp-types/runtimeconfig-v1beta1:projects.configs.waiters',
             'metadata': {
                 'dependsOn': [
-                    "{}-deployment-status2".format(deployment)
+                    "{}-deployment-phase2".format(deployment)
                 ]
             },
             'properties': {
@@ -125,7 +125,7 @@ def GenerateConfig(context):
             'type': 'gcp-types/runtimeconfig-v1beta1:projects.configs.waiters',
             'metadata': {
                 'dependsOn': [
-                    "{}-deployment-status3".format(deployment)
+                    "{}-deployment-phase3".format(deployment)
                 ]
             },
             'properties': {
