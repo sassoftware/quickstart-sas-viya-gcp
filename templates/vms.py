@@ -105,7 +105,7 @@ export ANSIBLE_CONFIG=$INSTALL_DIR/common/ansible/playbooks/ansible.cfg
 # - setting up directories and users
 ###################################
 export ANSIBLE_LOG_PATH=$LOG_DIR/prepare_nodes.log
-/bin/su sasinstall -c "ansible-playbook -v $INSTALL_DIR/common/ansible/playbooks/prepare_nodes.yml \
+/bin/su sasinstall -c "time ansible-playbook -v $INSTALL_DIR/common/ansible/playbooks/prepare_nodes.yml \
    -e SAS_INSTALL_DISK=/dev/disk/by-id/google-sashome \
    -e USERLIB_DISK=/dev/disk/by-id/google-userlib \
    -e CASCACHE_DISK=/dev/disk/by-id/google-cascache"
@@ -127,7 +127,7 @@ fi
 ###################################
 if [ "$OLCUSERPW" != "" ]; then
   export ANSIBLE_LOG_PATH=$LOG_DIR/openldapsetup.log
-  /bin/su sasinstall -c "ansible-playbook -v $INSTALL_DIR/common/ansible/playbooks/openldapsetup.yml \
+  /bin/su sasinstall -c "time ansible-playbook -v $INSTALL_DIR/common/ansible/playbooks/openldapsetup.yml \
      -e OLCROOTPW=$OLCROOTPW \
      -e OLCUSERPW=$OLCUSERPW"
   rc="$?"
@@ -148,7 +148,7 @@ fi
 # - modify inventory.ini and vars.yml
 ###################################
 export ANSIBLE_LOG_PATH=$LOG_DIR/prepare_deployment.log
-/bin/su sasinstall -c "ansible-playbook -v $INSTALL_DIR/common/ansible/playbooks/prepare_deployment.yml \
+/bin/su sasinstall -c "time ansible-playbook -v $INSTALL_DIR/common/ansible/playbooks/prepare_deployment.yml \
    -e DEPLOYMENT_MIRROR=$DEPLOYMENT_MIRROR\
    -e DEPLOYMENT_DATA_LOCATION=$DEPLOYMENT_DATA_LOCATION \
    -e ADMINPASS=$OLCROOTPW \
@@ -166,7 +166,7 @@ fi
 ###################################
 export ANSIBLE_LOG_PATH=$LOG_DIR/virk.log
 export ANSIBLE_INVENTORY=$INSTALL_DIR/ansible/sas_viya_playbook/inventory.ini
-/bin/su sasinstall -c "ansible-playbook -v $INSTALL_DIR/ansible/sas_viya_playbook/viya-ark/playbooks/pre-install-playbook/viya_pre_install_playbook.yml \
+/bin/su sasinstall -c "time ansible-playbook -v $INSTALL_DIR/ansible/sas_viya_playbook/viya-ark/playbooks/pre-install-playbook/viya_pre_install_playbook.yml \
   -e "use_pause=false" \
   --skip-tags skipmemfail,skipcoresfail,skipstoragefail,skipnicssfail,bandwidth"
 rc="$?"
@@ -176,18 +176,19 @@ if [ "$rc" -ne "0" ]; then
    gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: viya_pre_install_playbook.yml failed.  Check $ANSIBLE_LOG_PATH on the ansible controller VM." --config-name $DEPLOYMENT-deployment-waiters
    exit $rc
 fi
-# Waiters 1, initialization-phase
+# Waiter 1, initialization-phase
 # complete waiter
 gcloud beta runtime-config configs variables set startup/success/initialization-phase success --config-name $DEPLOYMENT-deployment-waiters   
 ##################################
 # Install Viya
 ##################################
+echo "Starting Viya Deployment"
 export PID_FILE="$LOG_DIR/viya_deployment.pid"
 export RETURN_FILE="$LOG_DIR/viya_deployment.rc"
 export ANSIBLE_LOG_PATH="$LOG_DIR/viya_deployment.log"
 export ANSIBLE_CONFIG="$INSTALL_DIR/ansible/sas_viya_playbook"
 pushd $INSTALL_DIR/ansible/sas_viya_playbook
-nohup /bin/su sasinstall -c "ansible-playbook -v site.yml" &
+nohup /bin/su sasinstall -c "time ansible-playbook -v site.yml" &
 PID=$!
 echo $PID > "$PID_FILE"
 rc="$?"
@@ -198,15 +199,15 @@ if [ "$rc" -ne "0" ]; then
     gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: Viya Deployment script did not start.  Check $ANSIBLE_LOG_PATH on the ansible controller VM." --config-name $DEPLOYMENT-deployment-waiters
     exit $rc
 fi
-echo Running Deployment Status Waiters
-# Waiters 1-3, deploying Viya
+echo "Running Deployment Phase Waiters"
+# Waiters 2-4, deployment-phase
 for ((WAITER_COUNT=1 ; WAITER_COUNT<4 ; WAITER_COUNT++))
 do
     # wait for 55 minutes or until the child process finishes.
     TIME_TO_LIVE_IN_SECONDS=$((SECONDS+55*60)) # 55 minutes
     while [ "$SECONDS" -lt "$TIME_TO_LIVE_IN_SECONDS" ] && kill -s 0 $PID; do
         echo "Viya deployment is still running."
-        echo "Deployment Status Waiter: $WAITER_COUNT has $(($((TIME_TO_LIVE_IN_SECONDS-SECONDS))/60)) minutes left"
+        echo "Deployment Phase Waiter: $WAITER_COUNT has $(($((TIME_TO_LIVE_IN_SECONDS-SECONDS))/60)) minutes left"
         sleep 60
     done
     # complete waiter
@@ -228,34 +229,52 @@ sed -i s/`echo "$OLCROOTPW" | base64 --decode`/scrubbedpw/g $ANSIBLE_LOG_PATH
 ##################################
 export ANSIBLE_LOG_PATH=$LOG_DIR/post_deployment.log
 export ANSIBLE_CONFIG=$INSTALL_DIR/common/ansible/playbooks/ansible.cfg
-/bin/su sasinstall -c "ansible-playbook -v $INSTALL_DIR/common/ansible/playbooks/post_deployment.yml"
+/bin/su sasinstall -c "time ansible-playbook -v $INSTALL_DIR/common/ansible/playbooks/post_deployment.yml"
+rc="$?"
+echo "post_deployment.yml Return Code: $rc"
+if [ "$rc" -ne "0" ]; then
+   echo "*** ERROR: post_deployment.yml failed.  Check $ANSIBLE_LOG_PATH on the ansible controller VM.  Return Code: $rc"
+   gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: post_deployment.yml failed.  Check $ANSIBLE_LOG_PATH on the ansible controller VM." --config-name $DEPLOYMENT-deployment-waiters
+   exit $rc
+fi
 /bin/su sasinstall -c "echo 'Check $LOG_DIR for deployment logs.' > /home/sasinstall/SAS_VIYA_DEPLOYMENT_FINISHED"
-# Final Waiter 5, checking on Viya services
-# wait for 55 minutes or until the login service is available for three consecutive tests
+##################################
+# Waiting for Viya Services to be available
+##################################
+echo "Waiting for Viya Services to become available"
+export PID_FILE="$LOG_DIR/restart_services.pid"
+export RETURN_FILE="$LOG_DIR/restart_services.rc"
+export ANSIBLE_LOG_PATH="$LOG_DIR/restart_services.log"
+export ANSIBLE_CONFIG=$INSTALL_DIR/common/ansible/playbooks/ansible.cfg
+nohup /bin/su sasinstall -c "time ansible-playbook -v $INSTALL_DIR/common/ansible/playbooks/restart_services.yml" &
+PID=$!
+echo $PID > "$PID_FILE"
+rc="$?"
+echo "$rc" > "$RETURN_FILE"
+if [ "$rc" -ne "0" ]; then
+    echo "*** ERROR: restart_services.yml script did not start.  Check $ANSIBLE_LOG_PATH on the ansible controller VM.  Return Code: $rc"
+    # viya restart services failed, exiting
+    gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: restart_services.yml script did not start.  Check $ANSIBLE_LOG_PATH on the ansible controller VM." --config-name $DEPLOYMENT-deployment-waiters
+    exit $rc
+fi
+# Waiter 5, services-status
+# wait for 55 minutes or until the child process finishes.
 TIME_TO_LIVE_IN_SECONDS=$((SECONDS+55*60)) # 55 minutes
-uriCheck=0
-while [[ "$SECONDS" -lt "$TIME_TO_LIVE_IN_SECONDS" && $uriCheck -lt 5 ]]; do
-    if [ $(curl -sk -o /dev/null -w "%{{http_code}}" https://$LOADBALANCERIP/SASLogon/login) -eq 200 ]; then
-        uriCheck=$((uriCheck+1))
-        echo "Viya is open for business. Check: $uriCheck"
-        echo "Services Status Waiter has $(($((TIME_TO_LIVE_IN_SECONDS-SECONDS))/60)) minutes left"
-        sleep 60
-    else
-        uriCheck=0
-        echo "Viya Logon service is still not available."
-        echo "Services Status Waiter has $(($((TIME_TO_LIVE_IN_SECONDS-SECONDS))/60)) minutes left"
-        sleep 60
-    fi
+while [ "$SECONDS" -lt "$TIME_TO_LIVE_IN_SECONDS" ] && kill -s 0 $PID; do
+    echo "Not all Viya Service are available."
+    echo "Services Status Waiter: $WAITER_COUNT has $(($((TIME_TO_LIVE_IN_SECONDS-SECONDS))/60)) minutes left"
+    sleep 60
 done
-if [[ $(curl -sk -o /dev/null -w "%{{http_code}}" https://$LOADBALANCERIP/SASLogon/login) -eq 200 && $uriCheck -eq 5 ]]; then
-    echo "Viya deployment was successful."
-    # complete final waiter
-    gcloud beta runtime-config configs variables set startup/success/services-status success --config-name $DEPLOYMENT-deployment-waiters
-else
-    echo "Viya Services are not available and we're out of time.  Please check install logs on the ansible controller in $LOG_DIR."
-    # failing final waiter
-    gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: Viya Services are not available and we're out of time.  Please check install logs on the ansible controller in $LOG_DIR." --config-name $DEPLOYMENT-deployment-waiters
-    exit 1
+# complete waiter
+gcloud beta runtime-config configs variables set startup/success/services-status success --config-name $DEPLOYMENT-deployment-waiters
+# Check deployment log for failure
+grep failed=1 $ANSIBLE_LOG_PATH
+rc="$?"
+if [ "$rc" -eq "0" ]; then
+    echo "*** ERROR: restart_services.yml did not complete successfully.  Check $ANSIBLE_LOG_PATH on the ansible controller VM.  Return Code: $rc"
+    # viya deployment failed, exiting
+    gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: restart_services.yml script did not complete successfully.  Check $ANSIBLE_LOG_PATH on the ansible controller VM." --config-name $DEPLOYMENT-deployment-waiters
+    exit $rc
 fi
 ##################################
 # Final system update
