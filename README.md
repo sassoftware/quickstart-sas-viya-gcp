@@ -29,6 +29,7 @@ This Quickstart is a reference architecture for users who want to deploy the SAS
    1. [Parameters](#parameters)
    1. [Path to SAS License Zip File](#zipfilepath)
 1. [Troubleshooting](#Tshoot)
+1. [Appendix](#AppendixA)
    
 
 <a name="Summary"></a>
@@ -229,9 +230,23 @@ gs://testbucket-deployment-data/viya3.4/SAS_Viya_deployment_data.zip
 <a name="Tshoot"></a> 
 ## Troubleshooting
 
+<a name="AppendixA"></a>
+## Appendix: Set Up A Mirror Repository
+1. To set up a mirror repository, refer to the instructions in ["Create a Mirror Repository"](https://go.documentation.sas.com/?docsetId=dplyml0phy0lax&docsetTarget=p1ilrw734naazfn119i2rqik91r0.htm&docsetVersion=3.4&locale=en) in the SAS Viya 3.4 for Linux: Deployment Guide.
+2. Set up a GCP bucket that is accessible by the account where you deployed the SAS Viya Quick Start.
+3. Move the file structure of your mirror repository to the GCP bucket.
+4. Upload the mirror repository into your GCP bucket.
 
+To upload the mirror using the GCP command line interface (CLI), run the following command:
+```
+gsutil rsync -r /path/to/your/local/mirror/sas_repos gs://yourbucket/your/mirror/
+```
+5. During your GCP Quickstart installation, specify the value for the **DeploymentMirror** parameter as follows:
+```
+gs://your-bucket/your/mirror/
+```
 
-    ```        
+           
 
 
     
