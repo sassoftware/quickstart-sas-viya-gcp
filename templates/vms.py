@@ -116,12 +116,6 @@ if [ "$rc" -ne "0" ]; then
    gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: prepare_nodes.yml failed. Check $ANSIBLE_LOG_PATH on the ansible controller VM." --config-name $DEPLOYMENT-deployment-waiters
    exit $rc
 fi
-# #### DEBUG
-# while [ ! -f /home/sasinstall/dante ]; do
-#   echo "Waiting for dante"
-#   sleep 5
-# done
-# ####/DEBUG   
 ###################################
 # Ansible playbook sets up an OpenLDAP server that can be used as initial identity provider for SAS Viya.
 ###################################
@@ -176,8 +170,8 @@ if [ "$rc" -ne "0" ]; then
    gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: viya_pre_install_playbook.yml failed.  Check $ANSIBLE_LOG_PATH on the ansible controller VM." --config-name $DEPLOYMENT-deployment-waiters
    exit $rc
 fi
-# Waiter 1, initialization-phase
-# complete waiter
+# initialization-phase Waiter
+echo "Complete Waiter initialization-phase"
 gcloud beta runtime-config configs variables set startup/success/initialization-phase success --config-name $DEPLOYMENT-deployment-waiters   
 ##################################
 # Install Viya
@@ -200,7 +194,7 @@ if [ "$rc" -ne "0" ]; then
     exit $rc
 fi
 echo "Running Deployment Phase Waiters"
-# Waiters 2-4, deployment-phase
+# deployment-phase Waiters 1-3
 for ((WAITER_COUNT=1 ; WAITER_COUNT<4 ; WAITER_COUNT++))
 do
     # wait for 55 minutes or until the child process finishes.
@@ -210,7 +204,7 @@ do
         echo "Deployment Phase Waiter: $WAITER_COUNT has $(($((TIME_TO_LIVE_IN_SECONDS-SECONDS))/60)) minutes left"
         sleep 60
     done
-    # complete waiter
+    echo " Complete Waiter deployment-phase$WAITER_COUNT"
     gcloud beta runtime-config configs variables set startup/success/deployment-phase$WAITER_COUNT success --config-name $DEPLOYMENT-deployment-waiters
 done
 # Check deployment log for failure
@@ -257,7 +251,7 @@ if [ "$rc" -ne "0" ]; then
     gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: restart_services.yml script did not start.  Check $ANSIBLE_LOG_PATH on the ansible controller VM." --config-name $DEPLOYMENT-deployment-waiters
     exit $rc
 fi
-# Waiter 5, services-status
+# services-status Waiter 4 
 # wait for 55 minutes or until the child process finishes.
 TIME_TO_LIVE_IN_SECONDS=$((SECONDS+55*60)) # 55 minutes
 while [ "$SECONDS" -lt "$TIME_TO_LIVE_IN_SECONDS" ] && kill -s 0 $PID; do
@@ -265,7 +259,7 @@ while [ "$SECONDS" -lt "$TIME_TO_LIVE_IN_SECONDS" ] && kill -s 0 $PID; do
     echo "Services Status Waiter: $WAITER_COUNT has $(($((TIME_TO_LIVE_IN_SECONDS-SECONDS))/60)) minutes left"
     sleep 60
 done
-# complete waiter
+echo "Complete Waiter services-status"
 gcloud beta runtime-config configs variables set startup/success/services-status success --config-name $DEPLOYMENT-deployment-waiters
 # Check deployment log for failure
 grep failed=1 $ANSIBLE_LOG_PATH
