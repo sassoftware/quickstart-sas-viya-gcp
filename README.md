@@ -29,7 +29,7 @@ This Quickstart is a reference architecture for users who want to deploy the SAS
    1. [Parameters](#parameters)
    1. [Path to SAS License Zip File](#zipfilepath)
 1. [Troubleshooting](#Tshoot)
-1. [Appendix A: Setting Up A Mirror Repository ](#AppendixA)
+1. [Appendix A: Setting Up a Mirror Repository ](#AppendixA)
 1. [Appendix B: Managing Users for the Provided OpenLDAP Server](#AppendixB)
    
 
@@ -124,7 +124,7 @@ git clone https://github.com/sassoftware/quickstart-sas-viya-gcp -b develop
 3. Modify  the following configuration file with values that are specific to your deployment:
 /\<path to quickstart-sas-viya-gcp\>/templates/sas-viya.config.yaml
 
-See ["Configuration File"](#configfile) for more information.
+See ["Configuration File"](#configFile) for more information.
 
 
 4. Deploy the template. 
@@ -146,45 +146,45 @@ For information about how to monitor the deployment, see ["Additional Deployment
 ### User Accounts
 The *sasinstall* host operating system account is created during deployment. Use this account to log in via SSH to any of the machines.
 
-The *sasadmin* and *sasuser* SAS Viya user accounts are also created during deployment.  These accounts exist in LDAP, and are the default user accounts for logging into SAS Viya.  You cannot directly log onto the host operating system with these accounts.
+The *sasadmin* and *sasuser* SAS Viya user accounts are also created during deployment.  These accounts exist in LDAP, and are the default user accounts for logging in to SAS Viya.  You cannot directly log on to the host operating system with these accounts.
 
-**Note:** The passwords for the *sasadmin* and *sasuser* SAS Viya user accounts are set in the *SASAdminPass* and *SASUserPass* variables within the [configuration file](#configFile). These passwords are displayed on the GCP Deployment Manager page which is only accessible to users with specific GCP permissions. If you are concerned that this is a security risk, you should change these passwords after the deployment. See link to new appendix for more information about how to change these passwords..
+**Note:** The passwords for the *sasadmin* and *sasuser* SAS Viya user accounts are specified in the *SASAdminPass* and *SASUserPass* variables within the [configuration file](#configFile). These passwords are displayed on the GCP Deployment Manager page that is only accessible to users with specific GCP permissions. If you are concerned that this is a security risk, you should change these passwords after the deployment. See ["Change a Password or Set the Password for a New User"](#passwordmgmt) for more information.
 
 <a name="depmonitoring"></a> 
 ### Monitoring the Deployment
 
 To monitor your deployment:
-*  Log into the Ansible controller to monitor the deployment log messages in real time. 
+*  Log in to the Ansible controller to monitor the deployment log messages in real time. 
 
-1. Log into the GCP console [here](https://console.cloud.google.com/) with the correct Google account, and connect to the project that is associated with your deployment.
-2. From the *Navigation Menu* at the top left, click on *Compute Engine* and then *VM instances*.
-3. Click on the Ansible controller that is associated with your deployment.
+1. Log in to the GCP console [here](https://console.cloud.google.com/) with the correct Google account, and connect to the project that is associated with your deployment.
+2. From the *Navigation Menu* at the top left, click *Compute Engine* and then *VM instances*.
+3. Click the Ansible controller that is associated with your deployment.
 4. From the "Logs" section, click on "Serial port 1 (console)".
 5. You will see the log in real time from the Ansible controller.  Click *REFRESH* from the top to reload the log.
 
 *  Check the resources that are deployed from the Deployment Manager window.
 
-1. Log into the GCP console [here](https://console.cloud.google.com/) with the correct Google account, and connect to the project that is associated with your deployment.
-2. From the *Navigation Menu* at the top left, click on *Deployment Manager* and then *Deployments*.
+1. Log in to the GCP console [here](https://console.cloud.google.com/) with the correct Google account, and connect to the project that is associated with your deployment.
+2. From the *Navigation Menu* at the top left, click *Deployment Manager* and then *Deployments*.
 3. Click on your deployment.
 4. You will see a list of the resources that are installed with your deployment. Click on each resource to get detailed property information.
 
 *  Verify that you can log on to SAS Viya from the load balancer IP address.
 
-1. Log into the GCP console [here](https://console.cloud.google.com/) with the correct Google account, and connect to the project that is associated with your deployment.
-2. From the *Navigation Menu* at the top left, click on *Network services* and then *Load balancing*.
+1. Log in to the GCP console [here](https://console.cloud.google.com/) with the correct Google account, and connect to the project that is associated with your deployment.
+2. From the *Navigation Menu* at the top left, click *Network services* and then *Load balancing*.
 3. Click on *advanced menu* at the bottom of the list of load balancers.
-4. Click on the IP address associated with the load balancer from your deployment.
+4. Click the IP address associated with the load balancer from your deployment.
 5. You should see a SAS log on screen.  Confirm that you can log on to SAS Viya as the *sasadmin* or *sasuser*. Use the password that you specified in the sas-viya.config.yaml configuration file.
 
 <a name=usage></a>
 ## Usage
 To connect to the SAS Viya login page:
 1. Log in to the GCP Console [here](https://console.cloud.google.com/).
-2. Ensure that you are logged into the correct Google account.
+2. Ensure that you are logged in to the correct Google account.
 3. Ensure that you are connected to the project that is associated with your deployment.
-4. From the *Navigation Menu* at the top left, click on *Network Services* and then *Load balancing*.
-5. Click on the *Advanced menu* link at the bottom of the list of load balancers.
+4. From the *Navigation Menu* at the top left, click *Network Services* and then *Load balancing*.
+5. Click the *Advanced menu* link at the bottom of the list of load balancers.
 6. Click on the address associated with your deployment from the *Forwarding rules* tab to open the SAS Viya login page. 
 
 <a name=configFile></a>
@@ -216,7 +216,7 @@ gs://<bucket_name>/<path>/<license_file>.zip
 ```
 To verify the path:
 1. Click [here](https://console.cloud.google.com/projectselector2/storage/browser?_ga=2.254580111.-645135131.1554401290&supportedpurview=project) to open the Google Storage browser from the GCP console.
-2. Ensure that you are logged into the correct Google account.
+2. Ensure that you are logged in to the correct Google account.
 3. Choose the project that contains the bucket with the license zip file. You should see a table with any buckets that are in the project.
 4. From the buckets list, click on the bucket with the license zip file.
 5. Click on any embedded folder(s) within the bucket to navigate to the license zip file.
@@ -234,7 +234,7 @@ gs://testbucket-deployment-data/viya3.4/SAS_Viya_deployment_data.zip
 ## Troubleshooting
 
 <a name="AppendixA"></a>
-## Appendix A: Setting Up A Mirror Repository
+## Appendix A: Setting Up a Mirror Repository
 1. To set up a mirror repository, refer to the instructions in ["Create a Mirror Repository"](https://go.documentation.sas.com/?docsetId=dplyml0phy0lax&docsetTarget=p1ilrw734naazfn119i2rqik91r0.htm&docsetVersion=3.4&locale=en) in the SAS Viya 3.4 for Linux: Deployment Guide.
 2. Set up a GCP bucket that is accessible by the account where you deployed the SAS Viya Quick Start.
 3. Move the file structure of your mirror repository to the GCP bucket.
@@ -251,7 +251,7 @@ gs://your-bucket/your/mirror/
 <a name="AppendixB"></a>
 ## Appendix B: Managing Users for the Provided OpenLDAP Server
 ### List All Users and Groups
- 1. From the Ansible controller VM, log into the Services VM:
+ 1. From the Ansible controller VM, log in to the Services VM:
  ```
  ssh services.viya.sas
  ```
@@ -260,11 +260,11 @@ gs://your-bucket/your/mirror/
 ldapsearch -x -h localhost -b "dc=sasviya,dc=com"
 ```
 ### Add a User
- 1. From the Ansible controller VM, log into the Services VM:
+ 1. From the Ansible controller VM, log in to the Services VM:
  ```
  ssh services.viya.sas
  ```
-2. Create a user file that conains all of the user information:
+2. Create a user file that contains all of the user information:
 
 **Note:** You must increment the UID from the last one displayed by the ldapsearch command.
 ```
@@ -288,7 +288,7 @@ displayName: New User
 ldapadd -x -h localhost -D "cn=admin,dc=sasviya,dc=com" -W -f
 /path/to/user/file
 ```
-**Note:** You will be prompted for the admin password (the same one you set when you created the stack).
+**Note:** You will be prompted for the admin password (the same one you specified when you created the stack).
 
 4. To allow the new user to access SAS Viya products, add the user as a member of the sasusers
 group by creating an ldif file with the following data:
@@ -316,9 +316,10 @@ sudo chown newuser:sasusers /home/newuser
 sudo chown newuser:sasusers /home/newuser/casuser
 exit
 ```
+<a name="passwordmgmt"></a>
 ### Change a Password or Set the Password for a New User
 
- 1. From the Ansible controller VM, log into the Services VM:
+ 1. From the Ansible controller VM, log in to the Services VM:
  ```
  ssh services.viya.sas
  ```
@@ -333,7 +334,7 @@ command with a space. The string following the -x should match the dn: attribute
 the user.
 
 ### Delete a User
- 1. From the Ansible controller VM, log into the Services VM:
+ 1. From the Ansible controller VM, log in to the Services VM:
  ```
  ssh services.viya.sas
  ```
