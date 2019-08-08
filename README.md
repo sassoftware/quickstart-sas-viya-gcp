@@ -29,7 +29,8 @@ This Quickstart is a reference architecture for users who want to deploy the SAS
    1. [Parameters](#parameters)
    1. [Path to SAS License Zip File](#zipfilepath)
 1. [Troubleshooting](#Tshoot)
-1. [Appendix](#AppendixA)
+1. [Appendix A: Setting Up A Mirror Repository ](#AppendixA)
+1. [Appendix B: Managing Users for the Provided OpenLDAP Server](#AppendixB)
    
 
 <a name="Summary"></a>
@@ -147,6 +148,8 @@ The *sasinstall* host operating system account is created during deployment. Use
 
 The *sasadmin* and *sasuser* SAS Viya user accounts are also created during deployment.  These accounts exist in LDAP, and are the default user accounts for logging into SAS Viya.  You cannot directly log onto the host operating system with these accounts.
 
+**Note:** The passwords for the *sasadmin* and *sasuser* SAS Viya user accounts are set in the *SASAdminPass* and *SASUserPass* variables within the [configuration file](#configFile). These passwords are displayed on the GCP Deployment Manager page which is only accessible to users with specific GCP permissions. If you are concerned that this is a security risk, you should change these passwords after the deployment. See link to new appendix for more information about how to change these passwords..
+
 <a name="depmonitoring"></a> 
 ### Monitoring the Deployment
 
@@ -231,7 +234,7 @@ gs://testbucket-deployment-data/viya3.4/SAS_Viya_deployment_data.zip
 ## Troubleshooting
 
 <a name="AppendixA"></a>
-## Appendix: Set Up A Mirror Repository
+## Appendix A: Setting Up A Mirror Repository
 1. To set up a mirror repository, refer to the instructions in ["Create a Mirror Repository"](https://go.documentation.sas.com/?docsetId=dplyml0phy0lax&docsetTarget=p1ilrw734naazfn119i2rqik91r0.htm&docsetVersion=3.4&locale=en) in the SAS Viya 3.4 for Linux: Deployment Guide.
 2. Set up a GCP bucket that is accessible by the account where you deployed the SAS Viya Quick Start.
 3. Move the file structure of your mirror repository to the GCP bucket.
@@ -245,8 +248,100 @@ gsutil rsync -r /path/to/your/local/mirror/sas_repos gs://yourbucket/your/mirror
 ```
 gs://your-bucket/your/mirror/
 ```
+<a name="AppendixB"></a>
+## Appendix B: Managing Users for the Provided OpenLDAP Server
+### List All Users and Groups
+ 1. From the Ansible controller VM, log into the Services VM:
+ ```
+ ssh services.viya.sas
+ ```
+ 2. List all users and groups:
+```
+ldapsearch -x -h localhost -b "dc=sasviya,dc=com"
+```
+### Add a User
+ 1. From the Ansible controller VM, log into the Services VM:
+ ```
+ ssh services.viya.sas
+ ```
+2. Create a user file that conains all of the user information:
 
-           
+**Note:** You must increment the UID from the last one displayed by the ldapsearch command.
+```
+dn: uid=newuser,ou=users,dc=sasviya,dc=com
+cn: newuser
+givenName: New
+sn: User
+objectClass: top
+objectClass: inetOrgPerson
+objectClass: organizationalPerson
+objectClass: posixAccount
+loginShell: /bin/bash
+uidNumber: 100011
+gidNumber: 100001
+homeDirectory: /home/newuser
+mail: newuser@services.viya.sas
+displayName: New User  
+```
+3. Run the following command:
+```
+ldapadd -x -h localhost -D "cn=admin,dc=sasviya,dc=com" -W -f
+/path/to/user/file
+```
+**Note:** You will be prompted for the admin password (the same one you set when you created the stack).
+
+4. To allow the new user to access SAS Viya products, add the user as a member of the sasusers
+group by creating an ldif file with the following data:
+```
+dn: cn=sasusers,ou=groups,dc=sasviya,dc=com
+changetype: modify
+add: memberUid
+memberUid: newuser
+-
+add: member
+member: uid=newuser,ou=users,dc=sasviya,dc=com
+ldapadd -x -h localhost -D "cn=admin,dc=sasviya,dc=com" -W -f
+/path/to/user/file
+```
+5. Add the home directories for your new user on the Services machine (services.viya.sas)
+and the CAS controller machine (controller.viya.sas). From the Ansible controller VM:
+```
+ssh services.viya.sas
+sudo mkdir -p /home/newuser
+sudo chown newuser:sasusers /home/newuser
+exit
+ssh controller.viya.sas
+sudo mkdir -p /home/newuser/casuser
+sudo chown newuser:sasusers /home/newuser
+sudo chown newuser:sasusers /home/newuser/casuser
+exit
+```
+### Change a Password or Set the Password for a New User
+
+ 1. From the Ansible controller VM, log into the Services VM:
+ ```
+ ssh services.viya.sas
+ ```
+ 2. Run the following command:
+ ```
+ldappasswd –h localhost –s USERPASSWORD –W –D
+cn=admin,dc=sasviya,dc=com -x
+“uid=newuser,ou=users,dc=sasviya,dc=com”
+```
+**Note:** To prevent the command from being saved to the bash history, preface this
+command with a space. The string following the -x should match the dn: attribute of
+the user.
+
+### Delete a User
+ 1. From the Ansible controller VM, log into the Services VM:
+ ```
+ ssh services.viya.sas
+ ```
+ 2. Run the following command: 
+```
+ldapdelete –h localhost -W -D "cn=admin,dc=sasviya,dc=com"
+"uid=newuser,ou=users,dc=sasviya,dc=com"
+```
 
 
     
