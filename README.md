@@ -29,6 +29,9 @@ This Quickstart is a reference architecture for users who want to deploy the SAS
    1. [Parameters](#parameters)
    1. [Path to SAS License Zip File](#zipfilepath)
 1. [Troubleshooting](#Tshoot)
+   1. [Review the Log Files](@reviewLogs)
+   1. [Restarting the Services](@restartServices)
+   1. [Useful Google Cloud CLI Troubleshooting Commands](@tsCommands)
 1. [Appendix A: Setting Up a Mirror Repository ](#AppendixA)
 1. [Appendix B: Managing Users for the Provided OpenLDAP Server](#AppendixB)
    
@@ -232,6 +235,75 @@ gs://testbucket-deployment-data/viya3.4/SAS_Viya_deployment_data.zip
 
 <a name="Tshoot"></a> 
 ## Troubleshooting
+<a name="reviewLogs"></a>
+### Review the Log Files
+
+#### Deployment Logs
+
+The following deployment logs are located in the /var/log/sas/install directory on the Ansible controller instance:
+* prepare_nodes.log - Ansible logs for instance preparation
+* openldap.log - Ansible logs for the OpenLDAP installation and configuration (if chosen)]
+* prepare_deployment.log - Ansible logs for SAS Viya deployment preparation steps
+* virk.log - Ansible logs for the Viya-Ark pre-deployment node preparation playbook
+* viya_deployment.log- Ansible log for SAS Viya main deployment
+* post_deployment.log - Ansible logs for additional steps after the main deployment
+
+#### SAS Viya Microservice Logs
+The logs for SAS Viya microservices are located in the /var/log/sas/viya directory on the SAS Viya services instance.
+
+<a name="restartServices"></a>
+         
+### Restarting the SAS Services
+With some older licenses, some services might not be fully started after a full deployment. If
+you receive a connection error when you connect to SASHome or SASDrive, you must
+restart the services.
+
+#### Checking the Status of the SAS Services through Viya-Ark
+Viya-Ark can check the status of the services by issuing the following commands as the sasinstall user on the Ansible controller instance:
+```
+cd /sas/install/ansible/sas_viya_playbook
+
+ansible-playbook viya-ark/playbooks/viya-mmsu/viya-servicesstatus.yml
+```
+<a name="tsCommands"></a>
+
+### Useful Google Cloud CLI Troubleshooting Commands
+In the event of a deployment failure, take the following into consideration:
+
+#### Receiving Waiter Failure Message
+Here is an example of an error message that results from a waiter failure:
+```
+ {"ResourceType":"gcp-types/runtimeconfig-v1beta1:projects.configs.waiters","ResourceErrorCode":"412","ResourceErrorMessage":"Failure condition satisfied."}
+ ```
+ In the event of a waiter failure, run the following command:
+```
+gcloud beta runtime-config configs variables list --config-name $STACK-deployment-waiters --values --format json
+```
+#### Check for Error in Console serial-port-output
+1. Run this command from the Ansible controller:
+
+```
+gcloud compute instances get-serial-port-output $STACK-ansible-controller --zone=$ZONE --project=$PROJECT
+```
+
+2. Look for **Error** in the output associated with a specific message.
+
+3. Get specific log output related to the error message identified in the last step:
+
+```
+ gcloud compute ssh $STACK-ansible-controller --command 'cat /var/log/sas/install/<log_file_name>.log' --zone $ZONE --project $PROJECT
+ ```
+ 4. If necessary, perform steps 1 through 3 on the CAS controller and SAS Viya services instances, substituting the correct instance name.
+ 
+#### Receiving Timeout When Waiting for File Message
+Here is an example of a message that results from a timeout:
+```
+gcloud compute instances get-serial-port-output $STACK-<services or controller> --zone=$ZONE --project=$PROJECT
+```
+In the event of a timeout, run the following command:
+```
+gcloud compute instances get-serial-port-output $STACK-<services or controller> --zone=$ZONE --project=$PROJECT
+```
 
 <a name="AppendixA"></a>
 ## Appendix A: Setting Up a Mirror Repository
@@ -251,7 +323,7 @@ gs://your-bucket/your/mirror/
 <a name="AppendixB"></a>
 ## Appendix B: Managing Users for the Provided OpenLDAP Server
 ### List All Users and Groups
- 1. From the Ansible controller VM, log in to the Services VM:
+ 1. From the Ansible controller VM, log in to the SAS Viya services VM:
  ```
  ssh services.viya.sas
  ```
@@ -260,7 +332,7 @@ gs://your-bucket/your/mirror/
 ldapsearch -x -h localhost -b "dc=sasviya,dc=com"
 ```
 ### Add a User
- 1. From the Ansible controller VM, log in to the Services VM:
+ 1. From the Ansible controller VM, log in to the SAS Viya services VM:
  ```
  ssh services.viya.sas
  ```
@@ -303,7 +375,7 @@ member: uid=newuser,ou=users,dc=sasviya,dc=com
 ldapadd -x -h localhost -D "cn=admin,dc=sasviya,dc=com" -W -f
 /path/to/user/file
 ```
-5. Add the home directories for your new user on the Services machine (services.viya.sas)
+5. Add the home directories for your new user on the SAS Viya services machine (services.viya.sas)
 and the CAS controller machine (controller.viya.sas). From the Ansible controller VM:
 ```
 ssh services.viya.sas
@@ -319,7 +391,7 @@ exit
 <a name="passwordmgmt"></a>
 ### Change a Password or Set the Password for a New User
 
- 1. From the Ansible controller VM, log in to the Services VM:
+ 1. From the Ansible controller VM, log in to the SAS Viya services VM:
  ```
  ssh services.viya.sas
  ```
@@ -334,7 +406,7 @@ command with a space. The string following the -x should match the dn: attribute
 the user.
 
 ### Delete a User
- 1. From the Ansible controller VM, log in to the Services VM:
+ 1. From the Ansible controller VM, log in to the SAS Viya services VM:
  ```
  ssh services.viya.sas
  ```
