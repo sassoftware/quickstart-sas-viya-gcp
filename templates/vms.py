@@ -26,6 +26,8 @@ fi
 ###################################
 # Installing dependencies
 ###################################
+yum install systemd-219-62.el7
+echo "exclude=systemd*" |  tee -a /etc/yum.conf
 yum install -y java-1.8.0-openjdk
 yum install -y epel-release
 yum install -y python-pip
@@ -272,8 +274,8 @@ if [ "$rc" -eq "0" ]; then
 fi
 ##################################
 # Final system update
-##################################
-yum -y update
+#################################
+# yum -y update
 '''
 
 """ Startup script for Viya services """
@@ -282,6 +284,8 @@ services_startup_script = '''#! /bin/bash
 export NFS_SERVER="{deployment}-ansible-controller"
 export HOST=$(hostname)
 # Installing dependencies
+yum install systemd-219-62.el7
+echo "exclude=systemd*" |  tee -a /etc/yum.conf
 yum -y install git
 # Getting quick start scripts
 git clone https://github.com/sassoftware/quickstart-sas-viya-common /tmp/common
@@ -290,7 +294,7 @@ git clone https://github.com/sassoftware/quickstart-sas-viya-common /tmp/common
 # VIRK requires GID 1001 to be free
 groupmod -g 2001 sasinstall
 # Final system update
-yum -y update
+# yum -y update
 # Moving yum cache to /opt/sas where there is more room to retrieve sas viya repo
 while [[ ! -d /opt/sas ]];
 do
@@ -305,6 +309,8 @@ controller_startup_script = '''#!/bin/bash
 export NFS_SERVER="{deployment}-ansible-controller"
 export HOST=$(hostname)
 # Installing dependencies
+yum install systemd-219-62.el7
+echo "exclude=systemd*" |  tee -a /etc/yum.conf
 yum -y install git
 # Getting quick start scripts
 git clone https://github.com/sassoftware/quickstart-sas-viya-common /tmp/common
@@ -313,7 +319,7 @@ git clone https://github.com/sassoftware/quickstart-sas-viya-common /tmp/common
 # VIRK requires GID 1001 to be free
 groupmod -g 2001 sasinstall
 # Final system update
-yum -y update
+# yum -y update
 '''
 
 
@@ -360,7 +366,8 @@ def GenerateConfig(context):
                     'boot': True,
                     'autoDelete': True,
                     'initializeParams': {
-                        'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7",
+                        # 'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7",
+                        'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/rhel-7-v20190729",
                         'diskSizeGb': 10
                     }
                 }],
@@ -406,7 +413,8 @@ def GenerateConfig(context):
                         'boot': True,
                         'autoDelete': True,
                         'initializeParams': {
-                            'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7",
+                            # 'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7",
+                            'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/rhel-7-v20190729",
                             'diskSizeGb': 10
                         }
                     },
@@ -459,7 +467,8 @@ def GenerateConfig(context):
                         'boot': True,
                         'autoDelete': True,
                         'initializeParams': {
-                            'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7",
+                            # 'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7",
+                            'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/rhel-7-v20190729",
                             'diskSizeGb': 10
                         }
                     },
