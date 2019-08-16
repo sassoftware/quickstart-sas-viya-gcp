@@ -7,7 +7,7 @@ ansible_startup_script = '''#!/bin/bash
 ###################################
 # Setting up environment
 ###################################
-export COMMON_CODE_COMMIT="8b2b495de09f0f34616e0d611feee07c450461b3"
+export COMMON_CODE_COMMIT="423761041c839c7bcbb1ee500eb6f70d44cdd351"
 export PROJECT="{project}"
 export DEPLOYMENT="{deployment}"
 export OLCROOTPW="{olc_root_pw}"
@@ -26,8 +26,6 @@ fi
 ###################################
 # Installing dependencies
 ###################################
-yum install systemd-219-62.el7
-echo "exclude=systemd*" |  tee -a /etc/yum.conf
 yum install -y java-1.8.0-openjdk
 yum install -y epel-release
 yum install -y python-pip
@@ -284,8 +282,6 @@ services_startup_script = '''#! /bin/bash
 export NFS_SERVER="{deployment}-ansible-controller"
 export HOST=$(hostname)
 # Installing dependencies
-yum install systemd-219-62.el7
-echo "exclude=systemd*" |  tee -a /etc/yum.conf
 yum -y install git
 # Getting quick start scripts
 git clone https://github.com/sassoftware/quickstart-sas-viya-common /tmp/common
@@ -309,8 +305,6 @@ controller_startup_script = '''#!/bin/bash
 export NFS_SERVER="{deployment}-ansible-controller"
 export HOST=$(hostname)
 # Installing dependencies
-yum install systemd-219-62.el7
-echo "exclude=systemd*" |  tee -a /etc/yum.conf
 yum -y install git
 # Getting quick start scripts
 git clone https://github.com/sassoftware/quickstart-sas-viya-common /tmp/common
