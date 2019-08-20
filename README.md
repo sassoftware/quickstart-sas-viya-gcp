@@ -132,11 +132,11 @@ See ["Configuration File"](#configFile) for more information.
 
 4. Deploy the template. 
 
-**Note:** The deployment name (*stack* in the sample command below) must be all lowercase and begin with a character from *a* to *z*.
+**Note:** The deployment name (*deployment* in the sample command below) must be all lowercase and begin with a character from *a* to *z*.
 
 From a terminal with the gcloud CLI configured, run the following command:
 ```
-gcloud deployment-manager deployments create stack --config <path to quickstart-sas-viya-gcp/templates>/sas-viya-config.yaml --async
+gcloud deployment-manager deployments create deployment --config <path to quickstart-sas-viya-gcp/templates>/sas-viya-config.yaml --async
 ```
 
 The deployment takes between 1 and 2 hours, depending on the quantity of software licensed. 
@@ -277,13 +277,13 @@ Here is an example of an error message that results from a waiter failure:
  ```
  In the event of a waiter failure, run the following command:
 ```
-gcloud beta runtime-config configs variables list --config-name $STACK-deployment-waiters --values --format json
+gcloud beta runtime-config configs variables list --config-name <deployment>-deployment-waiters --values --format json
 ```
 #### Check for Error in Console serial-port-output
-1. Run this command from the Ansible controller:
+1. Run this command from a terminal with the gcloud CLI installed:
 
 ```
-gcloud compute instances get-serial-port-output $STACK-ansible-controller --zone=$ZONE --project=$PROJECT
+gcloud compute instances get-serial-port-output <deployment>-ansible-controller --zone=$ZONE --project=$PROJECT
 ```
 
 2. Look for **Error** in the output associated with a specific message.
@@ -291,18 +291,18 @@ gcloud compute instances get-serial-port-output $STACK-ansible-controller --zone
 3. Get specific log output related to the error message identified in the last step:
 
 ```
- gcloud compute ssh $STACK-ansible-controller --command 'cat /var/log/sas/install/<log_file_name>.log' --zone $ZONE --project $PROJECT
+ gcloud compute ssh <deployment>-ansible-controller --command 'cat /var/log/sas/install/<log_file_name>.log' --zone $ZONE --project $PROJECT
  ```
- 4. If necessary, perform steps 1 through 3 on the CAS controller and SAS Viya services instances, substituting the correct instance name.
+ 4. If necessary, perform steps 1 through 3 on the CAS controller and SAS Viya services instances, substituting the correct instance name: \<deployment\>-controller or \<deployment\>-services.
  
 #### Receiving Timeout When Waiting for File Message
 Here is an example of a message that results from a timeout:
 ```
-gcloud compute instances get-serial-port-output $STACK-<services or controller> --zone=$ZONE --project=$PROJECT
+gcloud compute instances get-serial-port-output <deployment>-<services or controller> --zone=$ZONE --project=$PROJECT
 ```
 In the event of a timeout, run the following command:
 ```
-gcloud compute instances get-serial-port-output $STACK-<services or controller> --zone=$ZONE --project=$PROJECT
+gcloud compute instances get-serial-port-output <deployment>-<services or controller> --zone=$ZONE --project=$PROJECT
 ```
 
 <a name="AppendixA"></a>
@@ -360,7 +360,7 @@ displayName: New User
 ldapadd -x -h localhost -D "cn=admin,dc=sasviya,dc=com" -W -f
 /path/to/user/file
 ```
-**Note:** You will be prompted for the admin password (the same one you specified when you created the stack).
+**Note:** You will be prompted for the admin password (the same one you specified when you created the deployment).
 
 4. To allow the new user to access SAS Viya products, add the user as a member of the sasusers
 group by creating an ldif file with the following data:
