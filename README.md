@@ -24,6 +24,8 @@ This Quickstart is a reference architecture for users who want to deploy the SAS
 1. [Additional Deployment Details](#deploydetails)
    1. [User Accounts](#useraccounts)
    1. [Monitoring the Deployment](#depmonitoring)
+1. [Optional Post-Deployment](#Post-Deployment)
+   1. [Replace Self-Signed TLS(SSL) Certificate with Custom Certificate](#sslcert)
 1. [Usage](#usage)
 1. [Configuration File](#configFile)
    1. [Parameters](#parameters)
@@ -180,6 +182,34 @@ To monitor your deployment:
 4. Click the IP address associated with the load balancer from your deployment.
 5. You should see a SAS log on screen.  Confirm that you can log on to SAS Viya as the *sasadmin* or *sasuser*. Use the password that you specified in the sas-viya.config.yaml configuration file.
 
+<a name="Post-Deployment"></a>
+## Optional Post-Deployment 
+<a name="sslcert"></a>
+ ### Replace Self-Signed TLS(SSL) Certificate with Custom Certificate
+ To replace the default self-signed certificate with your own self-signed certificate:
+ 1. Upload your self-signed TLS certificate files to the Ansible controller VM by running the following commands from a terminal with the gcloud CLI installed:
+ ```
+ gcloud compute scp --ssh-key-file <path to ssh private key> <selfsigned.crt> sasinstall@<DEPLOYMENT>-ansible-controller:<path>
+ gcloud compute scp --ssh-key-file <path to ssh private key> <private.key> sasinstall@<DEPLOYMENT>-ansible-controller:<path>
+
+ ```
+ 3. Connect to the Ansible controller VM:
+ ```
+ ssh -i <path to ssh private key> sasinstall@<DEPLOYMENT>-ansible-controller
+ ```
+ 
+ 4. Run the following commands to replace the current TLS certificate with your self-signed TLS Certificate:
+ ```
+ export DEPLOYMENT=<Deployment name>  
+ export PROJECT=<GCP Project name>
+ gcloud compute ssl-certificates create $DEPLOYMENT-sslcert-tmp --certificate <path to crt file>/selfsigned.crt --private-key <path to key file>/private.key
+ gcloud compute target-https-proxies update $DEPLOYMENT-loadbalancer-target-proxy --ssl-certificates=https://www.googleapis.com/compute/v1/projects/$PROJECT/global/sslCertificates/$DEPLOYMENT-sslcert-tmp
+ gcloud compute ssl-certificates delete $DEPLOYMENT-sslcert --quiet
+ gcloud compute ssl-certificates create $DEPLOYMENT-sslcert --certificate <path to crt file>/selfsigned.crt --private-key <path to key file>/private.key
+ gcloud compute target-https-proxies update $DEPLOYMENT-loadbalancer-target-proxy --ssl-certificates=https://www.googleapis.com/compute/v1/projects/$PROJECT/global/sslCertificates/$DEPLOYMENT-sslcert
+ gcloud compute ssl-certificates delete $DEPLOYMENT-sslcert-tmp --quiet
+ ```
+ 
 <a name=usage></a>
 ## Usage
 To connect to the SAS Viya login page:
