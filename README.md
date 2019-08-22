@@ -31,9 +31,9 @@ This Quickstart is a reference architecture for users who want to deploy the SAS
    1. [Parameters](#parameters)
    1. [Path to SAS License Zip File](#zipfilepath)
 1. [Troubleshooting](#Tshoot)
-   1. [Review the Log Files](@reviewLogs)
-   1. [Restarting the Services](@restartServices)
-   1. [Useful Google Cloud CLI Troubleshooting Commands](@tsCommands)
+   1. [Review the Log Files](#reviewLogs)
+   1. [Restarting the Services](#restartServices)
+   1. [Useful Google Cloud CLI Troubleshooting Commands](#tsCommands)
 1. [Appendix A: Setting Up a Mirror Repository ](#AppendixA)
 1. [Appendix B: Managing Users for the Provided OpenLDAP Server](#AppendixB)
    
@@ -74,18 +74,7 @@ SAS Viya Quickstart Template for GCP creates three instances, including:
 
 * 1 VM for the SAS Viya services 
 
-Here are the estimated monthly costs of running these instances with their default sizes:
-
-**Note:** Resource costs vary by region.  These costs include the sustained use discount. 
-
-|Resource Name|Type|Resource Sizing|Monthly Cost|
-|-------------|-------------|-------------|-------------|
-|ansible-controller|g1-small|1 vCPU, 1.7GB RAM|$14.20|
-|CAS controller|n1-standard-2|2 vCPU, 7.5GB RAM|$48.95|
-|SAS Viya services|n1-highmem-8|8 vCPU, 52GB RAM|$242.41|
-
-See ["Cloud Storage Pricing"](https://cloud.google.com/storage/pricing#price-tables) for additional information about pricing.
- 
+**Note:** Resource costs vary by region. See ["Cloud Storage Pricing"](https://cloud.google.com/storage/pricing#price-tables) for additional information about pricing. 
 
 <a name="Prerequisites"></a> 
 ## Prerequisites 
@@ -232,16 +221,16 @@ You must modify the configuration file, /\<path_to_quickstart-sas-viya-gcp\>/tem
 |ServicesMachineType|Defines the SAS Viya Services machine type in GCP.
 |ServicesDiskSize|Defines the SAS Viya Services boot disk size in GCP (minimum required is 25GB).
 |ControllerMachineType|Defines the CAS Controller machine type in GCP.
-|SSHPublicKey|Specifies your SSH public key.  This will get added to the authorized_keys file on the Bastian host so that you can connect using ssh.
+|SSHPublicKey|Specifies your SSH public key.  This will get added to the authorized_keys file on the Bastion host so that you can connect using ssh.
 |SASAdminPass|Specifies the password for the SAS Viya adminuser. Used for the initial identity for the SAS Viya adminuser.
 |SASUserPass|Specifies the password for the SAS Viya sasuser. Used for the initial identity for the SAS Viya sasuser.
 |DeploymentDataLocation|Specifies the GCP bucket location of the SAS license zip file (for example, gs://\<bucket name\>/\<path\>/\<filename\>.zip). See ["Path to SAS License Zip File"](#zipfilepath) for more information.
-|AdminIngressLocation|Specifies the CIDR address range for machines that can access the Bastian host.
+|AdminIngressLocation|Specifies the CIDR address range for machines that can access the Bastion host.
 |WebIngressLocation|Specifies the CIDR address range for machines that can access the SAS Viya HTTP(S) server.
 
 <a name=zipfilepath></a>
 ### Path to SAS License Zip File 
-The DeploymentDataLocation parameter refers to the path to the SAS license zip file that was included with the Software Order Email (SOE), and subsequently uploaded to a storage bucket. You need the name of the bucket as well any embedded folders (if any) to construct the path to the SAS license zip file. 
+The DeploymentDataLocation parameter refers to the path to the SAS license zip file that was included with the Software Order Email (SOE), and subsequently uploaded to a storage bucket. You need the name of the bucket as well as any embedded folders (if any) to construct the path to the SAS license zip file. 
 The path consists of the following:
 ```
 gs://<bucket_name>/<path>/<license_file>.zip
@@ -271,7 +260,7 @@ gs://testbucket-deployment-data/viya3.4/SAS_Viya_deployment_data.zip
 
 The following deployment logs are located in the /var/log/sas/install directory on the Ansible controller instance:
 * prepare_nodes.log - Ansible logs for instance preparation
-* openldap.log - Ansible logs for the OpenLDAP installation and configuration (if chosen)]
+* openldap.log - Ansible logs for the OpenLDAP installation and configuration (if chosen)
 * prepare_deployment.log - Ansible logs for SAS Viya deployment preparation steps
 * virk.log - Ansible logs for the Viya-Ark pre-deployment node preparation playbook
 * viya_deployment.log- Ansible log for SAS Viya main deployment
@@ -426,9 +415,9 @@ exit
  ```
  2. Run the following command:
  ```
-ldappasswd –h localhost –s USERPASSWORD –W –D
+ldappasswd -h localhost -s USERPASSWORD -W -D
 cn=admin,dc=sasviya,dc=com -x
-“uid=newuser,ou=users,dc=sasviya,dc=com”
+"uid=newuser,ou=users,dc=sasviya,dc=com"
 ```
 **Note:** To prevent the command from being saved to the bash history, preface this
 command with a space. The string following the -x should match the dn: attribute of
@@ -441,7 +430,7 @@ the user.
  ```
  2. Run the following command: 
 ```
-ldapdelete –h localhost -W -D "cn=admin,dc=sasviya,dc=com"
+ldapdelete -h localhost -W -D "cn=admin,dc=sasviya,dc=com"
 "uid=newuser,ou=users,dc=sasviya,dc=com"
 ```
 
