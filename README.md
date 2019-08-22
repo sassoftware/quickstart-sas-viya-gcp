@@ -318,6 +318,29 @@ gcloud compute instances get-serial-port-output <deployment>-ansible-controller 
 
 2. Look for **Error** in the output associated with a specific message.
 
+3. Get specific log output related to the error message identified in the last step:
+
+```
+ gcloud compute ssh <deployment>-ansible-controller --command 'cat /var/log/sas/install/<log_file_name>.log' --zone $ZONE --project $PROJECT
+ ```
+ 4. If necessary, perform steps 1 through 3 on the CAS controller and SAS Viya services instances, substituting the correct instance name: \<deployment\>-controller or \<deployment\>-services.
+ 
+#### Receiving Timeout When Waiting for File Message
+Here is an example of a message that results from a timeout:
+```
+gcloud compute instances get-serial-port-output <deployment>-<services or controller> --zone=$ZONE --project=$PROJECT
+```
+In the event of a timeout, run the following command:
+```
+gcloud compute instances get-serial-port-output <deployment>-<services or controller> --zone=$ZONE --project=$PROJECT
+```
+
+<a name="AppendixA"></a>
+## Appendix A: Setting Up a Mirror Repository
+1. To set up a mirror repository, refer to the instructions in ["Create a Mirror Repository"](https://go.documentation.sas.com/?docsetId=dplyml0phy0lax&docsetTarget=p1ilrw734naazfn119i2rqik91r0.htm&docsetVersion=3.4&locale=en) in the SAS Viya 3.4 for Linux: Deployment Guide.
+2. Set up a GCP bucket that is accessible by the account where you deployed the SAS Viya Quick Start.
+3. Move the file structure of your mirror repository to the GCP bucket.
+4. Upload the mirror repository into your GCP bucket.
 To upload the mirror using the GCP command line interface (CLI), run the following command:
 ```
 gsutil rsync -r /path/to/your/local/mirror/sas_repos gs://yourbucket/your/mirror/
