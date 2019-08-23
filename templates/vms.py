@@ -419,7 +419,7 @@ def GenerateConfig(context):
                         'autoDelete': True,
                         'initializeParams': {
                             'diskName': "{}-sashome-services".format(deployment),
-                            'diskSizeGb': 100,
+                            'diskSizeGb': 150,
                             'description': "SAS_INSTALL_DISK"
                         }
                     }
