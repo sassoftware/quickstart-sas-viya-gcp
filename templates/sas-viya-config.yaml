@@ -12,7 +12,7 @@ resources:
     # Anisible Controller machineType
     AnsibleControllerMachineType: g1-small
     # Viya Services machineType
-    ServicesMachineType: n1-highmem-8
+    ServicesMachineType: n1-highmem-16
     # CAS Controller machineType
     ControllerMachineType: n1-standard-2
 
