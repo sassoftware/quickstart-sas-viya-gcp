@@ -53,7 +53,8 @@ def GenerateConfig(context):
                         ]
                     }],
                     'natIpAllocateOption': "AUTO_ONLY",
-                    'sourceSubnetworkIpRangesToNat': "LIST_OF_SUBNETWORKS"
+                    'sourceSubnetworkIpRangesToNat': "LIST_OF_SUBNETWORKS",
+                    'minPortsPerVm': 8000
                 }]
             }
         },
