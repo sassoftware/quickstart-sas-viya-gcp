@@ -26,6 +26,9 @@ This Quickstart is a reference architecture for users who want to deploy the SAS
    1. [Monitoring the Deployment](#depmonitoring)
 1. [Optional Post Deployment Steps](#postDeployment)
    1. [Replace Self-Signed Certificate with Custom Certificate](#certificate)
+   1. [Enable Access to Existing Data Sources](#DataSources)
+   1. [Validate the Server Cerficate if Using SAS/ACCESS](#ACCESSCertWarn)
+   1. [Set Up SAS Data Agent](#DataAgent)
 1. [Usage](#usage)
 1. [Configuration File](#configFile)
    1. [Parameters](#parameters)
@@ -175,7 +178,7 @@ To monitor your deployment:
 ## Optional Post Deployment Steps
 
 <a name=certificate></a>
-## Replace Self-Signed TLS Certificate with Custom Certificate
+### Replace Self-Signed TLS Certificate with Custom Certificate
 To replace the default self-signed certificate with your own self-signed certificate:
 1. Upload your self-signed certificate files to the Ansible controller VM by running the following commands from a terminal with the gcloud CLI installed:
 ```
@@ -197,6 +200,96 @@ To replace the default self-signed certificate with your own self-signed certifi
  gcloud compute target-https-proxies update $DEPLOYMENT-loadbalancer-target-proxy --ssl-certificates=https://www.googleapis.com/compute/v1/projects/$PROJECT/global/sslCertificates/$DEPLOYMENT-sslcert
  cloud compute ssl-certificates delete $DEPLOYMENT-sslcert-tmp --quiet
  ```
+<a name="DataSources"></a>
+### Enable Access to Existing Data Sources
+To access an existing data source from your SAS Viya deployment, add an inbound rule to each security group or firewall for the data source as follows:
+*  If your data source is accessed via the public internet, add a public IP address to the SAS Viya services VM and CAS controller VM. Add an **Allow** rule to your data source for both the services VM and CAS controller VM public IP addresses. When creating the public IP addresses for each VM, a static IP address using the "Standard" SKU is recommended. For details, see
+ ["Reserving a Static External IP Address."](https://cloud.google.com/compute/docs/ip-addresses/reserve-static-external-ip-address)
+
+* If you have a Google-managed database, add the service endpoint for the database to the private subnet of your SAS Viya network. For details, see
+ ["Virtual Private Cloud (VPC) network overview"](https://cloud.google.com/vpc/docs/vpc).
+
+* If you have peered the virtual network, add a rule to "Allow the private subnet CIDR range" for the SAS Viya network. (By default, 10.0.127.0/24). For details, see 
+ ["Virtual network peering."](https://docs.microsoft.com/en-us/azure/virtual-network/virtual-network-peering-overview)
+
+Data sources accessed through SAS/ACCESS should use the [SAS Data Agent for Linux Deployment Guide](https://go.documentation.sas.com/?docsetId=dplydagent0phy0lax&docsetTarget=p06vsqpjpj2motn1qhi5t40u8xf4.htm&docsetVersion=2.3&locale=en) instructions to  ["Configure Data Access"](https://go.documentation.sas.com/?docsetId=dplyml0phy0lax&docsetTarget=p03m8khzllmphsn17iubdbx6fjpq.htm&docsetVersion=3.4&locale=en) and ["Validate the Deployment."](https://go.documentation.sas.com/?docsetId=dplyml0phy0lax&docsetTarget=n18cthgsfyxndyn1imqkbfjisxsv.htm&docsetVersion=3.4&locale=en)
+
+<a name="ACCESSCertWarn"></a>
+### Validate the Server Certificate if Using SAS/ACCESS
+If you are using SAS/ACCESS with TLS, unvalidated TLS certificates are not supported. In this case, a trust store must be explicitly provided.
+
+**Note:** For most Google-managed data sources, the standard OpenSSL trust store validates the data source certificate:
+```
+/etc/pki/ca-trust/extracted/openssl/ca-bundle.trust.crt
+```
+<a name="DataAgent"></a>
+### Set Up SAS Data Agent
+
+1. Perform the pre-installation and installation steps in [SAS Data Agent for Linux: Deployment Guide.](https://go.documentation.sas.com/?docsetId=dplydagent0phy0lax&docsetTarget=p06vsqpjpj2motn1qhi5t40u8xf4.htm&docsetVersion=2.3&locale=en) For the post-installation tasks, you can either:
+    * (Recommended) Use the post-installation playbooks as specified in steps 6 and 7 below.
+    * Perform the manual steps in the SAS Data Agent for Linux: Deployment Guide.
+
+2. In the SAS Viya and SAS Data Preparation environment, open the firewall to allow access on port 443 as follows:
+
+      a. Obtain the public IP address of the SAS Data Agent firewall. The SAS Data Agent firewall address is either the public IP address of the machine where the HTTPS service is running or the public IP address of the NAT that routes outgoing traffic in the SAS Data Agent network.
+
+      b. Modify the security group of the Application Gateway. By default, this is called "PrimaryViyaLoadbalancer_NetworkSecurityGroup" and will be under the resource group of your SAS Viya deployment. Add an inbound rule for port 443 for the public IP that is specified in step 2a.
+      
+3. To verify that the connection works, run the following commands on the machine assigned to the [httpproxy] host group in the Ansible inventory file in your SAS Data Agent environment:
+   ``` 
+    sudo yum install -y nc
+    nc -v -z  <DNS-of-SAS-Viya-endpoint> 443
+   ``` 
+   If the output from the nc command contains "Ncat: Connected to <IP_address:443>", the connection was successful.
+   
+4. To allow access from your SAS Viya network, open the firewall of the SAS Data Agent environment. You can either:
+    * Add a public IP address to both the CAS controller and services VMs and allow port 443 from the public IP addresses of your installation. In this case, a static IP address using the "Standard" SKU is recommended. For details, see ["Reserving a Static External IP Address."](https://cloud.google.com/compute/docs/ip-addresses/reserve-static-external-ip-address) 
+    
+    * Allow general access to port 443 for all IP addresses.
+
+5. To verify the connection, on the services host:
+    ``` 
+    sudo yum install -y nc
+    nc -v -z  <IP-or-DNS-of-the-SAS-Data-Agent-host> 443
+    ``` 
+    
+   If the output from the nc command contains "Ncat: Connected to <IP_address:443>", the connection was successful.
+   
+6. Register the SAS Data Agent with the SAS Viya environment. As the deployment vmuser, log on to the Ansible controller VM and run the following commands from the /sas/install/ansible/sas_viya_playbook directory:
+
+**Note:** The password of the admin user is the value that you specified during deployment for the SASAdminPass input parameter. 
+
+   ``` 
+    cp /sas/install/postconfig-helpers/dataprep2dataagent.yml ./dataprep2dataagent.yml
+   ``` 
+   
+   ``` 
+   ansible-playbook ansible.dataprep2dataagent.yml \
+       -e "adminuser=sasadmin adminpw=<password of admin user>" \
+       -e "data_agent_host=<FQDN(DNS)-of-SAS-Data-Agent-machine>" \
+       -e "secret=<handshake-string>" \
+       -i "/sas/install/ansible/sas_viya_playbook/inventory.ini"
+   ```
+
+7. Register the SAS Viya environment with the SAS Data Agent. Copy the following file from the Ansible controller in your SAS Viya deployment into the playbook directory (sas_viya_playbook) in your SAS Data Agent deployment:
+
+   ``` 
+   /sas/install/postconfig-helpers/dataagent2dataprep.yml
+   ``` 
+ 
+   From the playbook directory (sas_viya_playbook) for the SAS Data Agent:
+    ```
+    ansible-playbook dataagent2dataprep.yml \
+       -e "data_prep_host=<DNS-of-SAS-Viya-endpoint>" \
+       -e "secret=<handshake-string>" 
+    ```
+    
+      **Note:** The DNS of the SAS Viya endpoint is the value of the SASDrive output parameter, without the " prefix and the "/SASDrive" suffix.
+
+8. To access the data sources through SAS/ACCESS, see ["Configure Data Access"](https://go.documentation.sas.com/?docsetId=dplyml0phy0lax&docsetTarget=p03m8khzllmphsn17iubdbx6fjpq.htm&docsetVersion=3.4&locale=en)
+in the SAS Data Agent for Linux: Deployment Guide.
+
+9. Validate the environment, including round-trip communication. For details, see the ["Validation"](https://go.documentation.sas.com/?docsetId=dplydagent0phy0lax&docsetTarget=n1v7mc6ox8omgfn1qzjjjektc7te.htm&docsetVersion=2.3&locale=en ) chapter in the SAS Data Agent for Linux: Deployment Guide.
 
 <a name=usage></a>
 ## Usage
