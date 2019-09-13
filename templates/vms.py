@@ -173,6 +173,8 @@ fi
 # initialization-phase Waiter
 echo "Complete Waiter initialization-phase"
 gcloud beta runtime-config configs variables set startup/success/initialization-phase success --config-name $DEPLOYMENT-deployment-waiters   
+# Update backend service security policy
+gcloud compute backend-services update $DEPLOYMENT-backend --security-policy $DEPLOYMENT-vpc-security-policy --global
 ##################################
 # Install Viya
 ##################################
