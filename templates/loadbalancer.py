@@ -64,7 +64,8 @@ def GenerateConfig(context):
                 ],
                 'healthChecks': [
                     "$(ref.{}-https-healthcheck.selfLink)".format(deployment)
-                ]
+                ],
+                'securityPolicy': "$(ref.{}-vpc-security-policy.selfLink)".format(deployment),
             }
         },
         {

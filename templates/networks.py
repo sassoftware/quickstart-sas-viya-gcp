@@ -104,13 +104,28 @@ def GenerateConfig(context):
             }
         },
         {
-            'name': "{}-vpc-allow-http".format(deployment),
+            'name': "{}-vpc-allow-https".format(deployment),
             'type': "gcp-types/compute-v1:firewalls",
             'properties': {
-                'description': "Incoming http and https allowed.",
+                'description': "Incoming https allowed.",
                 'network': "$(ref.{}-vpc.selfLink)".format(deployment),
                 'sourceRanges': [
                     web_ingress_location,
+                ],
+                'allowed': [{
+                    'IPProtocol': "tcp",
+                    'ports': [
+                        443
+                    ]
+                }]
+            }
+        },
+        {
+            'name': "{}-vpc-allow-healthcheck".format(deployment),
+            'type': "gcp-types/compute-v1:firewalls",
+            'properties': {
+                'network': "$(ref.{}-vpc.selfLink)".format(deployment),
+                'sourceRanges': [
                     health_check_range1,
                     health_check_range2,
                 ],
@@ -124,7 +139,42 @@ def GenerateConfig(context):
                     ]
                 }]
             }
-        }
+        },
+        {
+            'name': "{}-vpc-security-policy".format(deployment),
+            'type': "gcp-types/compute-v1:securityPolicies",
+            'properties': {
+                'description': "Enabling IP allow list/deny list for HTTP(S) Load Balancing",
+                'rules': [
+                    {
+                        'action': "deny(403)",
+                        'description': "Default rule, higher priority overrides it",
+                        'priority': 2147483647,
+                        'match': {
+                            'versionedExpr': "SRC_IPS_V1",
+                            'config': {
+                                'srcIpRanges': [
+                                    "*"
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        'action': "allow",
+                        'description': "Open Ports to CIDR range",
+                        'priority': 10,
+                        'match': {
+                            'versionedExpr': "SRC_IPS_V1",
+                            'config': {
+                                'srcIpRanges': [
+                                    web_ingress_location
+                                ]
+                            }
+                        }
+                    }
+                ]
+            }
+        },
     ]
 
     return {'resources': resources}
