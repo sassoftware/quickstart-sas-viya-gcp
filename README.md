@@ -27,8 +27,7 @@ This Quickstart is a reference architecture for users who want to deploy the SAS
 1. [Optional Post Deployment Steps](#postDeployment)
    1. [Replace Self-Signed Certificate with Custom Certificate](#certificate)
    1. [Enable Access to Existing Data Sources](#DataSources)
-   1. [Validate the Server Cerficate if Using SAS/ACCESS](#ACCESSCertWarn)
-   1. [Set Up SAS Data Agent](#DataAgent)
+   1. [Validate the Server Certificate if Using SAS/ACCESS](#ACCESSCertWarn)
 1. [Usage](#usage)
 1. [Configuration File](#configFile)
    1. [Parameters](#parameters)
@@ -48,7 +47,7 @@ By default, Quickstart deployments enable Transport Layer Security (TLS) for sec
 
   
 
-This SAS Viya Quickstart Template for GCP will take a generic license for SAS Viya and deploy SAS into its own network. The deployment will create the network and other infrastructure.  After the deployment process completes, you will have the outputs for the web endpoints for a SAS Viya deployment on recommended virtual machines (VMs).  
+This SAS Viya Quickstart Template for GCP takes a generic license for SAS Viya and deploy SAS into its own network. The deployment creates the network and other infrastructure.  After the deployment process completes, you will have the outputs for the web endpoints for a SAS Viya deployment on recommended virtual machines (VMs).  
 
   
 
@@ -84,7 +83,7 @@ SAS Viya Quickstart Template for GCP creates three instances, including:
 
 Before deploying SAS Viya Quickstart Template for GCP, you must have the following: 
 
-* GCP user account 
+* A GCP user account 
 * Access to a GCP project 
 
 * A SAS Software Order Confirmation Email that contains supported Quickstart products: 
@@ -215,82 +214,13 @@ To access an existing data source from your SAS Viya deployment, add an inbound 
 Data sources accessed through SAS/ACCESS should use the [SAS Data Agent for Linux Deployment Guide](https://go.documentation.sas.com/?docsetId=dplydagent0phy0lax&docsetTarget=p06vsqpjpj2motn1qhi5t40u8xf4.htm&docsetVersion=2.3&locale=en) instructions to  ["Configure Data Access"](https://go.documentation.sas.com/?docsetId=dplyml0phy0lax&docsetTarget=p03m8khzllmphsn17iubdbx6fjpq.htm&docsetVersion=3.4&locale=en) and ["Validate the Deployment."](https://go.documentation.sas.com/?docsetId=dplyml0phy0lax&docsetTarget=n18cthgsfyxndyn1imqkbfjisxsv.htm&docsetVersion=3.4&locale=en)
 
 <a name="ACCESSCertWarn"></a>
-### Validate the Server Certificate if Using SAS/ACCESS
+### Validate the Server Certificate If Using SAS/ACCESS
 If you are using SAS/ACCESS with TLS, unvalidated TLS certificates are not supported. In this case, a trust store must be explicitly provided.
 
 **Note:** For most Google-managed data sources, the standard OpenSSL trust store validates the data source certificate:
 ```
 /etc/pki/ca-trust/extracted/openssl/ca-bundle.trust.crt
 ```
-<a name="DataAgent"></a>
-### Set Up SAS Data Agent
-
-1. Perform the pre-installation and installation steps in [SAS Data Agent for Linux: Deployment Guide.](https://go.documentation.sas.com/?docsetId=dplydagent0phy0lax&docsetTarget=p06vsqpjpj2motn1qhi5t40u8xf4.htm&docsetVersion=2.3&locale=en) For the post-installation tasks, you can either:
-    * (Recommended) Use the post-installation playbooks as specified in steps 6 and 7 below.
-    * Perform the manual steps in the SAS Data Agent for Linux: Deployment Guide.
-
-2. In the SAS Viya and SAS Data Preparation environment, open the firewall to allow access on port 443 as follows:
-
-      a. Obtain the public IP address of the SAS Data Agent firewall. The SAS Data Agent firewall address is either the public IP address of the machine where the HTTPS service is running or the public IP address of the NAT that routes outgoing traffic in the SAS Data Agent network.
-
-      b. Modify the security group of the Application Gateway. By default, this is called "PrimaryViyaLoadbalancer_NetworkSecurityGroup" and will be under the resource group of your SAS Viya deployment. Add an inbound rule for port 443 for the public IP that is specified in step 2a.
-      
-3. To verify that the connection works, run the following commands on the machine assigned to the [httpproxy] host group in the Ansible inventory file in your SAS Data Agent environment:
-   ``` 
-    sudo yum install -y nc
-    nc -v -z  <DNS-of-SAS-Viya-endpoint> 443
-   ``` 
-   If the output from the nc command contains "Ncat: Connected to <IP_address:443>", the connection was successful.
-   
-4. To allow access from your SAS Viya network, open the firewall of the SAS Data Agent environment. You can either:
-    * Add a public IP address to both the CAS controller and services VMs and allow port 443 from the public IP addresses of your installation. In this case, a static IP address using the "Standard" SKU is recommended. For details, see ["Reserving a Static External IP Address."](https://cloud.google.com/compute/docs/ip-addresses/reserve-static-external-ip-address) 
-    
-    * Allow general access to port 443 for all IP addresses.
-
-5. To verify the connection, on the services host:
-    ``` 
-    sudo yum install -y nc
-    nc -v -z  <IP-or-DNS-of-the-SAS-Data-Agent-host> 443
-    ``` 
-    
-   If the output from the nc command contains "Ncat: Connected to <IP_address:443>", the connection was successful.
-   
-6. Register the SAS Data Agent with the SAS Viya environment. As the deployment vmuser, log on to the Ansible controller VM and run the following commands from the /sas/install/ansible/sas_viya_playbook directory:
-
-**Note:** The password of the admin user is the value that you specified during deployment for the SASAdminPass input parameter. 
-
-   ``` 
-    cp /sas/install/postconfig-helpers/dataprep2dataagent.yml ./dataprep2dataagent.yml
-   ``` 
-   
-   ``` 
-   ansible-playbook ansible.dataprep2dataagent.yml \
-       -e "adminuser=sasadmin adminpw=<password of admin user>" \
-       -e "data_agent_host=<FQDN(DNS)-of-SAS-Data-Agent-machine>" \
-       -e "secret=<handshake-string>" \
-       -i "/sas/install/ansible/sas_viya_playbook/inventory.ini"
-   ```
-
-7. Register the SAS Viya environment with the SAS Data Agent. Copy the following file from the Ansible controller in your SAS Viya deployment into the playbook directory (sas_viya_playbook) in your SAS Data Agent deployment:
-
-   ``` 
-   /sas/install/postconfig-helpers/dataagent2dataprep.yml
-   ``` 
- 
-   From the playbook directory (sas_viya_playbook) for the SAS Data Agent:
-    ```
-    ansible-playbook dataagent2dataprep.yml \
-       -e "data_prep_host=<DNS-of-SAS-Viya-endpoint>" \
-       -e "secret=<handshake-string>" 
-    ```
-    
-      **Note:** The DNS of the SAS Viya endpoint is the value of the SASDrive output parameter, without the " prefix and the "/SASDrive" suffix.
-
-8. To access the data sources through SAS/ACCESS, see ["Configure Data Access"](https://go.documentation.sas.com/?docsetId=dplyml0phy0lax&docsetTarget=p03m8khzllmphsn17iubdbx6fjpq.htm&docsetVersion=3.4&locale=en)
-in the SAS Data Agent for Linux: Deployment Guide.
-
-9. Validate the environment, including round-trip communication. For details, see the ["Validation"](https://go.documentation.sas.com/?docsetId=dplydagent0phy0lax&docsetTarget=n1v7mc6ox8omgfn1qzjjjektc7te.htm&docsetVersion=2.3&locale=en ) chapter in the SAS Data Agent for Linux: Deployment Guide.
-
 <a name=usage></a>
 ## Usage
 To connect to the SAS Viya login page:
@@ -312,7 +242,6 @@ You must modify the configuration file, /\<path_to_quickstart-sas-viya-gcp\>/tem
 |--------------|-----------|
 |AnsibleControllerMachineType|Defines the Ansible Controller machine type in GCP.
 |ServicesMachineType|Defines the SAS Viya Services machine type in GCP.
-|ServicesDiskSize|Defines the SAS Viya Services boot disk size in GCP (minimum required is 25GB).
 |ControllerMachineType|Defines the CAS Controller machine type in GCP.
 |SSHPublicKey|Specifies your SSH public key.  This will get added to the authorized_keys file on the Bastion host so that you can connect using ssh.
 |SASAdminPass|Specifies the password for the SAS Viya adminuser. Used for the initial identity for the SAS Viya adminuser.
@@ -323,7 +252,7 @@ You must modify the configuration file, /\<path_to_quickstart-sas-viya-gcp\>/tem
 
 <a name=zipfilepath></a>
 ### Path to SAS License Zip File 
-The DeploymentDataLocation parameter refers to the path to the SAS license zip file that was included with the Software Order Email (SOE), and subsequently uploaded to a storage bucket. You need the name of the bucket as well as any embedded folders (if any) to construct the path to the SAS license zip file. 
+The DeploymentDataLocation parameter refers to the path to the SAS license zip file that was included with the Software Order Email (SOE), and subsequently uploaded to a storage bucket. You need the name of the bucket as well as any embedded folders (if any) to construct the path to the SAS license ZIP file. 
 The path consists of the following:
 ```
 gs://<bucket_name>/<path>/<license_file>.zip
@@ -332,9 +261,9 @@ To verify the path:
 1. Click [here](https://console.cloud.google.com/projectselector2/storage/browser?_ga=2.254580111.-645135131.1554401290&supportedpurview=project) to open the Google Storage browser from the GCP console.
 2. Ensure that you are logged in to the correct Google account.
 3. Choose the project that contains the bucket with the license zip file. You should see a table with any buckets that are in the project.
-4. From the buckets list, click on the bucket with the license zip file.
-5. Click on any embedded folder(s) within the bucket to navigate to the license zip file.
-6. When you are at the level of the license zip file itself, you should see a table that contains the license zip file. Above the table on the left, note the word *Buckets*. To the right of the word *Buckets*, you will see the bucket name and path to the license zip file. For example, the line above the table with the license zip file might appear as follows:
+4. From the buckets list, click on the bucket with the license ZIP file.
+5. Click on any embedded folder(s) within the bucket to navigate to the license ZIP file.
+6. When you are at the level of the license ZIP file itself, you should see a table that contains the license ZIP file. Above the table on the left, note the word *Buckets*. To the right of the word *Buckets*, you will see the bucket name and path to the license ZIP file. For example, the line above the table with the license ZIP file might appear as follows:
 ```
 Buckets / testbucket-deployment-data/ viya3.4
 ```
@@ -376,6 +305,13 @@ cd /sas/install/ansible/sas_viya_playbook
 export ANSIBLE_CONFIG=`pwd`
 ansible-playbook viya-ark/playbooks/viya-mmsu/viya-servicesstatus.yml
 ```
+#### Restarting the SAS Services through Viya-Ark
+Viya-Ark can restart all of the services by issuing the following commands as the sasinstall user on the Ansible controller instance:
+```
+cd /sas/install/ansible/sas_viya_playbook
+export ANSIBLE_CONFIG=`pwd`
+ansible-playbook viya-ark/playbooks/viya-mmsu/viya-services-restart.yml -e enable_stray_cleanup=true
+```
 <a name="tsCommands"></a>
 
 ### Useful Google Cloud CLI Troubleshooting Commands
@@ -390,6 +326,8 @@ Here is an example of an error message that results from a waiter failure:
 ```
 gcloud beta runtime-config configs variables list --config-name <deployment>-deployment-waiters --values --format json
 ```
+The command returns information about the waiter failure that you can use for debugging.
+
 #### Check for Error in Console serial-port-output
 1. Run this command from a terminal with the gcloud CLI installed:
 
@@ -415,6 +353,7 @@ In the event of a timeout, run the following command:
 ```
 gcloud compute instances get-serial-port-output <deployment>-<services or controller> --zone=$ZONE --project=$PROJECT
 ```
+The command prints out the console of the specified machine. The console output is the output that would be streaming on the screen if you had done a manual deployment using the command line. You can use this information for debugging in the event of a deployment failure.
 
 <a name="AppendixA"></a>
 ## Appendix A: Setting Up a Mirror Repository
