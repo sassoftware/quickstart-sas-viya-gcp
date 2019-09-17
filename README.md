@@ -113,7 +113,7 @@ The *gcloud* command-line tool *(gcloud CLI)  is downloaded with the Google Clou
 2. Clone the github repository.  From a terminal with the gcloud CLI configured, run the following command: 
 
 ``` 
-git clone https://github.com/sassoftware/quickstart-sas-viya-gcp -b develop 
+git clone https://github.com/sassoftware/quickstart-sas-viya-gcp  
   ```
  
 
