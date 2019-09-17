@@ -213,6 +213,8 @@ To access an existing data source from your SAS Viya deployment, add an inbound 
 
 Data sources accessed through SAS/ACCESS should use the [SAS Data Agent for Linux Deployment Guide](https://go.documentation.sas.com/?docsetId=dplydagent0phy0lax&docsetTarget=p06vsqpjpj2motn1qhi5t40u8xf4.htm&docsetVersion=2.3&locale=en) instructions to  ["Configure Data Access"](https://go.documentation.sas.com/?docsetId=dplyml0phy0lax&docsetTarget=p03m8khzllmphsn17iubdbx6fjpq.htm&docsetVersion=3.4&locale=en) and ["Validate the Deployment."](https://go.documentation.sas.com/?docsetId=dplyml0phy0lax&docsetTarget=n18cthgsfyxndyn1imqkbfjisxsv.htm&docsetVersion=3.4&locale=en)
 
+**Note:** SAS Data Agent is not supported in SAS Viya Quickstart Template for Google Cloud Platform (GCP) at this time.
+
 <a name="ACCESSCertWarn"></a>
 ### Validate the Server Certificate If Using SAS/ACCESS
 If you are using SAS/ACCESS with TLS, unvalidated TLS certificates are not supported. In this case, a trust store must be explicitly provided.
