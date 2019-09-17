@@ -31,9 +31,9 @@ yum install -y epel-release
 yum install -y python-pip
 yum install -y git
 ###################################
-# Getting quick start scripts from Github  # TODO: Remove '-b develop' before push to master
+# Getting quick start scripts from Github
 ###################################
-git clone https://github.com/sassoftware/quickstart-sas-viya-gcp $INSTALL_DIR -b develop
+git clone https://github.com/sassoftware/quickstart-sas-viya-gcp $INSTALL_DIR
 # Clean up GitHub identifier files
 pushd $INSTALL_DIR
 rm -rf .git*
