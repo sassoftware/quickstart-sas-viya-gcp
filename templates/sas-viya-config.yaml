@@ -1,0 +1,39 @@
+imports:
+- path: sas-viya-template.jinja
+  
+resources:
+- name: sas-viya
+  type: sas-viya-template.jinja
+  properties:
+    ### Replace these variables with customer provided values
+
+    ## Minimum machineType resources set below.  For a complete list of machineType and resources run in GCP cli:
+    ## "gcloud compute machine-types list"
+    # Anisible Controller machineType
+    AnsibleControllerMachineType: g1-small
+    # Viya Services machineType
+    ServicesMachineType: n1-highmem-16
+    # CAS Controller machineType
+    ControllerMachineType: n1-standard-2
+
+    # Google Cloud Platform deployment zone
+    Zone: GCP_ZONE
+
+    # SSH Public Key added to Anisible Controller for ssh access.
+    SSHPublicKey: The full ssh public key that will be added to the servers
+
+    # Password of the SAS Admin Users (sasboot, optionally sasadmin). Must have at least 6 and no more than 255 characters.
+    SASAdminPass: PASSWORD
+    # Password of the default SAS User (sasuser). If left empty, no default users are being created (WARNING: If not set, deployment will require additional setup steps before being usable).
+    SASUserPass: PASSWORD
+
+    # Google storage bucket location and file name of SAS License file
+    DeploymentDataLocation: gs://BUCKET_PATH/LICENSE_FILENAME.ZIP
+    # OPTIONAL: Google storage bucket location of mirror
+    # DeploymentMirror: gs://BUCKET_PATH/MIRROR_DIRECTORY
+
+    # Allow inbound SSH traffic to the Ansible Controller from this CIDR block (IP address range). Must be a valid IP CIDR range of the form x.x.x.x/x.
+    AdminIngressLocation: x.x.x.x/x
+    # Allow inbound HTTP(S) traffic to the Web Server from this CIDR block (IP address range). Must be a valid IP CIDR range of the form x.x.x.x/x.
+    WebIngressLocation: x.x.x.x/x
+    

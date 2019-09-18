@@ -1,0 +1,33 @@
+resources:
+
+- name: iam
+  type: iam.py
+
+- name: networks
+  type: networks.py
+  properties:
+    Region: {{ properties["Zone"][:-2] }}
+    AdminIngressLocation: {{ properties["AdminIngressLocation"] }}
+    WebIngressLocation: {{ properties["AdminIngressLocation"] }}
+
+- name: vms
+  type: vms.py
+  properties:
+     AnsibleControllerMachineType: {{ properties["AnsibleControllerMachineType"] }}
+     ServicesMachineType: {{ properties["ServicesMachineType"] }}
+     ControllerMachineType: {{ properties["ControllerMachineType"] }}
+     Zone: {{ properties["Zone"] }}
+     SSHPublicKey: {{ properties["SSHPublicKey"] }}
+     SASAdminPass: {{ properties["SASAdminPass"] }}
+     SASUserPass: {{ properties["SASUserPass"] }}
+     DeploymentDataLocation: {{ properties["DeploymentDataLocation"] }}
+     DeploymentMirror: {{ properties["DeploymentMirror"] }}
+     
+- name: loadbalancer
+  type: loadbalancer.py
+  properties:
+     Zone: {{ properties["Zone"] }}
+     Region: {{ properties["Zone"][:-2] }}
+
+- name: runtimeconfig
+  type: runtimeconfig.py
