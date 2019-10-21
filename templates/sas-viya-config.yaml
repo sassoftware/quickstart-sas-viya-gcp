@@ -13,8 +13,12 @@ resources:
     AnsibleControllerMachineType: g1-small
     # Viya Services machineType
     ServicesMachineType: n1-highmem-16
-    # CAS Controller machineType
+    # CAS Controller machineType SMP
     ControllerMachineType: n1-standard-2
+    # CAS Controller machineType MPP
+    ControllerMachineTypeMPP: n1-standard-1
+    # CAS Worker machineType
+    WorkerMachineType: n1-standard-2
 
     # Google Cloud Platform deployment zone
     Zone: GCP_ZONE
@@ -36,4 +40,6 @@ resources:
     AdminIngressLocation: x.x.x.x/x
     # Allow inbound HTTP(S) traffic to the Web Server from this CIDR block (IP address range). Must be a valid IP CIDR range of the form x.x.x.x/x.
     WebIngressLocation: x.x.x.x/x
-    
+
+    # The number of Viya compute nodes to create. Note: Selecting 1 will install a SMP CAS deployment, but selecting 2 or more will create a MPP CAS deployment (controller + n workers deployment; max number of workers is 10).
+    CASInstanceCount: 1
