@@ -104,23 +104,6 @@ def GenerateConfig(context):
             }
         },
         {
-            'name': "{}-vpc-allow-https".format(deployment),
-            'type': "gcp-types/compute-v1:firewalls",
-            'properties': {
-                'description': "Incoming https allowed.",
-                'network': "$(ref.{}-vpc.selfLink)".format(deployment),
-                'sourceRanges': [
-                    web_ingress_location,
-                ],
-                'allowed': [{
-                    'IPProtocol': "tcp",
-                    'ports': [
-                        443
-                    ]
-                }]
-            }
-        },
-        {
             'name': "{}-vpc-allow-healthcheck".format(deployment),
             'type': "gcp-types/compute-v1:firewalls",
             'properties': {
