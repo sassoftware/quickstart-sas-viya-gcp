@@ -4,12 +4,18 @@
 """ Startup script for cas worker node """
 worker_startup_script = '''#!/bin/bash
 # Setting up environment
+export COMMON_CODE_COMMIT="{common_code_commit}"
 export NFS_SERVER="{deployment}-ansible-controller"
 export HOST=$(hostname)
 # Installing dependencies
 yum -y install git
 # Getting quick start scripts
 git clone https://github.com/sassoftware/quickstart-sas-viya-common /tmp/common
+pushd /tmp/common
+git checkout $COMMON_CODE_COMMIT -b $COMMON_CODE_COMMIT
+# Clean up GitHub identifier files
+rm -rf .git*
+popd
 # Bootstrapping all SAS VM
 /bin/su sasinstall -c '/tmp/common/scripts/sasnodes_prereqs.sh'
 # VIRK requires GID 1001 to be free
@@ -21,19 +27,21 @@ groupmod -g 2001 sasinstall
 
 def GenerateConfig(context):
     """ Retrieve variable values from the context """
+    common_code_commit = context.properties['CommonCodeCommit']
     worker_machinetype = context.properties['WorkerMachineType']
     if context.properties['CASInstanceCount'] is 10:
         cas_instance_count = context.properties['CASInstanceCount']
     else:
         cas_instance_count = "{:0>2}".format(context.properties['CASInstanceCount'])
-
-
-
-
     project = context.env['project']
     deployment = context.env['deployment']
     zone = context.properties['Zone']
     ssh_key = context.properties['SSHPublicKey']
+    boot_disk = context.properties['BootDisk']
+    sashome_disk = context.properties['SASHomeDisk']
+    userlib_disk = context.properties['UserLibDisk']
+    cascache_disk = context.properties['CASCacheDisk']
+
 
     """ Define the resources for the VMs """
     resources = [
@@ -57,9 +65,9 @@ def GenerateConfig(context):
                         'boot': True,
                         'autoDelete': True,
                         'initializeParams': {
-                            # 'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7",
+                            # 'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7" ## URI for latest image,
                             'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/rhel-7-v20190729",
-                            'diskSizeGb': 10
+                            'diskSizeGb': "{}".format(boot_disk)
                         }
                     },
                     {
@@ -69,7 +77,7 @@ def GenerateConfig(context):
                         'autoDelete': True,
                         'initializeParams': {
                             'diskName': "{}-sashome-worker{}".format(deployment, cas_instance_count),
-                            'diskSizeGb': 50,
+                            'diskSizeGb': "{}".format(sashome_disk),
                             'description': "SAS_INSTALL_DISK"
                         }
                     },
@@ -83,7 +91,7 @@ def GenerateConfig(context):
                         'initializeParams': {
                             'diskName': "{}-userlib-worker{}".format(deployment, cas_instance_count),
                             'diskType': "projects/{}/zones/{}/diskTypes/pd-standard".format(project, zone),
-                            'diskSizeGb': 50,
+                            'diskSizeGb': "{}".format(userlib_disk),
                             'description': "USERLIB_DISK"
                         }
                     },
@@ -97,7 +105,7 @@ def GenerateConfig(context):
                         'initializeParams': {
                             'diskName': "{}-cascache-worker{}".format(deployment, cas_instance_count),
                             'diskType': "projects/{}/zones/{}/diskTypes/pd-standard".format(project, zone),
-                            'diskSizeGb': 50,
+                            'diskSizeGb': "{}".format(cascache_disk),
                             'description': "CASCACHE_DISK"
                         }
                     }
@@ -109,7 +117,7 @@ def GenerateConfig(context):
                     'items': [
                         {'key': "ssh-keys", 'value': "sasinstall:{}".format(ssh_key)},
                         {'key': "block-project-ssh-keys", 'value': "true"},
-                        {'key': 'startup-script', 'value': worker_startup_script.format(deployment=deployment)}
+                        {'key': 'startup-script', 'value': worker_startup_script.format(common_code_commit=common_code_commit, deployment=deployment)}
                     ]
                 },
                 'tags': {

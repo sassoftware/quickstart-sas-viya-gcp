@@ -29,6 +29,11 @@ required:
 - CASInstanceCount
 
 properties:
+  CommonCodeCommit:
+    type: string
+    description: GitHub Common Code Commit ID
+    default: 4ccbb7a9a466fdb7c7d1ca6b37a60909781a7ec9
+
   AnsibleControllerMachineType:
     type: string
     description: Anisible Controller machine type defined in GCP
@@ -102,3 +107,56 @@ properties:
     minimum: 1
     maximum: 10
 
+  AnsibleControllerDisk:
+    type: integer
+    description: Ansible Controller boot disk size
+    default: 10
+    minimum: 10
+
+  ServicesDisk:
+    type: integer
+    description: Viya Services boot disk size
+    default: 10
+    minimum: 10
+
+  ServicesSASHomeDisk:
+    type: integer
+    description: Viya Services SAS Home disk size
+    default: 150
+    minimum: 10
+
+  ControllerDisk:
+    type: integer
+    description: CAS Controller boot disk size
+    default: 10
+    minimum: 10
+
+  ControllerSASHomeDisk:
+    type: integer
+    description: CAS Controller SAS Home disk size
+    default: 50
+    minimum: 10
+
+  UserLibDisk:
+    type: integer
+    description: CAS Controller userlib disk size
+    default: 50
+    minimum: 10
+
+  CASCacheDisk:
+    type: integer
+    description: CAS  Controller cascache disk size
+    default: 75
+    minimum: 10
+
+  MPPCASCacheDisk:
+    type: integer
+    description: CAS  Worker node cascache disk size
+    default: 5
+    minimum: 5
+
+  WorkerDisk:
+    type: integer
+    description: CAS Worker node boot disk size, MPP deployment only
+    default: 10
+    minimum: 10
