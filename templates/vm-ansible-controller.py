@@ -7,7 +7,7 @@ ansible_startup_script = '''#!/bin/bash
 ###################################
 # Setting up environment
 ###################################
-export COMMON_CODE_COMMIT="4ccbb7a9a466fdb7c7d1ca6b37a60909781a7ec9" #MPP support
+export COMMON_CODE_COMMIT="{common_code_commit}"
 export PROJECT="{project}"
 export DEPLOYMENT="{deployment}"
 export OLCROOTPW="{olc_root_pw}"
@@ -34,7 +34,7 @@ yum install -y git
 ###################################
 # Getting quick start scripts from Github
 ###################################
-git clone https://github.com/sassoftware/quickstart-sas-viya-gcp $INSTALL_DIR -b develop
+git clone https://github.com/sassoftware/quickstart-sas-viya-gcp $INSTALL_DIR
 # Clean up GitHub identifier files
 pushd $INSTALL_DIR
 rm -rf .git*
@@ -289,6 +289,7 @@ fi
 
 def GenerateConfig(context):
     """ Retrieve variable values from the context """
+    common_code_commit = context.properties['CommonCodeCommit']
     ansible_controller_machinetype = context.properties['AnsibleControllerMachineType']
     if context.properties['SASAdminPass'] is None:
         olc_root_pw = ''
@@ -308,6 +309,8 @@ def GenerateConfig(context):
     deployment = context.env['deployment']
     zone = context.properties['Zone']
     ssh_key = context.properties['SSHPublicKey']
+    boot_disk = context.properties['BootDisk']
+
 
     """ Define the resources for the VMs """
     resources = [
@@ -329,9 +332,9 @@ def GenerateConfig(context):
                     'boot': True,
                     'autoDelete': True,
                     'initializeParams': {
-                        # 'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7",
+                        # 'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7" ## URI for latest image,
                         'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/rhel-7-v20190729",
-                        'diskSizeGb': 10
+                        'diskSizeGb': "{}".format(boot_disk),
                     }
                 }],
                 'networkInterfaces': [{
@@ -351,7 +354,7 @@ def GenerateConfig(context):
                         {'key': 'ssh-keys', 'value': "sasinstall:{}".format(ssh_key)},
                         {'key': 'block-project-ssh-keys', 'value': "true"},
                         {'key': 'startup-script',
-                         'value': ansible_startup_script.format(project=project, deployment=deployment, olc_root_pw=olc_root_pw, olc_user_pw=olc_user_pw, deployment_data_location=deployment_data_location, deployment_mirror=deployment_mirror, cas_instance_count=cas_instance_count)}
+                         'value': ansible_startup_script.format(common_code_commit=common_code_commit, project=project, deployment=deployment, olc_root_pw=olc_root_pw, olc_user_pw=olc_user_pw, deployment_data_location=deployment_data_location, deployment_mirror=deployment_mirror, cas_instance_count=cas_instance_count)}
                     ]
                 }
             }
