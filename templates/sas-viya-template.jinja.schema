@@ -123,7 +123,7 @@ properties:
     type: integer
     description: Viya Services SAS Home disk size
     default: 150
-    minimum: 10
+    minimum: 150
 
   ControllerDisk:
     type: integer
@@ -135,19 +135,19 @@ properties:
     type: integer
     description: CAS Controller SAS Home disk size
     default: 50
-    minimum: 10
+    minimum: 50
 
   ControllerUserLibDisk:
     type: integer
     description: CAS Controller userlib disk size
     default: 50
-    minimum: 10
+    minimum: 50
 
   CASCacheDisk:
     type: integer
     description: CAS  Controller cascache disk size
     default: 75
-    minimum: 10
+    minimum: 75
 
   MPPCASCacheDisk:
     type: integer
