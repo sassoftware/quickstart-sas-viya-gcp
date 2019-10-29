@@ -1,24 +1,11 @@
 imports:
 - path: sas-viya-template.jinja
-  
+
 resources:
 - name: sas-viya
   type: sas-viya-template.jinja
   properties:
     ### Replace these variables with customer provided values
-
-    ## Minimum machineType resources set below.  For a complete list of machineType and resources run in GCP cli:
-    ## "gcloud compute machine-types list"
-    # Anisible Controller machineType
-    AnsibleControllerMachineType: g1-small
-    # Viya Services machineType
-    ServicesMachineType: n1-highmem-16
-    # CAS Controller machineType SMP
-    ControllerMachineType: n1-standard-2
-    # CAS Controller machineType MPP
-    ControllerMachineTypeMPP: n1-standard-1
-    # CAS Worker machineType
-    WorkerMachineType: n1-standard-2
 
     # Google Cloud Platform deployment zone
     Zone: GCP_ZONE
@@ -46,21 +33,31 @@ resources:
 
 
     ### Advanced configuration options
-    # Ansible Controller disk size
+    
+    ## Minimum machineType resources set below.  For a complete list of machineType and resources run in GCP cli:
+    ## "gcloud compute machine-types list"
+    # Anisible Controller machineType
+    AnsibleControllerMachineType: g1-small
     AnsibleControllerDisk: 10 #boot disk
 
-    #  SAS Viya Services VM disk sizes
+    # Viya Services machineType
+    ServicesMachineType: n1-highmem-16
     ServicesDisk: 10 # boot disk
     ServicesSASHomeDisk: 150 # /opt/sas
 
-    # CAS Controller VM disk sizes
+    # CAS Controller machineType SMP
+    ControllerMachineType: n1-standard-2
     ControllerDisk: 10 # boot disk
     ControllerSASHomeDisk: 50 # /opt/sas
     ControllerUserLibDisk: 50 # /opt/sas/viya/config/data/cas
     CASCacheDisk: 75 # /sastmp/cascache
 
+    # CAS Controller machineType MPP
+    ControllerMachineTypeMPP: n1-standard-1
    # cascache disk on CAS Controller VM for MPP deployment
     MPPCASCacheDisk: 5 # /sastmp/cascache
 
+    # CAS Worker machineType
+    WorkerMachineType: n1-standard-2
    # CAS Worker node VM disk size for MPP deployment only
     WorkerDisk: 10 # boot disk
