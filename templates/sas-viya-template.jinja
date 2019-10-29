@@ -23,7 +23,7 @@ resources:
      DeploymentMirror: {{ properties["DeploymentMirror"] }}
      CASInstanceCount: {{ properties["CASInstanceCount"] }}
      BootDisk: {{ properties["AnsibleControllerDisk"] }}
-     
+
 - name: vm-services
   type: vm-services.py
   properties:
@@ -44,7 +44,7 @@ resources:
      SSHPublicKey: {{ properties["SSHPublicKey"] }}
      BootDisk: {{ properties["ControllerDisk"] }}
      SASHomeDisk: {{ properties["ControllerSASHomeDisk"] }}
-     UserLibDisk: {{ properties["UserLibDisk"] }}
+     UserLibDisk: {{ properties["ControllerUserLibDisk"] }}
      CASCacheDisk: {{ properties["CASCacheDisk"] }}
     {% else %}
 - name: vm-controller-mpp
@@ -68,7 +68,7 @@ resources:
      CASInstanceCount: {{ count+1 }}
      BootDisk: {{ properties["WorkerDisk"] }}
      SASHomeDisk: {{ properties["ControllerSASHomeDisk"] }}
-     UserLibDisk: {{ properties["UserLibDisk"] }}
+     UserLibDisk: {{ properties["ControllerUserLibDisk"] }}
      CASCacheDisk: {{ properties["CASCacheDisk"] }}
   {% endfor %}
   {% endif %}
