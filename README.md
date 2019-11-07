@@ -83,9 +83,9 @@ SAS Viya Quickstart Template for GCP creates three instances, including:
 
 Before deploying SAS Viya Quickstart Template for GCP, you must have the following: 
 
-* A GCP user account (recommended to have 'Owner' role in order to deploy and fully manager deployment)
+* A GCP user account (recommended to have 'Owner' role in order to deploy and fully manage the deployment)
 * Access to a GCP project 
-* The GCP project's default service account (xxxxxxxxxxxx@cloudservices.gserviceaccount.com) must be granted the 'Project IAM Admin' role
+* The GCP project's default service account (xxxxxxxxxxxx@cloudservices.gserviceaccount.com) must have the 'Project IAM Admin' role added
 
 * A SAS Software Order Confirmation Email that contains supported Quickstart products: 
 
