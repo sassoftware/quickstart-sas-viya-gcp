@@ -8,7 +8,7 @@ resources:
   properties:
     Region: {{ properties["Zone"][:-2] }}
     AdminIngressLocation: {{ properties["AdminIngressLocation"] }}
-    WebIngressLocation: {{ properties["AdminIngressLocation"] }}
+    WebIngressLocation: {{ properties["WebIngressLocation"] }}
 
 - name: vm-ansible-controller
   type: vm-ansible-controller.py
