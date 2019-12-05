@@ -63,20 +63,52 @@ export VIYA_VERSION=$(python $INSTALL_DIR/functions/getviyaversion.py)
 pip install pyOpenSSL
 # Generating new SSL Cert and Key
 LOADBALANCERIP=$(gcloud compute addresses list | grep $DEPLOYMENT-loadbalancer | awk '{{print $2}}')
-python $INSTALL_DIR/functions/create-self-signed-cert.py $LOADBALANCERIP
-rc="$?"
-echo "create-self-signed-cert.py Return Code: $rc"
-if [ "$rc" -ne "0" ]; then
-    echo "*** ERROR: SSL Certificate generation failed.  Return Code: $rc"
+SSL_WORKING_FOLDER=/tmp
+SSL_CHILD_KEY_FILENAME=private.key
+SSL_CHILD_CERT_FILENAME=selfsigned.crt
+cat > $SSL_WORKING_FOLDER/cert_config_file.cfg <<EOF
+[req]
+default_bits = 2048
+prompt = no
+default_md = sha512
+req_extensions = req_ext
+distinguished_name = dn
+
+[ dn ]
+C=US
+ST=NC
+L=Cary
+O=Self-Signed CA signed Certificate
+OU=SASViya
+CN=globalViyaHttpdCert
+
+[ req_ext ]
+subjectAltName = @alt_names
+
+[ alt_names ]
+IP.1 = $LOADBALANCERIP
+EOF
+
+cat > "$SSL_WORKING_FOLDER/mintCert.sh"<<-EOF
+openssl req -x509 -newkey rsa:2048 -keyout "$SSL_WORKING_FOLDER/$SSL_CHILD_KEY_FILENAME" -out "$SSL_WORKING_FOLDER/$SSL_CHILD_CERT_FILENAME" -days 3650 -nodes -config "$SSL_WORKING_FOLDER/cert_config_file.cfg" -extensions req_ext
+cert-rc1="$?"
+echo "Generating  SSL cert files Return Code: $cert-rc1"
+EOF
+chmod +x "$SSL_WORKING_FOLDER/mintCert.sh"
+bash "$SSL_WORKING_FOLDER/mintCert.sh"
+cert-rc2="$?"
+echo "Minting SSL cert Return Code: $cert-rc2"
+if [ "$cert-rc1" -ne "0" ] || [ "$cert-rc2" -ne "0" ]; then
+    echo "*** ERROR: SSL Certificate generation failed.  Return Code: $cert-rc1, $cert-rc2"
     # Viya deployment failed, exiting
     gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: SSL Certificate generation failed" --config-name $DEPLOYMENT-deployment-waiters
     exit $rc
-elif [[ -f /tmp/selfsigned.crt && -f /tmp/private.key  ]]; then
+elif [[ -f $SSL_WORKING_FOLDER/$SSL_CHILD_CERT_FILENAME && -f $SSL_WORKING_FOLDER/$SSL_CHILD_KEY_FILENAME  ]]; then
     echo "Assign new SSL Cert to target-https-proxy resource and clean up." 
-    gcloud compute ssl-certificates create $DEPLOYMENT-sslcert-tmp --certificate /tmp/selfsigned.crt --private-key /tmp/private.key
+    gcloud compute ssl-certificates create $DEPLOYMENT-sslcert-tmp --certificate $SSL_WORKING_FOLDER/$SSL_CHILD_CERT_FILENAME --private-key $SSL_WORKING_FOLDER/$SSL_CHILD_KEY_FILENAME
     gcloud compute target-https-proxies update $DEPLOYMENT-loadbalancer-target-proxy --ssl-certificates=https://www.googleapis.com/compute/v1/projects/$PROJECT/global/sslCertificates/$DEPLOYMENT-sslcert-tmp
     gcloud compute ssl-certificates delete $DEPLOYMENT-sslcert --quiet
-    gcloud compute ssl-certificates create $DEPLOYMENT-sslcert --certificate /tmp/selfsigned.crt --private-key /tmp/private.key
+    gcloud compute ssl-certificates create $DEPLOYMENT-sslcert --certificate $SSL_WORKING_FOLDER/$SSL_CHILD_CERT_FILENAME --private-key $SSL_WORKING_FOLDER/$SSL_CHILD_KEY_FILENAME
     gcloud compute target-https-proxies update $DEPLOYMENT-loadbalancer-target-proxy --ssl-certificates=https://www.googleapis.com/compute/v1/projects/$PROJECT/global/sslCertificates/$DEPLOYMENT-sslcert
     gcloud compute ssl-certificates delete $DEPLOYMENT-sslcert-tmp --quiet   
 else
