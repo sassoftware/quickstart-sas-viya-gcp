@@ -2,23 +2,12 @@
 
 **Note**: Currently, SAS Viya has no license agreement with Google.  Therefore, there is no contractual support from Google. You are responsible for the costs of the resources that are consumed by your deployment. 
 
-This README for  SAS Viya Quickstart Template for Google Cloud Platform (GCP) is used to deploy the following SAS Viya products in the GCP cloud: 
-
-  
-
-* SAS Visual Analytics 8.3.1 on Linux 
-
-* SAS Visual Statistics 8.3.1 on Linux 
-
-* SAS Visual Data Mining and Machine Learning 8.3.1 on Linux 
-
-  
-
-This Quickstart is a reference architecture for users who want to deploy the SAS platform, using microservices and other cloud-friendly technologies. By deploying the SAS platform in GCP, you get SAS analytics, data visualization, and machine-learning capabilities in a GCP-validated environment. 
 
 ## Contents
-1. [Solution Summary](#Summary)
+1. [Overview](#Overview)
+    1. [SAS Viya on GCP](#SAS Viya on GCP)
     1. [Costs and Licenses](#Costs)
+1. [Architecture](#Architecture)
 1. [Prerequisites](#Prerequisites)
 1. [Deployment Steps](#Deployment)
 1. [Additional Deployment Details](#deploydetails)
@@ -41,25 +30,29 @@ This Quickstart is a reference architecture for users who want to deploy the SAS
    
 
 <a name="Summary"></a>
-## Solution Summary 
-
-By default, Quickstart deployments enable Transport Layer Security (TLS) for secure communication. 
-
-  
-
-This SAS Viya Quickstart Template for GCP takes a generic license for SAS Viya and deploy SAS into its own network. The deployment creates the network and other infrastructure.  After the deployment process completes, you will have the outputs for the web endpoints for a SAS Viya deployment on recommended virtual machines (VMs).  
+## Overview
+This README for  SAS Viya Quickstart Template for Google Cloud Platform (GCP) is used to deploy the following SAS Viya products in the GCP cloud: 
 
   
 
-When you deploy the Quickstart with default parameters, the following SAS Viya environment is built in the GCP cloud: 
+* SAS Visual Analytics 8.3.1 on Linux 
 
-  
+* SAS Visual Statistics 8.3.1 on Linux 
 
-![Network Diagram](/images/GCP_Topology.jpg) 
+* SAS Visual Data Mining and Machine Learning 8.3.1 on Linux 
 
-  
 
-For details, see [SAS Viya 3.4 for Linux: Deployment Guide](https://go.documentation.sas.com/?docsetId=dplyml0phy0lax&docsetTarget=titlepage.htm&docsetVersion=3.4&locale=en). 
+
+This Quickstart is a reference architecture for users who want to deploy the SAS platform, using microservices and other cloud-friendly technologies. By deploying the SAS platform in GCP, you get SAS analytics, data visualization, and machine-learning capabilities in a GCP validated environment. 
+
+<a name="SAS Viya on GCP"></a>
+### SAS Viya on GCP
+
+SAS Viya is a cloud-enabled, in-memory analytics engine. It uses elastic, scalable, and fault-tolerant processing to address complex analytical challenges. SAS Viya provides faster processing for analytics by using a standardized code base that supports programming in SAS, Python, R, Java, and Lua. It also supports cloud, on-premises, or hybrid environments and deploys seamlessly to any infrastructure or application ecosystem.
+With SAS Viya, you can: 
+* Gather and share insights from embedded analytical services. 
+* Build centralized, governed analytics models for efficient deployment and maintenance. 
+* Use analytics to quickly deliver answers and results.
 
 <a name="Costs"></a>
 ### Costs and Licenses 
@@ -70,22 +63,57 @@ You will need a SAS license to launch this Quickstart. Your SAS account team and
 
 SAS Viya Quickstart Template for GCP creates three instances, including:  
 
-* 1 compute virtual machine (VM), the Cloud Analytic Services (CAS) controller 
+* compute virtual machine (VM), the Cloud Analytic Services (CAS) controller 
 
-* 1 VM for administration, the Ansible controller 
+* VM for administration, the Ansible controller 
 
-* 1 VM for the SAS Viya services 
+* VM for the SAS Viya services 
 
 **Note:** Resource costs vary by region. See ["Cloud Storage Pricing"](https://cloud.google.com/storage/pricing#price-tables) for additional information about pricing. 
+
+<a name="Architecture"></a>
+## Architecture
+
+This SAS Viya Quickstart Template for GCP takes a generic license for SAS Viya and deploy SAS into its own network. The deployment creates the network and other infrastructure.  After the deployment process completes, you will have the outputs for the web endpoints for a SAS Viya deployment on recommended virtual machines (VMs).  
+
+For details, see [SAS Viya 3.4 for Linux: Deployment Guide](https://go.documentation.sas.com/?docsetId=dplyml0phy0lax&docsetTarget=titlepage.htm&docsetVersion=3.4&locale=en). 
+
+By default, Quickstart deployments enable Transport Layer Security (TLS) to help ensure that communication between external clients (on the internet) and the load balancer is secure. Likewise, TLS is enabled between the load balancer and the private subnet that contains the SAS Viya components. 
+
+Deploying this Quickstart for a new virtual private cloud (VPC) with default parameters in a symmetric multiprocessing (SMP) environment builds the following SAS Viya environment in GCP, shown in Figure 1.  In SMP environments, the CASInstanceCount parameter is set to one, indicating that only one CAS controller is configured.
+
+![SMP Diagram](/images/GCP_TopologySMP.jpg)
+
+Figure 1: Quickstart architecture for SAS Viya on GCP in an SMP Environment
+
+Deploying this Quickstart for a new virtual private cloud (VPC)  in a massively parallel processing (MPP) environment builds the following SAS Viya environment in GCP, shown in Figure 2. In MPP environments, the CASInstanceCount parameter is set to a number between two and ten, indicating the number of CAS workers that are configured in addition to the CAS controller.
+
+![MPP Diagram](/images/GCP_TopologyMPP.jpg)
+
+Figure 2: Quickstart architecture for SAS Viya on GCP in an MPP Environment
+
+The Quickstart sets up the following:
+* A virtual private cloud (VPC) configured with public and private subnets according to GCP best practices. This provides the network infrastructure for your SAS Viya deployment.*
+* A load balancer. 
+* An internet gateway to provide access to the internet.
+* Managed NAT gateways to allow outbound internet access for resources in the private subnets.
+* In the private subnet in an SMP environment, two compute instances with SAS Viya on Red Hat Enterprise Linux (RHEL) 7.4.
+* In the private subnet in an MPP environment, two plus the number of worker nodes  (defined in the CASInstanceCount parameter) compute instances with SAS Viya on Red Hat Enterprise Linux (RHEL) 7.4.
+* In the public subnet, a compute instance running Red Hat Enterprise Linux (RHEL) 7.4. This instance is used as an Ansible controller that serves as an admin node, allowing access to the SAS Viya VMs in the private subnet.
+* Security groups for the SAS Viya VMs and the Ansible controller.
+* Optionally, a default identity provider with users “sasuser” and “sasadmin.”
+ 
+
 
 <a name="Prerequisites"></a> 
 ## Prerequisites 
 
 Before deploying SAS Viya Quickstart Template for GCP, you must have the following: 
 
-* A GCP user account (recommended to have 'Owner' role in order to deploy and fully manage the deployment)
+* A GCP user account (recommended to have 'Owner' role in order to deploy and fully manage deployment) 
 * Access to a GCP project 
-* The GCP project's default service account (xxxxxxxxxxxx@cloudservices.gserviceaccount.com) must have the 'Project IAM Admin' role added
+* The GCP project's default service account (xxxxxxxxxxxx@cloudservices.gserviceaccount.com) must be granted the 'Project IAM Admin' role
+
 
 * A SAS Software Order Confirmation Email that contains supported Quickstart products: 
 
@@ -254,8 +282,8 @@ You must modify the configuration file, /\<path_to_quickstart-sas-viya-gcp\>/tem
 |WebIngressLocation|Specifies the CIDR address range for machines that can access the SAS Viya HTTP(S) server.
 
 <a name=zipfilepath></a>
-### Path to SAS License Zip File 
-The DeploymentDataLocation parameter refers to the path to the SAS license zip file that was included with the Software Order Email (SOE), and subsequently uploaded to a storage bucket. You need the name of the bucket as well as any embedded folders (if any) to construct the path to the SAS license ZIP file. 
+### Path to SAS License ZIP File 
+The DeploymentDataLocation parameter refers to the path to the SAS license ZIP file that was included with the Software Order Email (SOE), and subsequently uploaded to a storage bucket. You need the name of the bucket as well as any embedded folders (if any) to construct the path to the SAS license ZIP file. 
 The path consists of the following:
 ```
 gs://<bucket_name>/<path>/<license_file>.zip
@@ -263,14 +291,14 @@ gs://<bucket_name>/<path>/<license_file>.zip
 To verify the path:
 1. Click [here](https://console.cloud.google.com/projectselector2/storage/browser?_ga=2.254580111.-645135131.1554401290&supportedpurview=project) to open the Google Storage browser from the GCP console.
 2. Ensure that you are logged in to the correct Google account.
-3. Choose the project that contains the bucket with the license zip file. You should see a table with any buckets that are in the project.
+3. Choose the project that contains the bucket with the license ZIP file. You should see a table with any buckets that are in the project.
 4. From the buckets list, click on the bucket with the license ZIP file.
 5. Click on any embedded folder(s) within the bucket to navigate to the license ZIP file.
 6. When you are at the level of the license ZIP file itself, you should see a table that contains the license ZIP file. Above the table on the left, note the word *Buckets*. To the right of the word *Buckets*, you will see the bucket name and path to the license ZIP file. For example, the line above the table with the license ZIP file might appear as follows:
 ```
 Buckets / testbucket-deployment-data/ viya3.4
 ```
-In this example, the bucket name is *testbucket-deployment-data*, the path is *viya3.4*, and suppose that the license zip file is named *SAS_Viya_deployment_data.zip*.
+In this example, the bucket name is *testbucket-deployment-data*, the path is *viya3.4*, and suppose that the license ZIP file is named *SAS_Viya_deployment_data.zip*.
 Therefore, the value of the DeploymentDataLocation parameter would be the following:
 ```
 gs://testbucket-deployment-data/viya3.4/SAS_Viya_deployment_data.zip
@@ -361,7 +389,7 @@ The command prints out the console of the specified machine. The console output 
 <a name="AppendixA"></a>
 ## Appendix A: Setting Up a Mirror Repository
 1. To set up a mirror repository, refer to the instructions in ["Create a Mirror Repository"](https://go.documentation.sas.com/?docsetId=dplyml0phy0lax&docsetTarget=p1ilrw734naazfn119i2rqik91r0.htm&docsetVersion=3.4&locale=en) in the SAS Viya 3.4 for Linux: Deployment Guide.
-2. Set up a GCP bucket that is accessible by the account where you deployed the SAS Viya Quick Start.
+2. Set up a GCP bucket that is accessible by the account where you deployed the SAS Viya Quickstart.
 3. Move the file structure of your mirror repository to the GCP bucket.
 4. Upload the mirror repository into your GCP bucket.
 
