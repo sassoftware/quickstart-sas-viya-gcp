@@ -17,6 +17,7 @@
    1. [Replace Self-Signed Certificate with Custom Certificate](#certificate)
    1. [Enable Access to Existing Data Sources](#DataSources)
    1. [Validate the Server Certificate if Using SAS/ACCESS](#ACCESSCertWarn)
+   1. [Set Up SAS Data Agent](#SASDataAgent)
 1. [Usage](#usage)
 1. [Configuration File](#configFile)
    1. [Parameters](#parameters)
@@ -252,6 +253,70 @@ If you are using SAS/ACCESS with TLS, unvalidated TLS certificates are not suppo
 ```
 /etc/pki/ca-trust/extracted/openssl/ca-bundle.trust.crt
 ```
+
+<a name="SASDataAgent"></a>
+### Set Up SAS Data Agent
+1. Perform the pre-installation and installation steps in ["SAS Data Agent for Linux: Deployment Guide"](https://go.documentation.sas.com/?docsetId=dplydagent0phy0lax&docsetTarget=p06vsqpjpj2motn1qhi5t40u8xf4.htm&docsetVersion=2.3&locale=en). 
+
+For the post-installation tasks, you can either:
+* (Recommended) Use the post-installation playbooks as specified in steps 6 and 7 below.
+* Perform the manual steps in the ["SAS Data Agent for Linux: Deployment Guide"](https://go.documentation.sas.com/?docsetId=dplydagent0phy0lax&docsetTarget=p0prf6lsvg8yp2n1m2sq9ulbg3jp.htm&docsetVersion=2.3&locale=en)  post installation section.
+
+2. In the SAS Viya and SAS Data Preparation environment, edit the Cloud Armor Security Policy to add a new rule to allow access from the SAS Data Agent’s public IP address as follows:
+
+    a. Obtain the public IP address of the SAS Data Agent firewall. The SAS Data Agent firewall address is either the public IP address of the machine where the HTTPS service is running or the public IP address of the NAT that routes outgoing traffic in the SAS Data Agent network.
+    
+    b. Add a rule to the Cloud Armor vpc-security-policy that is associated with the SAS Viya environment. Add a description indicating that this a SAS Data Agent rule.  Add the SAS Data Agent IP address from step 2a to the *Match* box and select *Allow Action*.  Specify a priority of 11 or lower for this new rule.
+    
+3. To verify that the connection works, run the following commands on the machine that is assigned to the [httpproxy] host group in the Ansible inventory file in your SAS Data Agent environment:
+```
+sudo yum install -y nc
+nc -v -z  <DNS-of-SAS-Viya-endpoint> 443
+```
+If the output from the *nc* command contains "Ncat: Connected to <IP_address:443>", the connection was successful.
+
+4. To allow access from your SAS Viya network, open the firewall of the SAS Data Agent environment. You can either:
+
+* Add a public IP address for local CIRD, SAS Viya network Load Balancer and SAS Data Agent to allow TCP ports 443, 5431, 5432, 8200, 8501, and 25141. In this case, a static IP address using the "Standard" SKU is recommended. For details, see ["Reserving a Static External IP Address"](https://cloud.google.com/compute/docs/ip-addresses/reserve-static-external-ip-address).
+
+* Allow general access to port 443 for all IP addresses.
+
+5. To verify the connection, run the following commands on the services VM:
+```
+sudo yum install -y nc
+nc -v -z  <IP-or-DNS-of-the-SAS-Data-Agent-host> 443
+```
+If the output from the *nc* command contains "Ncat: Connected to <IP_address:443>", the connection was successful.
+
+6. Register the SAS Data Agent with the SAS Viya environment. As the deployment user *sasinstall*, log on to the Ansible controller VM and run the following command from the /sas/install/ansible/sas_viya_playbook directory:
+
+**Note:** The password of the admin user is the value that you specified during deployment for the SASAdminPass input parameter.
+
+```
+cp /sas/install/postconfig-helpers/dataprep2dataagent.yml ./dataprep2dataagent.yml
+ansible-playbook ansible.dataprep2dataagent.yml \
+    -e "adminuser=sasadmin adminpw=<password of admin user>" \
+    -e "data_agent_host=<FQDN(DNS)-of-SAS-Data-Agent-machine>" \
+    -e "secret=<handshake-string>" \
+    -i "/sas/install/ansible/sas_viya_playbook/inventory.ini"
+```
+
+7. Register the SAS Viya environment with the SAS Data Agent. 
+
+    a. Copy the following file from the Ansible controller in your SAS Viya deployment into the playbook directory (sas_viya_playbook) in your SAS Data Agent deployment: /sas/install/postconfig-helpers/dataagent2dataprep.yml
+    
+    b. From the playbook directory (sas_viya_playbook) for the SAS Data Agent, run the following command:
+    
+    ```
+   ansible-playbook dataagent2dataprep.yml \
+       -e "data_prep_host=<DNS-of-SAS-Viya-endpoint>" \
+       -e "secret=<handshake-string>"   
+   ```
+   **Note:** The DNS of the SAS Viya endpoint is the value of the SASDrive output parameter, without the " prefix and the "/SASDrive" suffix.
+8. To access the data sources through SAS/ACCESS, see ["Configure Data Access"](https://go.documentation.sas.com/?docsetId=dplyml0phy0lax&docsetTarget=p03m8khzllmphsn17iubdbx6fjpq.htm&docsetVersion=3.4&locale=en) in the SAS Data Agent for Linux: Deployment Guide.
+9. Validate the environment, including round-trip communication. For details, see the ["Validation"](https://go.documentation.sas.com/?docsetId=dplydagent0phy0lax&docsetTarget=n1v7mc6ox8omgfn1qzjjjektc7te.htm&docsetVersion=2.3&locale=en) chapter in the SAS Data Agent for Linux: Deployment Guide.
+ 
+
 <a name=usage></a>
 ## Usage
 To connect to the SAS Viya login page:
