@@ -32,7 +32,7 @@ sed -i '/cachedir/s/var/opt\/sas/' /etc/yum.conf
 
 def GenerateConfig(context):
     """ Retrieve variable values from the context """
-    common_code_commit = '4ccbb7a9a466fdb7c7d1ca6b37a60909781a7ec9'
+    common_code_commit = context.properties['CommonCodeCommit']
     services_machinetype = context.properties['ServicesMachineType']
     deployment = context.env['deployment']
     zone = context.properties['Zone']
