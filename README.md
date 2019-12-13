@@ -232,18 +232,16 @@ To replace the default self-signed certificate with your own self-signed certifi
 <a name="DataSources"></a>
 ### Enable Access to Existing Data Sources
 To access an existing data source from your SAS Viya deployment, add an inbound rule to each security group or firewall for the data source as follows:
-*  If your data source is accessed via the public internet, add a public IP address to the SAS Viya services VM and CAS controller VM. Add an **Allow** rule to your data source for both the services VM and CAS controller VM public IP addresses. When creating the public IP addresses for each VM, a static IP address using the "Standard" SKU is recommended. For details, see
+*  If your data source is accessed via the public internet, add a public IP address to the SAS Viya services VM and CAS controller VM. Add an **Allow** rule to your data source for both the services VM and CAS controller VM public IP addresses. When creating the public IP addresses for each VM, a static IP address using the "Premium" Network Service Tier is recommended. For details, see
  ["Reserving a Static External IP Address."](https://cloud.google.com/compute/docs/ip-addresses/reserve-static-external-ip-address)
 
 * If you have a Google-managed database, add the service endpoint for the database to the private subnet of your SAS Viya network. For details, see
  ["Virtual Private Cloud (VPC) network overview"](https://cloud.google.com/vpc/docs/vpc).
 
 * If you have peered the virtual network, add a rule to "Allow the private subnet CIDR range" for the SAS Viya network. (By default, 10.0.127.0/24). For details, see 
- ["Virtual network peering."](https://docs.microsoft.com/en-us/azure/virtual-network/virtual-network-peering-overview)
+ ["Virtual network peering."](https://cloud.google.com/vpc/docs/vpc-peering )
 
 Data sources accessed through SAS/ACCESS should use the [SAS Data Agent for Linux Deployment Guide](https://go.documentation.sas.com/?docsetId=dplydagent0phy0lax&docsetTarget=p06vsqpjpj2motn1qhi5t40u8xf4.htm&docsetVersion=2.3&locale=en) instructions to  ["Configure Data Access"](https://go.documentation.sas.com/?docsetId=dplyml0phy0lax&docsetTarget=p03m8khzllmphsn17iubdbx6fjpq.htm&docsetVersion=3.4&locale=en) and ["Validate the Deployment."](https://go.documentation.sas.com/?docsetId=dplyml0phy0lax&docsetTarget=n18cthgsfyxndyn1imqkbfjisxsv.htm&docsetVersion=3.4&locale=en)
-
-**Note:** SAS Data Agent is not supported in SAS Viya Quickstart Template for Google Cloud Platform (GCP) at this time.
 
 <a name="ACCESSCertWarn"></a>
 ### Validate the Server Certificate If Using SAS/ACCESS
@@ -277,7 +275,7 @@ If the output from the *nc* command contains "Ncat: Connected to <IP_address:443
 
 4. To allow access from your SAS Viya network, open the firewall of the SAS Data Agent environment. You can either:
 
-* Add a public IP address for local CIRD, SAS Viya network Load Balancer and SAS Data Agent to allow TCP ports 443, 5431, 5432, 8200, 8501, and 25141. In this case, a static IP address using the "Standard" SKU is recommended. For details, see ["Reserving a Static External IP Address"](https://cloud.google.com/compute/docs/ip-addresses/reserve-static-external-ip-address).
+* Add a public IP address for local CIDR, SAS Viya network Load Balancer and SAS Data Agent to allow TCP ports 443, 5431, 5432, 8200, 8501, and 25141. In this case, a static IP address using the "Premium" Network Service Tier is recommended. For details, see ["Reserving a Static External IP Address"](https://cloud.google.com/compute/docs/ip-addresses/reserve-static-external-ip-address).
 
 * Allow general access to port 443 for all IP addresses.
 
@@ -312,7 +310,7 @@ ansible-playbook ansible.dataprep2dataagent.yml \
        -e "data_prep_host=<DNS-of-SAS-Viya-endpoint>" \
        -e "secret=<handshake-string>"   
    ```
-   **Note:** The DNS of the SAS Viya endpoint is the value of the SASDrive output parameter, without the " prefix and the "/SASDrive" suffix.
+   **Note:** The DNS of the SAS Viya endpoint is the value of the SASDrive output parameter, without the prefix and the "/SASDrive" suffix.
 8. To access the data sources through SAS/ACCESS, see ["Configure Data Access"](https://go.documentation.sas.com/?docsetId=dplyml0phy0lax&docsetTarget=p03m8khzllmphsn17iubdbx6fjpq.htm&docsetVersion=3.4&locale=en) in the SAS Data Agent for Linux: Deployment Guide.
 9. Validate the environment, including round-trip communication. For details, see the ["Validation"](https://go.documentation.sas.com/?docsetId=dplydagent0phy0lax&docsetTarget=n1v7mc6ox8omgfn1qzjjjektc7te.htm&docsetVersion=2.3&locale=en) chapter in the SAS Data Agent for Linux: Deployment Guide.
  
