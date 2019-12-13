@@ -5,7 +5,7 @@
 
 ## Contents
 1. [Overview](#Overview)
-    1. [SAS Viya on GCP](#SAS Viya on GCP)
+    1. [SAS Viya on GCP](#SASViyaonGCP)
     1. [Costs and Licenses](#Costs)
 1. [Architecture](#Architecture)
 1. [Prerequisites](#Prerequisites)
@@ -46,7 +46,7 @@ This README for  SAS Viya Quickstart Template for Google Cloud Platform (GCP) is
 
 This Quickstart is a reference architecture for users who want to deploy the SAS platform, using microservices and other cloud-friendly technologies. By deploying the SAS platform in GCP, you get SAS analytics, data visualization, and machine-learning capabilities in a GCP validated environment. 
 
-<a name="SAS Viya on GCP"></a>
+<a name="SASViyaonGCP"></a>
 ### SAS Viya on GCP
 
 SAS Viya is a cloud-enabled, in-memory analytics engine. It uses elastic, scalable, and fault-tolerant processing to address complex analytical challenges. SAS Viya provides faster processing for analytics by using a standardized code base that supports programming in SAS, Python, R, Java, and Lua. It also supports cloud, on-premises, or hybrid environments and deploys seamlessly to any infrastructure or application ecosystem.
