@@ -6,7 +6,11 @@ info:
 imports:
 - path: iam.py
 - path: networks.py
-- path: vms.py
+- path: vm-ansible-controller.py
+- path: vm-services.py
+- path: vm-controller.py
+- path: vm-controller-mpp.py
+- path: vm-worker.py
 - path: loadbalancer.py
 - path: runtimeconfig.py
 
@@ -14,14 +18,22 @@ required:
 - AnsibleControllerMachineType
 - ServicesMachineType
 - ControllerMachineType
+- ControllerMachineTypeMPP
+- WorkerMachineType
 - Zone
 - SSHPublicKey
 - SASAdminPass
 - DeploymentDataLocation
 - AdminIngressLocation
 - WebIngressLocation
+- CASInstanceCount
 
 properties:
+  CommonCodeCommit:
+    type: string
+    description: GitHub Common Code Commit ID
+    default: 4ccbb7a9a466fdb7c7d1ca6b37a60909781a7ec9
+
   AnsibleControllerMachineType:
     type: string
     description: Anisible Controller machine type defined in GCP
@@ -33,6 +45,14 @@ properties:
   ControllerMachineType:
     type: string
     description: CAS Controller machine type defined in GCP
+
+  ControllerMachineTypeMPP:
+    type: string
+    description: CAS Controller MPP machine type defined in GCP
+
+  WorkerMachineType:
+    type: string
+    description: CAS Worker node machine type defined in GCP
 
   Zone:
     type: string
@@ -68,14 +88,75 @@ properties:
 
   AdminIngressLocation:
     type: string
-    description: Allow inbound SSH traffic to the Ansible Controller from this CIDR block (IP address range). Must be a valid IP CIDR range of the form x.x.x.x/x.
+    description: Allow inbound SSH traffic to the Ansible Controller from this CIDR block (IP address range). Must be a valid IP CIDR range of the form x.x.x.x/x.  Used by Firewall Rule
     minLength: 9
     maxLength: 18
     pattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
 
   WebIngressLocation:
     type: string
-    description: Allow inbound HTTP(S) traffic to the Services VM from this CIDR block (IP address range). Must be a valid IP CIDR range of the form x.x.x.x/x.
+    description: Allow inbound HTTP(S) traffic to the Services VM from this CIDR block (IP address range). Must be a valid IP CIDR range of the form x.x.x.x/x.  Used by Cloud Armor Security Policy
     minLength: 9
     maxLength: 18
     pattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
+
+  CASInstanceCount:
+    type: integer
+    description: The number of Viya compute nodes to create. Note... Selecting 1 will install an SMP CAS deployment, but selecting 2 or more will create an MPP CAS deployment (controller + n workers deployment; max number of workers is 10).
+    default: 1
+    minimum: 1
+    maximum: 10
+
+  AnsibleControllerDisk:
+    type: integer
+    description: Ansible Controller boot disk size
+    default: 10
+    minimum: 10
+
+  ServicesDisk:
+    type: integer
+    description: Viya Services boot disk size
+    default: 10
+    minimum: 10
+
+  ServicesSASHomeDisk:
+    type: integer
+    description: Viya Services SAS Home disk size
+    default: 150
+    minimum: 150
+
+  ControllerDisk:
+    type: integer
+    description: CAS Controller boot disk size
+    default: 10
+    minimum: 10
+
+  ControllerSASHomeDisk:
+    type: integer
+    description: CAS Controller SAS Home disk size
+    default: 50
+    minimum: 50
+
+  ControllerUserLibDisk:
+    type: integer
+    description: CAS Controller userlib disk size
+    default: 50
+    minimum: 50
+
+  CASCacheDisk:
+    type: integer
+    description: CAS  Controller cascache disk size
+    default: 75
+    minimum: 75
+
+  MPPCASCacheDisk:
+    type: integer
+    description: CAS  Worker node cascache disk size
+    default: 5
+    minimum: 5
+
+  WorkerDisk:
+    type: integer
+    description: CAS Worker node boot disk size, MPP deployment only
+    default: 10
+    minimum: 10

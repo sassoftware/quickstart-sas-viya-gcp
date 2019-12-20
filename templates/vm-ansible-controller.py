@@ -1,4 +1,4 @@
-"""Creates three VMs: anisble controller, viya services and cas controller"""
+"""Creates the  anisble controller VM"""
 
 import base64
 
@@ -7,13 +7,14 @@ ansible_startup_script = '''#!/bin/bash
 ###################################
 # Setting up environment
 ###################################
-export COMMON_CODE_COMMIT="423761041c839c7bcbb1ee500eb6f70d44cdd351"
+export COMMON_CODE_COMMIT="{common_code_commit}"
 export PROJECT="{project}"
 export DEPLOYMENT="{deployment}"
 export OLCROOTPW="{olc_root_pw}"
 export OLCUSERPW="{olc_user_pw}"
 export DEPLOYMENT_DATA_LOCATION="{deployment_data_location}"
 export DEPLOYMENT_MIRROR="{deployment_mirror}"
+export CAS_INSTANCE_COUNT="{cas_instance_count}"
 export IAAS="gcp"
 export INSTALL_DIR="/sas/install"
 export LOG_DIR="/var/log/sas/install"
@@ -62,20 +63,52 @@ export VIYA_VERSION=$(python $INSTALL_DIR/functions/getviyaversion.py)
 pip install pyOpenSSL
 # Generating new SSL Cert and Key
 LOADBALANCERIP=$(gcloud compute addresses list | grep $DEPLOYMENT-loadbalancer | awk '{{print $2}}')
-python $INSTALL_DIR/functions/create-self-signed-cert.py $LOADBALANCERIP
-rc="$?"
-echo "create-self-signed-cert.py Return Code: $rc"
-if [ "$rc" -ne "0" ]; then
-    echo "*** ERROR: SSL Certificate generation failed.  Return Code: $rc"
+SSL_WORKING_FOLDER=/tmp
+SSL_CHILD_KEY_FILENAME=private.key
+SSL_CHILD_CERT_FILENAME=selfsigned.crt
+cat > $SSL_WORKING_FOLDER/cert_config_file.cfg <<EOF
+[req]
+default_bits = 2048
+prompt = no
+default_md = sha512
+req_extensions = req_ext
+distinguished_name = dn
+
+[ dn ]
+C=US
+ST=NC
+L=Cary
+O=Self-Signed CA signed Certificate
+OU=SASViya
+CN=globalViyaHttpdCert
+
+[ req_ext ]
+subjectAltName = @alt_names
+
+[ alt_names ]
+IP.1 = $LOADBALANCERIP
+EOF
+
+cat > "$SSL_WORKING_FOLDER/mintCert.sh"<<-EOF
+openssl req -x509 -newkey rsa:2048 -keyout "$SSL_WORKING_FOLDER/$SSL_CHILD_KEY_FILENAME" -out "$SSL_WORKING_FOLDER/$SSL_CHILD_CERT_FILENAME" -days 3650 -nodes -config "$SSL_WORKING_FOLDER/cert_config_file.cfg" -extensions req_ext
+cert-rc1="$?"
+echo "Generating  SSL cert files Return Code: $cert-rc1"
+EOF
+chmod +x "$SSL_WORKING_FOLDER/mintCert.sh"
+bash "$SSL_WORKING_FOLDER/mintCert.sh"
+cert-rc2="$?"
+echo "Minting SSL cert Return Code: $cert-rc2"
+if [ "$cert-rc1" -ne "0" ] || [ "$cert-rc2" -ne "0" ]; then
+    echo "*** ERROR: SSL Certificate generation failed.  Return Code: $cert-rc1, $cert-rc2"
     # Viya deployment failed, exiting
     gcloud beta runtime-config configs variables set startup/failure/message "*** ERROR: SSL Certificate generation failed" --config-name $DEPLOYMENT-deployment-waiters
     exit $rc
-elif [[ -f /tmp/selfsigned.crt && -f /tmp/private.key  ]]; then
+elif [[ -f $SSL_WORKING_FOLDER/$SSL_CHILD_CERT_FILENAME && -f $SSL_WORKING_FOLDER/$SSL_CHILD_KEY_FILENAME  ]]; then
     echo "Assign new SSL Cert to target-https-proxy resource and clean up." 
-    gcloud compute ssl-certificates create $DEPLOYMENT-sslcert-tmp --certificate /tmp/selfsigned.crt --private-key /tmp/private.key
+    gcloud compute ssl-certificates create $DEPLOYMENT-sslcert-tmp --certificate $SSL_WORKING_FOLDER/$SSL_CHILD_CERT_FILENAME --private-key $SSL_WORKING_FOLDER/$SSL_CHILD_KEY_FILENAME
     gcloud compute target-https-proxies update $DEPLOYMENT-loadbalancer-target-proxy --ssl-certificates=https://www.googleapis.com/compute/v1/projects/$PROJECT/global/sslCertificates/$DEPLOYMENT-sslcert-tmp
     gcloud compute ssl-certificates delete $DEPLOYMENT-sslcert --quiet
-    gcloud compute ssl-certificates create $DEPLOYMENT-sslcert --certificate /tmp/selfsigned.crt --private-key /tmp/private.key
+    gcloud compute ssl-certificates create $DEPLOYMENT-sslcert --certificate $SSL_WORKING_FOLDER/$SSL_CHILD_CERT_FILENAME --private-key $SSL_WORKING_FOLDER/$SSL_CHILD_KEY_FILENAME
     gcloud compute target-https-proxies update $DEPLOYMENT-loadbalancer-target-proxy --ssl-certificates=https://www.googleapis.com/compute/v1/projects/$PROJECT/global/sslCertificates/$DEPLOYMENT-sslcert
     gcloud compute ssl-certificates delete $DEPLOYMENT-sslcert-tmp --quiet   
 else
@@ -97,13 +130,21 @@ mkdir -p "$INSTALL_DIR/ansible"
 chown -R sasinstall:sasinstall $INSTALL_DIR
 # Bootstrapping ansible controller machine
 /bin/su sasinstall -c "$INSTALL_DIR/common/scripts/ansiblecontroller_prereqs.sh"
+###################################
+# Ansible playbook creates main inventory file
+# - CAS instance count
+###################################
 export ANSIBLE_CONFIG=$INSTALL_DIR/common/ansible/playbooks/ansible.cfg
+export ANSIBLE_LOG_PATH=$LOG_DIR/prepare_inventory.log
+/bin/su sasinstall -c "time ansible-playbook -v $INSTALL_DIR/common/ansible/playbooks/assemble_main_inventory.yml \
+    -e CAS_INSTANCE_COUNT=$CAS_INSTANCE_COUNT"
 ###################################
 # Ansible playbook does additional steps needed before installing SAS, including
 # - host routing
 # - volume attachments
 # - setting up directories and users
 ###################################
+export ANSIBLE_CONFIG=$INSTALL_DIR/common/ansible/playbooks/ansible.cfg
 export ANSIBLE_LOG_PATH=$LOG_DIR/prepare_nodes.log
 /bin/su sasinstall -c "time ansible-playbook -v $INSTALL_DIR/common/ansible/playbooks/prepare_nodes.yml \
    -e SAS_INSTALL_DISK=/dev/disk/by-id/google-sashome \
@@ -278,52 +319,10 @@ fi
 # yum -y update
 '''
 
-""" Startup script for Viya services """
-services_startup_script = '''#! /bin/bash
-# Setting up environment
-export NFS_SERVER="{deployment}-ansible-controller"
-export HOST=$(hostname)
-# Installing dependencies
-yum -y install git
-# Getting quick start scripts
-git clone https://github.com/sassoftware/quickstart-sas-viya-common /tmp/common
-# Bootstrapping all SAS VM
-/bin/su sasinstall -c '/tmp/common/scripts/sasnodes_prereqs.sh'
-# VIRK requires GID 1001 to be free
-groupmod -g 2001 sasinstall
-# Final system update
-# yum -y update
-# Moving yum cache to /opt/sas where there is more room to retrieve sas viya repo
-while [[ ! -d /opt/sas ]];
-do
-  sleep 2
-done
-sed -i '/cachedir/s/var/opt\/sas/' /etc/yum.conf
-'''
-
-""" Startup script for cas controller """
-controller_startup_script = '''#!/bin/bash
-# Setting up environment
-export NFS_SERVER="{deployment}-ansible-controller"
-export HOST=$(hostname)
-# Installing dependencies
-yum -y install git
-# Getting quick start scripts
-git clone https://github.com/sassoftware/quickstart-sas-viya-common /tmp/common
-# Bootstrapping all SAS VM
-/bin/su sasinstall -c '/tmp/common/scripts/sasnodes_prereqs.sh'
-# VIRK requires GID 1001 to be free
-groupmod -g 2001 sasinstall
-# Final system update
-# yum -y update
-'''
-
-
 def GenerateConfig(context):
     """ Retrieve variable values from the context """
+    common_code_commit = context.properties['CommonCodeCommit']
     ansible_controller_machinetype = context.properties['AnsibleControllerMachineType']
-    services_machinetype = context.properties['ServicesMachineType']
-    controller_machinetype = context.properties['ControllerMachineType']
     if context.properties['SASAdminPass'] is None:
         olc_root_pw = ''
     else:
@@ -337,10 +336,13 @@ def GenerateConfig(context):
         deployment_mirror = ''
     else:
         deployment_mirror = context.properties['DeploymentMirror']
+    cas_instance_count = context.properties['CASInstanceCount']
     project = context.env['project']
     deployment = context.env['deployment']
     zone = context.properties['Zone']
     ssh_key = context.properties['SSHPublicKey']
+    boot_disk = context.properties['BootDisk']
+
 
     """ Define the resources for the VMs """
     resources = [
@@ -362,9 +364,9 @@ def GenerateConfig(context):
                     'boot': True,
                     'autoDelete': True,
                     'initializeParams': {
-                        # 'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7",
+                        # 'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7" ## URI for latest image,
                         'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/rhel-7-v20190729",
-                        'diskSizeGb': 10
+                        'diskSizeGb': "{}".format(boot_disk),
                     }
                 }],
                 'networkInterfaces': [{
@@ -384,143 +386,7 @@ def GenerateConfig(context):
                         {'key': 'ssh-keys', 'value': "sasinstall:{}".format(ssh_key)},
                         {'key': 'block-project-ssh-keys', 'value': "true"},
                         {'key': 'startup-script',
-                         'value': ansible_startup_script.format(project=project, deployment=deployment, olc_root_pw=olc_root_pw, olc_user_pw=olc_user_pw, deployment_data_location=deployment_data_location, deployment_mirror=deployment_mirror)}
-                    ]
-                }
-            }
-        },
-        {
-            'name': "{}-services".format(deployment),
-            'type': "gcp-types/compute-v1:instances",
-            'properties': {
-                'zone': zone,
-                'machineType': "zones/{}/machineTypes/{}".format(zone, services_machinetype),
-                'hostname': "services.viya.sas",
-                'serviceAccounts': [{
-                    'email': "$(ref.{}-ansible-svc-account.email)".format(deployment),
-                    'scopes': [
-                        "https://www.googleapis.com/auth/cloud-platform"
-                    ]
-                }],
-                'disks': [
-                    {
-                        'deviceName': 'boot',
-                        'type': "PERSISTENT",
-                        'boot': True,
-                        'autoDelete': True,
-                        'initializeParams': {
-                            # 'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7",
-                            'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/rhel-7-v20190729",
-                            'diskSizeGb': 10
-                        }
-                    },
-                    {
-                        'deviceName': 'sashome',
-                        'type': "PERSISTENT",
-                        'boot': False,
-                        'autoDelete': True,
-                        'initializeParams': {
-                            'diskName': "{}-sashome-services".format(deployment),
-                            'diskSizeGb': 150,
-                            'description': "SAS_INSTALL_DISK"
-                        }
-                    }
-                ],
-                'networkInterfaces': [{
-                    'subnetwork': "$(ref.{}-private-subnet.selfLink)".format(deployment)
-                }],
-                'metadata': {
-                    'items': [
-                        {'key': 'ssh-keys', 'value': "sasinstall:{}".format(ssh_key)},
-                        {'key': 'block-project-ssh-keys', 'value': "true"},
-                        {'key': 'startup-script', 'value': services_startup_script.format(deployment=deployment)}
-                    ]
-                },
-                'tags': {
-                    'items': [
-                        'sas-viya-vm'
-                    ]
-                }
-            }
-        },
-        {
-            'name': "{}-controller".format(deployment),
-            'type': "gcp-types/compute-v1:instances",
-            'properties': {
-                'zone': zone,
-                'machineType': "zones/{}/machineTypes/{}".format(zone, controller_machinetype),
-                'hostname': "controller.viya.sas",
-                'serviceAccounts': [{
-                    'email': "$(ref.{}-ansible-svc-account.email)".format(deployment),
-                    'scopes': [
-                        "https://www.googleapis.com/auth/cloud-platform"
-                    ]
-                }],
-                'disks': [
-                    {
-                        'deviceName': "boot",
-                        'type': "PERSISTENT",
-                        'boot': True,
-                        'autoDelete': True,
-                        'initializeParams': {
-                            # 'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7",
-                            'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/rhel-7-v20190729",
-                            'diskSizeGb': 10
-                        }
-                    },
-                    {
-                        'deviceName': "sashome",
-                        'type': "PERSISTENT",
-                        'boot': False,
-                        'autoDelete': True,
-                        'initializeParams': {
-                            'diskName': "{}-sashome-controller".format(deployment),
-                            'diskSizeGb': 50,
-                            'description': "SAS_INSTALL_DISK"
-                        }
-                    },
-                    {
-                        'deviceName': "userlib",
-                        'type': "PERSISTENT",
-                        'boot': False,
-                        'autoDelete': True,
-                        'kind': "compute",
-                        'mode': "READ_WRITE",
-                        'initializeParams': {
-                            'diskName': "{}-userlib".format(deployment),
-                            'diskType': "projects/{}/zones/{}/diskTypes/pd-standard".format(project, zone),
-                            'diskSizeGb': 50,
-                            'description': "USERLIB_DISK"
-                        }
-                    },
-                    {
-                        'deviceName': "cascache",
-                        'type': "PERSISTENT",
-                        'boot': False,
-                        'autoDelete': True,
-                        'kind': "compute",
-                        'mode': "READ_WRITE",
-                        'initializeParams': {
-                            'diskName': "{}-cascache".format(deployment),
-                            'diskType': "projects/{}/zones/{}/diskTypes/pd-standard".format(project, zone),
-                            'diskSizeGb': 50,
-                            'description': "CASCACHE_DISK"
-                        }
-                    }
-                ],
-                'networkInterfaces': [{
-                    'subnetwork': "$(ref.{}-private-subnet.selfLink)".format(deployment)
-                }],
-                'metadata': {
-                    'items': [
-                        {'key': "ssh-keys", 'value': "sasinstall:{}".format(ssh_key)},
-                        {'key': "block-project-ssh-keys", 'value': "true"},
-                        {'key': 'startup-script', 'value': controller_startup_script.format(deployment=deployment)}
-                    ]
-                },
-                'tags': {
-                    'items': [
-                        "sas-viya-vm"
+                         'value': ansible_startup_script.format(common_code_commit=common_code_commit, project=project, deployment=deployment, olc_root_pw=olc_root_pw, olc_user_pw=olc_user_pw, deployment_data_location=deployment_data_location, deployment_mirror=deployment_mirror, cas_instance_count=cas_instance_count)}
                     ]
                 }
             }

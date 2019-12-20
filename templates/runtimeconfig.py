@@ -15,7 +15,7 @@ def GenerateConfig(context):
             }
 
         },
-        # Triggers for the following waiters are in ansible_startup_script  contained in file vms.py
+        # Triggers for the following waiters are in ansible_startup_script  contained in file vm-ansible-controller.py
         {
             'name': "{}-initialization-phase".format(deployment),
             'type': 'gcp-types/runtimeconfig-v1beta1:projects.configs.waiters',

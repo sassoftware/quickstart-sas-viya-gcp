@@ -8,21 +8,71 @@ resources:
   properties:
     Region: {{ properties["Zone"][:-2] }}
     AdminIngressLocation: {{ properties["AdminIngressLocation"] }}
-    WebIngressLocation: {{ properties["AdminIngressLocation"] }}
+    WebIngressLocation: {{ properties["WebIngressLocation"] }}
 
-- name: vms
-  type: vms.py
+- name: vm-ansible-controller
+  type: vm-ansible-controller.py
   properties:
+     CommonCodeCommit: {{ properties["CommonCodeCommit"] }}
      AnsibleControllerMachineType: {{ properties["AnsibleControllerMachineType"] }}
-     ServicesMachineType: {{ properties["ServicesMachineType"] }}
-     ControllerMachineType: {{ properties["ControllerMachineType"] }}
      Zone: {{ properties["Zone"] }}
      SSHPublicKey: {{ properties["SSHPublicKey"] }}
      SASAdminPass: {{ properties["SASAdminPass"] }}
      SASUserPass: {{ properties["SASUserPass"] }}
      DeploymentDataLocation: {{ properties["DeploymentDataLocation"] }}
      DeploymentMirror: {{ properties["DeploymentMirror"] }}
-     
+     CASInstanceCount: {{ properties["CASInstanceCount"] }}
+     BootDisk: {{ properties["AnsibleControllerDisk"] }}
+
+- name: vm-services
+  type: vm-services.py
+  properties:
+     CommonCodeCommit: {{ properties["CommonCodeCommit"] }}
+     ServicesMachineType: {{ properties["ServicesMachineType"] }}
+     Zone: {{ properties["Zone"] }}
+     SSHPublicKey: {{ properties["SSHPublicKey"] }}
+     BootDisk: {{ properties["ServicesDisk"] }}
+     SASHomeDisk: {{ properties["ServicesSASHomeDisk"] }}
+
+  {% if properties["CASInstanceCount"]  == 1 %}
+- name: vm-controller
+  type: vm-controller.py
+  properties:
+     CommonCodeCommit: {{ properties["CommonCodeCommit"] }}
+     ControllerMachineType: {{ properties["ControllerMachineType"] }}
+     Zone: {{ properties["Zone"] }}
+     SSHPublicKey: {{ properties["SSHPublicKey"] }}
+     BootDisk: {{ properties["ControllerDisk"] }}
+     SASHomeDisk: {{ properties["ControllerSASHomeDisk"] }}
+     UserLibDisk: {{ properties["ControllerUserLibDisk"] }}
+     CASCacheDisk: {{ properties["CASCacheDisk"] }}
+    {% else %}
+- name: vm-controller-mpp
+  type: vm-controller-mpp.py
+  properties:
+     CommonCodeCommit: {{ properties["CommonCodeCommit"] }}
+     ControllerMachineType: {{ properties["ControllerMachineTypeMPP"] }}
+     Zone: {{ properties["Zone"] }}
+     SSHPublicKey: {{ properties["SSHPublicKey"] }}
+     BootDisk: {{ properties["ControllerDisk"] }}
+     SASHomeDisk: {{ properties["ControllerSASHomeDisk"] }}
+     CASCacheDisk: {{ properties["MPPCASCacheDisk"] }}
+  {% for (count) in range(properties["CASInstanceCount"] ) %}
+- name: vm-worker{{ count +1 }}
+  type: vm-worker.py
+  properties:
+     CommonCodeCommit: {{ properties["CommonCodeCommit"] }}
+     WorkerMachineType: {{ properties["WorkerMachineType"] }}
+     Zone: {{ properties["Zone"] }}
+     SSHPublicKey: {{ properties["SSHPublicKey"] }}
+     CASInstanceCount: {{ count+1 }}
+     BootDisk: {{ properties["WorkerDisk"] }}
+     SASHomeDisk: {{ properties["ControllerSASHomeDisk"] }}
+     UserLibDisk: {{ properties["ControllerUserLibDisk"] }}
+     CASCacheDisk: {{ properties["CASCacheDisk"] }}
+  {% endfor %}
+  {% endif %}
+
 - name: loadbalancer
   type: loadbalancer.py
   properties:
