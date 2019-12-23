@@ -6,6 +6,10 @@ services_startup_script = '''#! /bin/bash
 export COMMON_CODE_COMMIT="{common_code_commit}"
 export NFS_SERVER="{deployment}-ansible-controller"
 export HOST=$(hostname)
+# Set SELinux to Permissive on Viya nodes
+# In Viya 3.5, Viya-ark now validates that SELinux is *not* enforced.
+setenforce 0
+sed -i.bak -e 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config
 # Installing dependencies
 yum -y install git
 # Getting quick start scripts
