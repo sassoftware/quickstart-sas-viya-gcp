@@ -203,7 +203,7 @@ export ANSIBLE_LOG_PATH=$LOG_DIR/virk.log
 export ANSIBLE_INVENTORY=$INSTALL_DIR/ansible/sas_viya_playbook/inventory.ini
 /bin/su sasinstall -c "time ansible-playbook -v $INSTALL_DIR/ansible/sas_viya_playbook/viya-ark/playbooks/pre-install-playbook/viya_pre_install_playbook.yml \
   -e "use_pause=false" \
-  --skip-tags skipmemfail,skipcoresfail,skipstoragefail,skipnicssfail,bandwidth"
+  --skip-tags skipmemfail,skipcoresfail,skipstoragefail,skipnicssfail,bandwidth,short_hostname_check"
 rc="$?"
 echo "viya_pre_install_playbook.yml Return Code: $rc"
 if [ "$rc" -ne "0" ]; then

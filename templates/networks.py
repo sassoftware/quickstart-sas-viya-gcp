@@ -91,6 +91,19 @@ def GenerateConfig(context):
             }
         },
         {
+            'name': "{}-allow-viya-ping-from-ansible".format(deployment),
+            'type': "gcp-types/compute-v1:firewalls",
+            'properties': {
+                'network': "$(ref.{}-vpc.selfLink)".format(deployment),
+                'sourceTags': [
+                    "sas-viya-ansible-controller"
+                ],
+                'allowed': [{
+                    'IPProtocol': "icmp",
+                }]
+            }
+        },
+        {
             'name': "{}-allow-viya-to-viya".format(deployment),
             'type': "gcp-types/compute-v1:firewalls",
             'properties': {
