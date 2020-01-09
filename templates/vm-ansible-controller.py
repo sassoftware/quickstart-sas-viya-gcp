@@ -1,6 +1,6 @@
 """Creates the  anisble controller VM"""
 
-import base64
+from base64 import b64encode
 
 """ Startup script for Ansible Controller """
 ansible_startup_script = '''#!/bin/bash
@@ -316,7 +316,7 @@ fi
 ##################################
 # Final system update
 #################################
-# yum -y update
+yum -y update
 '''
 
 def GenerateConfig(context):
@@ -364,8 +364,8 @@ def GenerateConfig(context):
                     'boot': True,
                     'autoDelete': True,
                     'initializeParams': {
-                        # 'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7" ## URI for latest image,
-                        'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/rhel-7-v20190729",
+                        'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7", ## URI for latest image
+                        # 'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/rhel-7-v20190729",
                         'diskSizeGb': "{}".format(boot_disk),
                     }
                 }],

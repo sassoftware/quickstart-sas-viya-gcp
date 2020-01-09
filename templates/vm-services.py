@@ -24,7 +24,7 @@ popd
 # VIRK requires GID 1001 to be free
 groupmod -g 2001 sasinstall
 # Final system update
-# yum -y update
+yum -y update
 # Moving yum cache to /opt/sas where there is more room to retrieve sas viya repo
 while [[ ! -d /opt/sas ]];
 do
@@ -66,8 +66,8 @@ def GenerateConfig(context):
                         'boot': True,
                         'autoDelete': True,
                         'initializeParams': {
-                            # 'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7" ## URI for latest image,
-                            'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/rhel-7-v20190729",
+                            'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7", ## URI for latest image
+                            # 'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/rhel-7-v20190729",
                             'diskSizeGb': "{}".format(boot_disk),
                         }
                     },
