@@ -1,6 +1,6 @@
 """Creates the  anisble controller VM"""
 
-from base64 import b64encode
+import base64
 
 """ Startup script for Ansible Controller """
 ansible_startup_script = '''#!/bin/bash
