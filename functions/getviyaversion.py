@@ -6,4 +6,4 @@ with zipfile.ZipFile('/tmp/license.zip', 'r') as zip_file:
         if file.filename.endswith('jwt'):
             viya_version = '3.4'
 
-print viya_version
+print(viya_version)
