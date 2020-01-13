@@ -326,11 +326,11 @@ def GenerateConfig(context):
     if context.properties['SASAdminPass'] is None:
         olc_root_pw = ''
     else:
-        olc_root_pw = base64.b64encode(context.properties['SASAdminPass'])
+        olc_root_pw = base64.b64encode(context.properties['SASAdminPass'].encode())
     if context.properties['SASUserPass'] is None:
         olc_user_pw = ''
     else:
-        olc_user_pw = base64.b64encode(context.properties['SASUserPass'])
+        olc_user_pw = base64.b64encode(context.properties['SASUserPass'].encode())
     deployment_data_location = context.properties['DeploymentDataLocation']
     if context.properties['DeploymentMirror'] is None:
         deployment_mirror = ''
