@@ -19,7 +19,6 @@
         source /opt/sas/viya/config/consul.conf
         export CONSUL_HTTP_SSL=true;
         /opt/sas/viya/home/bin/sas-bootstrap-config --token-file /opt/sas/viya/config/etc/SASSecurityCertificateFramework/tokens/consul/default/client.token kv write --key "cacerts/op1" --value "{{ cert.stdout }}" --force
-
   - name: decode cert
     shell:
       cmd: |
@@ -43,14 +42,11 @@
       chdir: /opt/sas/viya/home/bin
       cmd: |
         export SSL_CERT_FILE=/opt/sas/viya/config/etc/SASSecurityCertificateFramework/cacerts/trustedcerts.pem
-        ./sas-admin profile set-endpoint "https://localhost"
+        ./sas-admin profile set-endpoint "http://localhost:80"
         ./sas-admin{% if 'sas-viya-dataagentservices-default' in services %} -k{% endif %} auth login --user {{ adminuser }} --password  {{ adminpw }}
         ./sas-admin{% if 'sas-viya-dataagentservices-default' in services %} -k{% endif %} identities create-group --id "DataAgentAdministrators" --name "Data Agent Administrators" --description "Data Agent Administrators group"
         ./sas-admin{% if 'sas-viya-dataagentservices-default' in services %} -k{% endif %} identities create-group --id "DataAgentPowerUsers" --name "Data Agent Power Users" --description "Data Agent Power Users group"
         ./sas-admin{% if 'sas-viya-dataagentservices-default' in services %} -k{% endif %} identities add-member --group-id "DataAgentAdministrators" --user-member-id "{{ adminuser }}"
-    register: command_result
-    failed_when: "'failed' in command_result.stdout"
-
   - name: register hostname
     shell: hostname
     register: coreserviceshostname
@@ -74,6 +70,9 @@
     with_list:
       - "sas-viya-dagentcont-default"
       - "sas-viya-dagentmgmt-default"
+      - "sas-viya-dataagentservices-default"
+    when: "item in services"
+
 
 - hosts: [sas-casserver-primary, sas_casserver_primary, DataServices]
   gather_facts: False
@@ -81,7 +80,6 @@
   become_user: sas
 
   tasks:
-    - name: register the Data Agent client id
     - name: Populate service facts
       service_facts:
     - name: register the Data Agent client id for viya 3.4
@@ -97,4 +95,3 @@
         cmd: |
           ./da_reg_server.sh --customerid shared --remotehost {{ data_agent_host }}  --remoteport 443 --sasadministratoruser {{ adminuser }} --sasadministratorpassword {{ adminpw }} --secret {{ secret }} --sas-endpoint https://localhost:443 --regoverwrite Y
       when: "'sas-viya-dataagentservices-default' in services and 'DataServices' in group_names"
-
