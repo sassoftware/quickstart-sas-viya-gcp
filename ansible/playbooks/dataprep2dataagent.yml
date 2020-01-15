@@ -19,6 +19,7 @@
         source /opt/sas/viya/config/consul.conf
         export CONSUL_HTTP_SSL=true;
         /opt/sas/viya/home/bin/sas-bootstrap-config --token-file /opt/sas/viya/config/etc/SASSecurityCertificateFramework/tokens/consul/default/client.token kv write --key "cacerts/op1" --value "{{ cert.stdout }}" --force
+        
   - name: decode cert
     shell:
       cmd: |
