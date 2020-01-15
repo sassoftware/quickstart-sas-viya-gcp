@@ -85,7 +85,7 @@
     - name: Populate service facts
       service_facts:
     - name: register the Data Agent client id for viya 3.4
-        shell:
+      shell:
         chdir: /opt/sas/viya/home/bin
         cmd: |
           ./da_reg_server.sh --customerid shared --remotehost {{ data_agent_host }}  --remoteport 443 --sasadministratoruser {{ adminuser }} --sasadministratorpassword {{ adminpw }} --secret {{ secret }} --sas-endpoint https://{{hostvars[groups['CoreServices']|first]['corehost']}}:443 --regoverwrite Y
