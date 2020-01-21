@@ -37,6 +37,7 @@ sed -i '/cachedir/s/var/opt\/sas/' /etc/yum.conf
 def GenerateConfig(context):
     """ Retrieve variable values from the context """
     common_code_commit = context.properties['CommonCodeCommit']
+    source_image = context.properties['SourceImage']
     services_machinetype = context.properties['ServicesMachineType']
     deployment = context.env['deployment']
     zone = context.properties['Zone']
@@ -66,8 +67,7 @@ def GenerateConfig(context):
                         'boot': True,
                         'autoDelete': True,
                         'initializeParams': {
-                            'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7", ## URI for latest image
-                            # 'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/rhel-7-v20190729",
+                            'sourceImage': "{}".format(source_image),
                             'diskSizeGb': "{}".format(boot_disk),
                         }
                     },

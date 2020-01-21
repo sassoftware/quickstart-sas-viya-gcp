@@ -1,7 +1,9 @@
 """ Creates the IAM resources """
+
 import uuid
 
 
+# noinspection PyPep8Naming
 def GenerateConfig(context):
     """ Retrieve variable values from the context """
     deployment = context.env['deployment']
