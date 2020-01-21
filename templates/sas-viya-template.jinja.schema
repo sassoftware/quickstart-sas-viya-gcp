@@ -34,6 +34,12 @@ properties:
     description: GitHub Common Code Commit ID
     default: 002cbe7b3fdbc5474ea3f8cde7d2d3e6f5f4b3f4
 
+  SourceImage:
+    type: string
+    description: RHEL 7 source image defined in GCP
+    # default: https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/rhel-7-v20190729
+    default: https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7
+
   AnsibleControllerMachineType:
     type: string
     description: Anisible Controller machine type defined in GCP

@@ -1,6 +1,7 @@
 """Creates Runtime Config resources to wait for startup to complete successfully"""
 
 
+# noinspection PyPep8Naming
 def GenerateConfig(context):
     """ Retrieve variables from the context """
     deployment = context.env['deployment']

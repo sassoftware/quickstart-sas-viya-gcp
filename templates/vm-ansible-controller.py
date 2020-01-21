@@ -1,7 +1,5 @@
 """Creates the  anisble controller VM"""
 
-import base64
-
 """ Startup script for Ansible Controller """
 ansible_startup_script = '''#!/bin/bash
 ###################################
@@ -10,8 +8,8 @@ ansible_startup_script = '''#!/bin/bash
 export COMMON_CODE_COMMIT="{common_code_commit}"
 export PROJECT="{project}"
 export DEPLOYMENT="{deployment}"
-export OLCROOTPW="{olc_root_pw}"
-export OLCUSERPW="{olc_user_pw}"
+export OLCROOTPW=$(echo -ne "{olc_root_pw}" | base64)
+export OLCUSERPW=$(echo -ne "{olc_user_pw}" | base64)
 export DEPLOYMENT_DATA_LOCATION="{deployment_data_location}"
 export DEPLOYMENT_MIRROR="{deployment_mirror}"
 export CAS_INSTANCE_COUNT="{cas_instance_count}"
@@ -163,7 +161,7 @@ fi
 if [ "$OLCUSERPW" != "" ]; then
   export ANSIBLE_LOG_PATH=$LOG_DIR/openldapsetup.log
   /bin/su sasinstall -c "time ansible-playbook -v $INSTALL_DIR/common/ansible/playbooks/openldapsetup.yml \
-     -e OLCROOTPW=$OLCROOTPW \
+     -e OLCROOTPW=$OLCROOTPW\
      -e OLCUSERPW=$OLCUSERPW"
   rc="$?"
   echo "openldapsetup.yml Return Code: $rc"
@@ -319,18 +317,20 @@ fi
 yum -y update
 '''
 
+
 def GenerateConfig(context):
     """ Retrieve variable values from the context """
     common_code_commit = context.properties['CommonCodeCommit']
+    source_image = context.properties['SourceImage']
     ansible_controller_machinetype = context.properties['AnsibleControllerMachineType']
     if context.properties['SASAdminPass'] is None:
         olc_root_pw = ''
     else:
-        olc_root_pw = base64.b64encode(context.properties['SASAdminPass'].encode())
+        olc_root_pw = context.properties['SASAdminPass']
     if context.properties['SASUserPass'] is None:
         olc_user_pw = ''
     else:
-        olc_user_pw = base64.b64encode(context.properties['SASUserPass'].encode())
+        olc_user_pw = context.properties['SASUserPass']
     deployment_data_location = context.properties['DeploymentDataLocation']
     if context.properties['DeploymentMirror'] is None:
         deployment_mirror = ''
@@ -342,7 +342,6 @@ def GenerateConfig(context):
     zone = context.properties['Zone']
     ssh_key = context.properties['SSHPublicKey']
     boot_disk = context.properties['BootDisk']
-
 
     """ Define the resources for the VMs """
     resources = [
@@ -364,8 +363,7 @@ def GenerateConfig(context):
                     'boot': True,
                     'autoDelete': True,
                     'initializeParams': {
-                        'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7", ## URI for latest image
-                        # 'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/rhel-7-v20190729",
+                        'sourceImage': "{}".format(source_image),
                         'diskSizeGb': "{}".format(boot_disk),
                     }
                 }],
@@ -386,7 +384,12 @@ def GenerateConfig(context):
                         {'key': 'ssh-keys', 'value': "sasinstall:{}".format(ssh_key)},
                         {'key': 'block-project-ssh-keys', 'value': "true"},
                         {'key': 'startup-script',
-                         'value': ansible_startup_script.format(common_code_commit=common_code_commit, project=project, deployment=deployment, olc_root_pw=olc_root_pw, olc_user_pw=olc_user_pw, deployment_data_location=deployment_data_location, deployment_mirror=deployment_mirror, cas_instance_count=cas_instance_count)}
+                         'value': ansible_startup_script.format(common_code_commit=common_code_commit, project=project,
+                                                                deployment=deployment, olc_root_pw=olc_root_pw,
+                                                                olc_user_pw=olc_user_pw,
+                                                                deployment_data_location=deployment_data_location,
+                                                                deployment_mirror=deployment_mirror,
+                                                                cas_instance_count=cas_instance_count)}
                     ]
                 }
             }

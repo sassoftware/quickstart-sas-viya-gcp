@@ -32,6 +32,7 @@ yum -y update
 def GenerateConfig(context):
     """ Retrieve variable values from the context """
     common_code_commit = context.properties['CommonCodeCommit']
+    source_image = context.properties['SourceImage']
     controller_machinetype = context.properties['ControllerMachineType']
     project = context.env['project']
     deployment = context.env['deployment']
@@ -63,8 +64,7 @@ def GenerateConfig(context):
                         'boot': True,
                         'autoDelete': True,
                         'initializeParams': {
-                            'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7", ## URI for latest image
-                            # 'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/rhel-7-v20190729",
+                            'sourceImage': "{}".format(source_image),
                             'diskSizeGb': "{}".format(boot_disk)
                         }
                     },

@@ -14,6 +14,7 @@ resources:
   type: vm-ansible-controller.py
   properties:
      CommonCodeCommit: {{ properties["CommonCodeCommit"] }}
+     SourceImage: {{properties["SourceImage"]}}
      AnsibleControllerMachineType: {{ properties["AnsibleControllerMachineType"] }}
      Zone: {{ properties["Zone"] }}
      SSHPublicKey: {{ properties["SSHPublicKey"] }}
@@ -28,6 +29,7 @@ resources:
   type: vm-services.py
   properties:
      CommonCodeCommit: {{ properties["CommonCodeCommit"] }}
+     SourceImage: {{properties["SourceImage"]}}
      ServicesMachineType: {{ properties["ServicesMachineType"] }}
      Zone: {{ properties["Zone"] }}
      SSHPublicKey: {{ properties["SSHPublicKey"] }}
@@ -39,6 +41,7 @@ resources:
   type: vm-controller.py
   properties:
      CommonCodeCommit: {{ properties["CommonCodeCommit"] }}
+     SourceImage: {{properties["SourceImage"]}}
      ControllerMachineType: {{ properties["ControllerMachineType"] }}
      Zone: {{ properties["Zone"] }}
      SSHPublicKey: {{ properties["SSHPublicKey"] }}
@@ -51,6 +54,7 @@ resources:
   type: vm-controller-mpp.py
   properties:
      CommonCodeCommit: {{ properties["CommonCodeCommit"] }}
+     SourceImage: {{properties["SourceImage"]}}
      ControllerMachineType: {{ properties["ControllerMachineTypeMPP"] }}
      Zone: {{ properties["Zone"] }}
      SSHPublicKey: {{ properties["SSHPublicKey"] }}
@@ -62,6 +66,7 @@ resources:
   type: vm-worker.py
   properties:
      CommonCodeCommit: {{ properties["CommonCodeCommit"] }}
+     SourceImage: {{properties["SourceImage"]}}
      WorkerMachineType: {{ properties["WorkerMachineType"] }}
      Zone: {{ properties["Zone"] }}
      SSHPublicKey: {{ properties["SSHPublicKey"] }}
