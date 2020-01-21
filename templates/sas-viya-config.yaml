@@ -1,6 +1,6 @@
 imports:
 - path: sas-viya-template.jinja
-  
+
 resources:
 - name: sas-viya
   type: sas-viya-template.jinja
@@ -8,83 +8,56 @@ resources:
     ### Replace these variables with customer provided values
 
     # Google Cloud Platform deployment zone
-    Zone: us-east1-b
-#    Zone: us-east2-b
-#    Zone: us-east3-b
-#    Zone: us-east4-b
-#    Zone: us-central1-b
+    Zone: GCP_ZONE
 
     # SSH Public Key added to Anisible Controller for ssh access.
-#    SSHPublicKey: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDmj4OjEV/fQQRB4w1X/CbJz55FVHWtWJJ8mrOTM9xCEevza4xhB0YXKn64IZtVLvTK+pN+p2LWlIN4BIEjG6gB1q3Kr2xoZQ5kFlR2bZwirYDxYwM0UyQWBodHVDjJHZZREKj/c9zM+KMePpPAb5P6/KQE13Y74ZN4FkQXUSX5GQM6hb778TuSaIKb4k7cSQ1MJoOcF3ED+QVSraqip8d4ZDpJV9r1/UVwTvKRAP9WH8ByVeHW15RVJASdU+vLX9zODksxCrGNMATqOow8/n8p9auoYPuRfZn7T5DZATx3q9Rh4yOD/MRNnQ+8cVRGw9fDDsQoic59dOY204Cro2wj a3scas
-    SSHPublicKey: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCz+WaLc6b3qvZd2XHXNDaGK5SgdIwbawhg79KwO/BPz9vAtVqeqpKyBw1Ww+CItmT+bnxjzpRe3ZN6imSTz/aJXeUg1HDN4JX5n8kk/zgQtNTNPYpQQkYp8JrDXXaedqDBIdqWjRHkxrDZCFm4JurpsvYoRQU/GNROtlKmmEgsVD0u/iia/VNnK+jT/M8LJULtaPccAp3yA7xVmY/AwAM1F6uoGJ/FJf/8fCYjx+zWRxfiIyHVmrRqD02hL89RN9KmYZz/atHvyq8Z/RoBE7+rADGgIUUOLGIXOqkIoY+kodqTnfGjydxCKaoertx9rMoVTvSTO8QUrOK1NVTTEX7X myawskey
-#    SSHPublicKey: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDmj4OjEV/fQQRB4w1X/CbJz55FVHWtWJJ8mrOTM9xCEevza4xhB0YXKn64IZtVLvTK+pN+p2LWlIN4BIEjG6gB1q3Kr2xoZQ5kFlR2bZwirYDxYwM0UyQWBodHVDjJHZZREKj/c9zM+KMePpPAb5P6/KQE13Y74ZN4FkQXUSX5GQM6hb778TuSaIKb4k7cSQ1MJoOcF3ED+QVSraqip8d4ZDpJV9r1/UVwTvKRAP9WH8ByVeHW15RVJASdU+vLX9zODksxCrGNMATqOow8/n8p9auoYPuRfZn7T5DZATx3q9Rh4yOD/MRNnQ+8cVRGw9fDDsQoic59dOY204Cro2wj a3scas
-    # Used by openldapsetup playbook
-    SASAdminPass: adminadmin
-    SASUserPass: useruser
+    SSHPublicKey: The full ssh public key that will be added to the servers
+
+    # Password of the SAS Admin Users (sasboot, optionally sasadmin). Must have at least 6 and no more than 255 characters.
+    SASAdminPass: PASSWORD
+    # Password of the default SAS User (sasuser). If left empty, no default users are being created (WARNING: If not set, deployment will require additional setup steps before being usable).
+    SASUserPass: PASSWORD
 
     # Google storage bucket location and file name of SAS License file
-#    DeploymentDataLocation: gs://mercury-deployment-data/viya_licenses/MERCURY_OUT_OF_DOWNLOADS-9C6528-19w21.zip
-#    DeploymentDataLocation: gs://mercury-deployment-data/viya_licenses/MERCURY_VA-9C5X4W-19w21.zip
-#    DeploymentDataLocation: gs://mercury-deployment-data/viya_licenses/MERCURY_VA-9C63YC-18w47.zip
-#    DeploymentDataLocation: gs://mercury-deployment-data/viya_licenses/MERCURY_VA-9C6L2H-19w25.zip
-#    DeploymentDataLocation: gs://mercury-deployment-data/viya_licenses/MERCURY_VA-9C715Y-19w30.zip
-#    DeploymentDataLocation: gs://mercury-deployment-data/viya_licenses/MERCURY_VA-9C7C4P-19w34.zip
-#    DeploymentDataLocation: gs://mercury-deployment-data/viya_licenses/MERCURY_VA-9C8QFZ-19w43.zip
-#    DeploymentDataLocation: gs://mercury-deployment-data/viya_licenses/MERCURY_VA-LATEST.zip
-#    DeploymentDataLocation: gs://mercury-deployment-data/viya_licenses/MERCURY_VDMMLDP-9C5Z82-19w21.zip
-#    DeploymentDataLocation: gs://mercury-deployment-data/viya_licenses/MERCURY_VDMMLDP-9C63YD-18w47.zip
-#    DeploymentDataLocation: gs://mercury-deployment-data/viya_licenses/MERCURY_VDMMLDP-9C6L2P-19w25.zip
-#    DeploymentDataLocation: gs://mercury-deployment-data/viya_licenses/MERCURY_VDMMLDP-9C715V-19w30.zip
-#    DeploymentDataLocation: gs://mercury-deployment-data/viya_licenses/MERCURY_VDMMLDP-9C7C4V-19w34.zip
-#    DeploymentDataLocation: gs://mercury-deployment-data/viya_licenses/MERCURY_VDMMLDP-9C8QG2-19w43.zip
-#    DeploymentDataLocation: gs://mercury-deployment-data/viya_licenses/MERCURY_VDMMLDP-LATEST.zip
+    DeploymentDataLocation: gs://BUCKET_PATH/LICENSE_FILENAME.ZIP
     # OPTIONAL: Google storage bucket location of mirror
-#    DeploymentMirror: gs://mercury-deployment-data/viya_mirrors/19w43
+    # DeploymentMirror: gs://BUCKET_PATH/MIRROR_DIRECTORY
 
-# VIYA 3.5
-#    DeploymentDataLocation: gs://mercury-deployment-data/viya_licenses/MERCURY_VA-9C8QG8-19w47.zip
-    DeploymentDataLocation: gs://mercury-deployment-data/viya_licenses/MERCURY_VDMMLDP-9C8QG5-19w47.zip
-# OPTIONAL: Google storage bucket location of mirror
-    DeploymentMirror: gs://mercury-deployment-data/viya_mirrors/19w47
+    # Allow inbound SSH traffic to the Ansible Controller from this CIDR block (IP address range). Must be a valid IP CIDR range of the form x.x.x.x/x.
+    AdminIngressLocation: x.x.x.x/x
+    # Allow inbound HTTP(S) traffic to the Web Server from this CIDR block (IP address range). Must be a valid IP CIDR range of the form x.x.x.x/x.
+    WebIngressLocation: x.x.x.x/x
 
-    # Allow inbound SSH traffic to the Ansible Controller from this CIDR block (IP address range). Must be a valid IP CIDR range of the form x.x.x.x/x.  Used by Firewall Rule
-    AdminIngressLocation: 149.173.0.0/16
-    # Allow inbound HTTP(S) traffic to the Web Server from this CIDR block (IP address range). Must be a valid IP CIDR range of the form x.x.x.x/x.  Used by Cloud Armor Security Policy
-    WebIngressLocation: 149.173.0.0/16
-
-    # The number of Viya compute nodes to create. Note: Selecting 1 will install an SMP CAS deployment, but selecting 2 or more will create an MPP CAS deployment (controller + n workers deployment; max number of workers is 10).
+    # The number of Viya compute nodes to create. Note: Selecting 1 will install a SMP CAS deployment, but selecting 2 or more will create a MPP CAS deployment (controller + n workers deployment; max number of workers is 10).
     CASInstanceCount: 1
 
 
     ### Advanced configuration options
+    
     ## Minimum machineType resources set below.  For a complete list of machineType and resources run in GCP cli:
     ## "gcloud compute machine-types list"
     # Anisible Controller machineType
     AnsibleControllerMachineType: g1-small
-    # Viya Services machineType
-    ServicesMachineType: n1-highmem-16
-    # CAS Controller machineType SMP
-    ControllerMachineType: n1-standard-2
-    # CAS Controller machineType MPP
-    ControllerMachineTypeMPP: n1-standard-1
-    # CAS Worker machineType
-    WorkerMachineType: n1-standard-2
-
-    # Ansible Controller disk size
     AnsibleControllerDisk: 10 #boot disk
 
-    #  SAS Viya Services VM disk sizes
+    # Viya Services machineType
+    ServicesMachineType: n1-highmem-16
     ServicesDisk: 10 # boot disk
     ServicesSASHomeDisk: 150 # /opt/sas
 
-    # CAS Controller VM disk sizes
+    # CAS Controller machineType SMP
+    ControllerMachineType: n1-standard-2
     ControllerDisk: 10 # boot disk
     ControllerSASHomeDisk: 50 # /opt/sas
     ControllerUserLibDisk: 50 # /opt/sas/viya/config/data/cas
     CASCacheDisk: 75 # /sastmp/cascache
 
-   # cascache for CAS Controller VM for MPP deployment
+    # CAS Controller machineType MPP
+    ControllerMachineTypeMPP: n1-standard-1
+   # cascache disk on CAS Controller VM for MPP deployment
     MPPCASCacheDisk: 5 # /sastmp/cascache
 
-   # CAS Worker node VM disk size  forMPP deployment only
+    # CAS Worker machineType
+    WorkerMachineType: n1-standard-2
+   # CAS Worker node VM disk size for MPP deployment only
     WorkerDisk: 10 # boot disk
