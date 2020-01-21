@@ -36,11 +36,11 @@ This README for  SAS Viya Quickstart Template for Google Cloud Platform (GCP) is
 
   
 
-* SAS Visual Analytics 8.3.1 on Linux 
+* SAS Visual Analytics 8.5 on Linux 
 
-* SAS Visual Statistics 8.3.1 on Linux 
+* SAS Visual Statistics 8.5 on Linux 
 
-* SAS Visual Data Mining and Machine Learning 8.3.1 on Linux 
+* SAS Visual Data Mining and Machine Learning 8.5 on Linux 
 
 
 
@@ -77,7 +77,7 @@ SAS Viya Quickstart Template for GCP creates three instances, including:
 
 This SAS Viya Quickstart Template for GCP takes a generic license for SAS Viya and deploy SAS into its own network. The deployment creates the network and other infrastructure.  After the deployment process completes, you will have the outputs for the web endpoints for a SAS Viya deployment on recommended virtual machines (VMs).  
 
-For details, see [SAS Viya 3.4 for Linux: Deployment Guide](https://go.documentation.sas.com/?docsetId=dplyml0phy0lax&docsetTarget=titlepage.htm&docsetVersion=3.4&locale=en). 
+For details, see [SAS Viya 3.5 for Linux: Deployment Guide](https://go.documentation.sas.com/?docsetId=dplyml0phy0lax&docsetTarget=titlepage.htm&docsetVersion=3.5&locale=en). 
 
 By default, Quickstart deployments enable Transport Layer Security (TLS) to help ensure that communication between external clients (on the internet) and the load balancer is secure. Likewise, TLS is enabled between the load balancer and the private subnet that contains the SAS Viya components. 
 
@@ -120,11 +120,11 @@ Before deploying SAS Viya Quickstart Template for GCP, you must have the followi
 
   
 
-        SAS Visual Analytics 8.3.1 on Linux 
+        SAS Visual Analytics 8.5 on Linux 
 
-        SAS Visual Statistics 8.3.1 on Linux 
+        SAS Visual Statistics 8.5 on Linux 
 
-        SAS Visual Data Mining and Machine Learning 8.3.1 on Linux 
+        SAS Visual Data Mining and Machine Learning 8.5 on Linux 
 
 *  The license file in .zip format (attached to your Software Order Email) available in a storage bucket from your GCP project. The storage bucket must be in the same project as your deployment. See  ["Creating Storage Buckets"](https://cloud.google.com/storage/docs/creating-buckets) and ["Uploading Objects"](https://cloud.google.com/storage/docs/uploading-objects) for more information.
 
@@ -241,7 +241,7 @@ To access an existing data source from your SAS Viya deployment, add an inbound 
 * If you have peered the virtual network, add a rule to "Allow the private subnet CIDR range" for the SAS Viya network. (By default, 10.0.127.0/24). For details, see 
  ["Virtual network peering."](https://cloud.google.com/vpc/docs/vpc-peering )
 
-Data sources accessed through SAS/ACCESS should use the [SAS Data Agent for Linux Deployment Guide](https://go.documentation.sas.com/?docsetId=dplydagent0phy0lax&docsetTarget=p06vsqpjpj2motn1qhi5t40u8xf4.htm&docsetVersion=2.3&locale=en) instructions to  ["Configure Data Access"](https://go.documentation.sas.com/?docsetId=dplyml0phy0lax&docsetTarget=p03m8khzllmphsn17iubdbx6fjpq.htm&docsetVersion=3.4&locale=en) and ["Validate the Deployment."](https://go.documentation.sas.com/?docsetId=dplyml0phy0lax&docsetTarget=n18cthgsfyxndyn1imqkbfjisxsv.htm&docsetVersion=3.4&locale=en)
+Data sources accessed through SAS/ACCESS should use the [SAS Data Agent for Linux Deployment Guide](https://go.documentation.sas.com/?docsetId=dplydagent0phy0lax&docsetTarget=p06vsqpjpj2motn1qhi5t40u8xf4.htm&docsetVersion=2.5&locale=en) instructions to  ["Configure Data Access"](https://go.documentation.sas.com/?docsetId=dplyml0phy0lax&docsetTarget=p03m8khzllmphsn17iubdbx6fjpq.htm&docsetVersion=3.5&locale=en) and ["Validate the Deployment."](https://go.documentation.sas.com/?docsetId=dplyml0phy0lax&docsetTarget=n18cthgsfyxndyn1imqkbfjisxsv.htm&docsetVersion=3.5&locale=en)
 
 <a name="ACCESSCertWarn"></a>
 ### Validate the Server Certificate If Using SAS/ACCESS
@@ -254,11 +254,11 @@ If you are using SAS/ACCESS with TLS, unvalidated TLS certificates are not suppo
 
 <a name="SASDataAgent"></a>
 ### Set Up SAS Data Agent
-1. Perform the pre-installation and installation steps in ["SAS Data Agent for Linux: Deployment Guide"](https://go.documentation.sas.com/?docsetId=dplydagent0phy0lax&docsetTarget=p06vsqpjpj2motn1qhi5t40u8xf4.htm&docsetVersion=2.3&locale=en). 
+1. Perform the pre-installation and installation steps in ["SAS Data Agent for Linux: Deployment Guide"](https://go.documentation.sas.com/?docsetId=dplydagent0phy0lax&docsetTarget=p06vsqpjpj2motn1qhi5t40u8xf4.htm&docsetVersion=2.5&locale=en). 
 
 For the post-installation tasks, you can either:
 * (Recommended) Use the post-installation playbooks as specified in steps 6 and 7 below.
-* Perform the manual steps in the ["SAS Data Agent for Linux: Deployment Guide"](https://go.documentation.sas.com/?docsetId=dplydagent0phy0lax&docsetTarget=p0prf6lsvg8yp2n1m2sq9ulbg3jp.htm&docsetVersion=2.3&locale=en)  post installation section.
+* Perform the manual steps in the ["SAS Data Agent for Linux: Deployment Guide"](https://go.documentation.sas.com/?docsetId=dplydagent0phy0lax&docsetTarget=p0prf6lsvg8yp2n1m2sq9ulbg3jp.htm&docsetVersion=2.5&locale=en)  post installation section.
 
 2. In the SAS Viya and SAS Data Preparation environment, edit the Cloud Armor Security Policy to add a new rule to allow access from the SAS Data Agent’s public IP address as follows:
 
@@ -311,8 +311,8 @@ ansible-playbook ansible.dataprep2dataagent.yml \
        -e "secret=<handshake-string>"   
    ```
    **Note:** The DNS of the SAS Viya endpoint is the value of the SASDrive output parameter, without the prefix and the "/SASDrive" suffix.
-8. To access the data sources through SAS/ACCESS, see ["Configure Data Access"](https://go.documentation.sas.com/?docsetId=dplyml0phy0lax&docsetTarget=p03m8khzllmphsn17iubdbx6fjpq.htm&docsetVersion=3.4&locale=en) in the SAS Data Agent for Linux: Deployment Guide.
-9. Validate the environment, including round-trip communication. For details, see the ["Validation"](https://go.documentation.sas.com/?docsetId=dplydagent0phy0lax&docsetTarget=n1v7mc6ox8omgfn1qzjjjektc7te.htm&docsetVersion=2.3&locale=en) chapter in the SAS Data Agent for Linux: Deployment Guide.
+8. To access the data sources through SAS/ACCESS, see ["Configure Data Access"](https://go.documentation.sas.com/?docsetId=dplyml0phy0lax&docsetTarget=p03m8khzllmphsn17iubdbx6fjpq.htm&docsetVersion=3.5&locale=en) in the SAS Data Agent for Linux: Deployment Guide.
+9. Validate the environment, including round-trip communication. For details, see the ["Validation"](https://go.documentation.sas.com/?docsetId=dplydagent0phy0lax&docsetTarget=n1v7mc6ox8omgfn1qzjjjektc7te.htm&docsetVersion=2.5&locale=en) chapter in the SAS Data Agent for Linux: Deployment Guide.
  
 
 <a name=usage></a>
@@ -359,12 +359,12 @@ To verify the path:
 5. Click on any embedded folder(s) within the bucket to navigate to the license ZIP file.
 6. When you are at the level of the license ZIP file itself, you should see a table that contains the license ZIP file. Above the table on the left, note the word *Buckets*. To the right of the word *Buckets*, you will see the bucket name and path to the license ZIP file. For example, the line above the table with the license ZIP file might appear as follows:
 ```
-Buckets / testbucket-deployment-data/ viya3.4
+Buckets / testbucket-deployment-data/ viya3.5
 ```
-In this example, the bucket name is *testbucket-deployment-data*, the path is *viya3.4*, and suppose that the license ZIP file is named *SAS_Viya_deployment_data.zip*.
+In this example, the bucket name is *testbucket-deployment-data*, the path is *viya3.5*, and suppose that the license ZIP file is named *SAS_Viya_deployment_data.zip*.
 Therefore, the value of the DeploymentDataLocation parameter would be the following:
 ```
-gs://testbucket-deployment-data/viya3.4/SAS_Viya_deployment_data.zip
+gs://testbucket-deployment-data/viya3.5/SAS_Viya_deployment_data.zip
 ```
 
 <a name="Tshoot"></a> 
@@ -451,7 +451,7 @@ The command prints out the console of the specified machine. The console output 
 
 <a name="AppendixA"></a>
 ## Appendix A: Setting Up a Mirror Repository
-1. To set up a mirror repository, refer to the instructions in ["Create a Mirror Repository"](https://go.documentation.sas.com/?docsetId=dplyml0phy0lax&docsetTarget=p1ilrw734naazfn119i2rqik91r0.htm&docsetVersion=3.4&locale=en) in the SAS Viya 3.4 for Linux: Deployment Guide.
+1. To set up a mirror repository, refer to the instructions in ["Create a Mirror Repository"](https://go.documentation.sas.com/?docsetId=dplyml0phy0lax&docsetTarget=p1ilrw734naazfn119i2rqik91r0.htm&docsetVersion=3.5&locale=en) in the SAS Viya 3.5 for Linux: Deployment Guide.
 2. Set up a GCP bucket that is accessible by the account where you deployed the SAS Viya Quickstart.
 3. Move the file structure of your mirror repository to the GCP bucket.
 4. Upload the mirror repository into your GCP bucket.
