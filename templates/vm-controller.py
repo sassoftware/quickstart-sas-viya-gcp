@@ -1,6 +1,5 @@
 """Creates the  cas controller VM"""
 
-
 """ Startup script for cas controller """
 controller_startup_script = '''#!/bin/bash
 # Setting up environment
@@ -32,6 +31,7 @@ yum -y update
 def GenerateConfig(context):
     """ Retrieve variable values from the context """
     common_code_commit = context.properties['CommonCodeCommit']
+    source_image = context.properties['SourceImage']
     controller_machinetype = context.properties['ControllerMachineType']
     project = context.env['project']
     deployment = context.env['deployment']
@@ -41,7 +41,6 @@ def GenerateConfig(context):
     sashome_disk = context.properties['SASHomeDisk']
     userlib_disk = context.properties['UserLibDisk']
     cascache_disk = context.properties['CASCacheDisk']
-
 
     """ Define the resources for the VMs """
     resources = [
@@ -65,8 +64,7 @@ def GenerateConfig(context):
                         'boot': True,
                         'autoDelete': True,
                         'initializeParams': {
-                            'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7", ## URI for latest image
-                            # 'sourceImage': "https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/rhel-7-v20190729",
+                            'sourceImage': "{}".format(source_image),
                             'diskSizeGb': "{}".format(boot_disk)
                         }
                     },
@@ -117,7 +115,9 @@ def GenerateConfig(context):
                     'items': [
                         {'key': "ssh-keys", 'value': "sasinstall:{}".format(ssh_key)},
                         {'key': "block-project-ssh-keys", 'value': "true"},
-                        {'key': 'startup-script', 'value': controller_startup_script.format(common_code_commit=common_code_commit, deployment=deployment)}
+                        {'key': 'startup-script',
+                         'value': controller_startup_script.format(common_code_commit=common_code_commit,
+                                                                   deployment=deployment)}
                     ]
                 },
                 'tags': {
