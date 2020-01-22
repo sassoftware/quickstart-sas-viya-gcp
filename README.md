@@ -98,9 +98,9 @@ The Quickstart sets up the following:
 * A load balancer. 
 * An internet gateway to provide access to the internet.
 * Managed NAT gateways to allow outbound internet access for resources in the private subnets.
-* In the private subnet in an SMP environment, two compute instances with SAS Viya on Red Hat Enterprise Linux (RHEL) 7.4.
-* In the private subnet in an MPP environment, two plus the number of worker nodes  (defined in the CASInstanceCount parameter) compute instances with SAS Viya on Red Hat Enterprise Linux (RHEL) 7.4.
-* In the public subnet, a compute instance running Red Hat Enterprise Linux (RHEL) 7.4. This instance is used as an Ansible controller that serves as an admin node, allowing access to the SAS Viya VMs in the private subnet.
+* In the private subnet in an SMP environment, two compute instances with SAS Viya on Red Hat Enterprise Linux (RHEL) 7.x.
+* In the private subnet in an MPP environment, two plus the number of worker nodes  (defined in the CASInstanceCount parameter) compute instances with SAS Viya on Red Hat Enterprise Linux (RHEL) 7.x.
+* In the public subnet, a compute instance running Red Hat Enterprise Linux (RHEL) 7.x. This instance is used as an Ansible controller that serves as an admin node, allowing access to the SAS Viya VMs in the private subnet.
 * Security groups for the SAS Viya VMs and the Ansible controller.
 * Optionally, a default identity provider with users “sasuser” and “sasadmin.”
  
