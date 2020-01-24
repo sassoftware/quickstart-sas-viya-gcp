@@ -88,7 +88,7 @@
         chdir: /opt/sas/viya/home/bin
         cmd: |
           ./da_reg_server.sh --customerid shared --remotehost {{ data_agent_host }}  --remoteport 443 --sasadministratoruser {{ adminuser }} --sasadministratorpassword {{ adminpw }} --secret {{ secret }} --sas-endpoint https://{{hostvars[groups['CoreServices']|first]['corehost']}}:443 --regoverwrite Y
-      when:  "'sas-viya-dataagentservices-default' not in hostvars['services']['services']"
+      when:  "'sas-viya-dataagentservices-default' not in hostvars['services']['services'] and ansible_host != 'services'"
 
     - name: register the Data Agent client id for viya 3.5
       shell:
