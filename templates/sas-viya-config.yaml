@@ -38,16 +38,16 @@ resources:
     ## "gcloud compute machine-types list"
     # Anisible Controller machineType
     AnsibleControllerMachineType: g1-small
-    AnsibleControllerDisk: 10 #boot disk
+    AnsibleControllerDisk: 20 #boot disk
 
     # Viya Services machineType
     ServicesMachineType: n1-highmem-16
-    ServicesDisk: 10 # boot disk
+    ServicesDisk: 20 # boot disk
     ServicesSASHomeDisk: 150 # /opt/sas
 
     # CAS Controller machineType SMP
     ControllerMachineType: n1-standard-2
-    ControllerDisk: 10 # boot disk
+    ControllerDisk: 20 # boot disk
     ControllerSASHomeDisk: 50 # /opt/sas
     ControllerUserLibDisk: 50 # /opt/sas/viya/config/data/cas
     CASCacheDisk: 75 # /sastmp/cascache
@@ -60,4 +60,4 @@ resources:
     # CAS Worker machineType
     WorkerMachineType: n1-standard-2
    # CAS Worker node VM disk size for MPP deployment only
-    WorkerDisk: 10 # boot disk
+    WorkerDisk: 20 # boot disk
