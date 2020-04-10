@@ -116,14 +116,14 @@ properties:
   AnsibleControllerDisk:
     type: integer
     description: Ansible Controller boot disk size
-    default: 10
-    minimum: 10
+    default: 20
+    minimum: 20
 
   ServicesDisk:
     type: integer
     description: Viya Services boot disk size
-    default: 10
-    minimum: 10
+    default: 20
+    minimum: 20
 
   ServicesSASHomeDisk:
     type: integer
@@ -134,8 +134,8 @@ properties:
   ControllerDisk:
     type: integer
     description: CAS Controller boot disk size
-    default: 10
-    minimum: 10
+    default: 20
+    minimum: 20
 
   ControllerSASHomeDisk:
     type: integer
@@ -164,5 +164,5 @@ properties:
   WorkerDisk:
     type: integer
     description: CAS Worker node boot disk size, MPP deployment only
-    default: 10
-    minimum: 10
+    default: 20
+    minimum: 20
