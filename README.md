@@ -397,7 +397,7 @@ Viya-Ark can check the status of the services by issuing the following commands 
 ```
 cd /sas/install/ansible/sas_viya_playbook
 export ANSIBLE_CONFIG=`pwd`
-ansible-playbook viya-ark/playbooks/viya-mmsu/viya-servicesstatus.yml
+ansible-playbook viya-ark/playbooks/viya-mmsu/viya-services-status.yml
 ```
 #### Restarting the SAS Services through Viya-Ark
 Viya-Ark can restart all of the services by issuing the following commands as the sasinstall user on the Ansible controller instance:
