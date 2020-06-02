@@ -39,6 +39,10 @@ def GenerateConfig(context):
                             'members': ["serviceAccount:$(ref.{}-ansible-svc-account.email)".format(deployment)]
                         },
                         {
+                            'role': "roles/logging.logWriter",
+                            'members': ["serviceAccount:$(ref.{}-ansible-svc-account.email)".format(deployment)]
+                        },
+                        {
                             'role': "roles/compute.viewer",
                             'members': ["serviceAccount:$(ref.{}-ansible-svc-account.email)".format(deployment)]
                         },

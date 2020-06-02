@@ -37,8 +37,10 @@ properties:
   SourceImage:
     type: string
     description: RHEL 7 source image defined in GCP
-    # default: https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/rhel-7-v20190729
-    default: https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7
+    # Using the pinned image below may cause a deployment warning, but it has been tested with GCP Quickstart
+    default: https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/rhel-7-v20200429
+    # Using the latest image below may cause unpredictable behavior as it may not have been tested with the GCP Quickstart.
+    # default: https://www.googleapis.com/compute/v1/projects/rhel-cloud/global/images/family/rhel-7
 
   AnsibleControllerMachineType:
     type: string
