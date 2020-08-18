@@ -28,6 +28,7 @@ fi
 yum install -y java-1.8.0-openjdk
 yum install -y epel-release
 yum install -y python-pip
+pip install --upgrade pip
 yum install -y git
 ###################################
 # Getting quick start scripts from Github
