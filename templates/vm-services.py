@@ -1,7 +1,7 @@
 """ Creates the viya services VM """
 
 """ Startup script for Viya services """
-services_startup_script = '''#! /bin/bash
+services_startup_script = '''#!/bin/bash
 # Setting up environment
 export COMMON_CODE_COMMIT="{common_code_commit}"
 export NFS_SERVER="{deployment}-ansible-controller"
@@ -23,14 +23,16 @@ popd
 /bin/su sasinstall -c '/tmp/common/scripts/sasnodes_prereqs.sh'
 # VIRK requires GID 1001 to be free
 groupmod -g 2001 sasinstall
-# Final system update
-yum -y update
 # Moving yum cache to /opt/sas where there is more room to retrieve sas viya repo
 while [[ ! -d /opt/sas ]];
 do
   sleep 2
 done
 sed -i '/cachedir/s/var/opt\/sas/' /etc/yum.conf
+# Final system update
+echo "Sleeping 5 minutes before running system update"
+sleep 5m
+yum -y update
 '''
 
 
