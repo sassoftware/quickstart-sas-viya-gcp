@@ -32,7 +32,7 @@ properties:
   CommonCodeCommit:
     type: string
     description: GitHub Common Code Commit ID
-    default: 3afe49fb1655c4f42cd9f3c24671336f8020df5d
+    default: 64ed3a9afe242293025e7ca64919edfc7f1d2b36
 
   SourceImage:
     type: string

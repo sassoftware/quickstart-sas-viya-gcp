@@ -1,6 +1,5 @@
 """Creates the  cas controller VM"""
 
-
 """ Startup script for cas controller """
 controller_startup_script = '''#!/bin/bash
 # Setting up environment
@@ -25,6 +24,8 @@ popd
 # VIRK requires GID 1001 to be free
 groupmod -g 2001 sasinstall
 # Final system update
+echo "Sleeping 5 minutes before running system update"
+sleep 5m
 yum -y update
 '''
 
