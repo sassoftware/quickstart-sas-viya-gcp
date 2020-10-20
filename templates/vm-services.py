@@ -12,6 +12,7 @@ setenforce 0
 sed -i.bak -e 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config
 # Installing dependencies
 yum -y install git
+yum -y update
 # Getting quick start scripts
 git clone https://github.com/sassoftware/quickstart-sas-viya-common /tmp/common
 pushd /tmp/common
@@ -29,10 +30,6 @@ do
   sleep 2
 done
 sed -i '/cachedir/s/var/opt\/sas/' /etc/yum.conf
-# Final system update
-echo "Sleeping 5 minutes before running system update"
-sleep 5m
-yum -y update
 '''
 
 
