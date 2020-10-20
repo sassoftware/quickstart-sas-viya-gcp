@@ -12,6 +12,7 @@ setenforce 0
 sed -i.bak -e 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config
 # Installing dependencies
 yum -y install git
+yum -y update
 # Getting quick start scripts
 git clone https://github.com/sassoftware/quickstart-sas-viya-common /tmp/common
 pushd /tmp/common
@@ -23,10 +24,6 @@ popd
 /bin/su sasinstall -c '/tmp/common/scripts/sasnodes_prereqs.sh'
 # VIRK requires GID 1001 to be free
 groupmod -g 2001 sasinstall
-# Final system update
-echo "Sleeping 5 minutes before running system update"
-sleep 5m
-yum -y update
 '''
 
 
