@@ -27,13 +27,15 @@ fi
 ###################################
 yum install -y java-1.8.0-openjdk
 yum install -y epel-release
-yum install -y python-pip
-pip install --upgrade pip
+# Installing pip version 20.3.4 to fix python 2 deprection in lastest version
+curl -O https://bootstrap.pypa.io/2.7/get-pip.py && python get-pip.py &> /dev/null
+# yum install -y python-pip
+# pip install --upgrade pip
 yum install -y git
 ###################################
 # Getting quick start scripts from Github
 ###################################
-git clone https://github.com/sassoftware/quickstart-sas-viya-gcp $INSTALL_DIR
+git clone https://github.com/sassoftware/quickstart-sas-viya-gcp -b GCPVIYA-162 $INSTALL_DIR
 # Clean up GitHub identifier files
 pushd $INSTALL_DIR
 rm -rf .git*
