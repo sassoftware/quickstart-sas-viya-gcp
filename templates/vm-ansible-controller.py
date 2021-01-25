@@ -27,7 +27,7 @@ fi
 ###################################
 yum install -y java-1.8.0-openjdk
 yum install -y epel-release
-# Installing pip version 20.3.4 to fix python 2 deprection in lastest version
+# Installing pip version 20.3.4 to fix python 2 depreciation in lastest version
 curl -O https://bootstrap.pypa.io/2.7/get-pip.py && python get-pip.py &> /dev/null
 # yum install -y python-pip
 # pip install --upgrade pip
