@@ -1,7 +1,5 @@
 ## SAS Viya Quickstart Template for Google Cloud Platform 
 
-**As of 25JAN2021, we are investigating deployment failures due to a new version of pip, the package installer for Python.**
-
 **Note**: Currently, SAS Viya has no license agreement with Google.  Therefore, there is no contractual support from Google. You are responsible for the costs of the resources that are consumed by your deployment. 
 
 
