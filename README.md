@@ -1,6 +1,6 @@
 ## SAS Viya Quickstart Template for Google Cloud Platform 
 
-**NOTE**: As of October 4, 2021, SAS is no longer supporting the SAS Viya Quickstart Template for Google Cloud Platform.
+**NOTE**: As of October 4, 2021, SAS is no longer supporting the SAS Viya Quickstart Template for Google Cloud Platform. After this date, there is no expectation that this QuickStart will be functional. Rather, it will be available as a reference architecture only.
 
 **Note**: Currently, SAS Viya has no license agreement with Google.  Therefore, there is no contractual support from Google. You are responsible for the costs of the resources that are consumed by your deployment. 
 
